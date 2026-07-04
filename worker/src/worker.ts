@@ -1,9 +1,14 @@
 import { makeEmitter, type Emitter } from "./trace/arize";
 import { buildOpportunityCards, buildRouteCards } from "./a2ui/cards";
+import { callRenderModel, A2UI_RULES } from "./agent/model";
+import opportunitiesData from "../../data/demo/opportunities.sample.json";
 
 export interface Env {
   ARIZE_API_KEY?: string;
   ALLOWED_ORIGINS?: string;
+  OPENROUTER_KEY?: string; // Worker secret; the keyless default falls back to the stub
+  AI_GATEWAY_URL?: string; // optional OpenAI-compatible base (Cloudflare AI Gateway); else OpenRouter
+  DEFAULT_MODEL?: string;
 }
 
 interface AgentEvent {
@@ -16,12 +21,27 @@ interface StageDef {
   kind: string;
   events: AgentEvent[];
 }
+interface ModelCtx {
+  key: string;
+  model: string;
+  baseURL: string;
+  prompt: string;
+}
 
 const USECASES = new Set(["founders-copilot", "on-it"]);
+const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
+const FALLBACK_MODEL = "anthropic/claude-haiku-4.5";
 
-// Canned per-usecase stages (Phase-1 stub — no model call yet). Phase 2 swaps these for the real
-// plan/tool/render loop over usecases/*.json. Same engine, different JSON = the modularity proof.
-function stagesFor(usecase: string): StageDef[] {
+const FOUNDERS_SYSTEM = `You are Groundwork's Founder's Copilot. Given a founder's idea and a JSON list of candidate funding opportunities, pick the best-matched ones and render OPPORTUNITY CARDS. For each matched opportunity: a Card whose child is a Column of Text — the title (usageHint "h3"), "<org> · <category>" (caption), one line on why it fits THIS idea (body), and "Score <n> · deadline <d> · <eligibility>" (caption). Use ONLY the provided opportunities — never invent grants.
+
+${A2UI_RULES}`;
+
+function foundersUser(idea: string): string {
+  return `Idea: ${idea || "(not provided)"}\n\nCandidate opportunities (JSON):\n${JSON.stringify(opportunitiesData)}\n\nRender the matched opportunity cards.`;
+}
+
+// Canned plan/tool stages per usecase (the render stage is handled separately, possibly by the model).
+function preRenderStages(usecase: string): StageDef[] {
   if (usecase === "on-it") {
     return [
       { span: "plan", kind: "plan", events: [
@@ -36,9 +56,6 @@ function stagesFor(usecase: string): StageDef[] {
         { type: "TOOL_CALL_START", text: "get_tfl_journey" },
         { type: "TOOL_CALL_END", text: "get_tfl_journey" },
       ] },
-      { span: "render", kind: "render", events: [
-        { type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: buildRouteCards() },
-      ] },
     ];
   }
   return [
@@ -50,10 +67,33 @@ function stagesFor(usecase: string): StageDef[] {
       { type: "TOOL_CALL_START", text: "search_opportunities" },
       { type: "TOOL_CALL_END", text: "search_opportunities" },
     ] },
-    { span: "render", kind: "render", events: [
-      { type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: buildOpportunityCards() },
-    ] },
   ];
+}
+
+// Render the card batch. Track A stays canned (a model-invented step-free route would hallucinate;
+// real routing is Phase 3). Track B asks the model to generate the cards grounded in the demo data,
+// falling back to the deterministic stub when there's no key or the model errors/times out.
+async function renderBatch(usecase: string, emitter: Emitter, ctx: ModelCtx): Promise<unknown[]> {
+  if (usecase === "on-it") return buildRouteCards();
+  const stub = buildOpportunityCards();
+  if (!ctx.key) return stub;
+  const ac = new AbortController();
+  const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
+  try {
+    const result = await callRenderModel({
+      apiKey: ctx.key,
+      model: ctx.model,
+      baseURL: ctx.baseURL,
+      system: FOUNDERS_SYSTEM,
+      user: foundersUser(ctx.prompt),
+      signal: ac.signal,
+    });
+    if (!result) return stub;
+    emitter.span({ name: "model:openrouter", attrs: { model: result.model, ...result.usage } });
+    return result.batch;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function corsHeaders(request: Request, env: Env): Record<string, string> {
@@ -71,20 +111,24 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   };
 }
 
-// One Arize span per stage + a root "run" span; each stage also writes its SSE event(s).
-function runStages(
+async function runStages(
   usecase: string,
   emitter: Emitter,
   write: (e: AgentEvent) => void,
-  runAttrs: Record<string, unknown>
-): void {
+  runAttrs: Record<string, unknown>,
+  ctx: ModelCtx
+): Promise<void> {
   emitter.span({ name: "run", attrs: runAttrs });
   write({ type: "RUN_STARTED" });
-  for (const stage of stagesFor(usecase)) {
+  for (const stage of preRenderStages(usecase)) {
     const t0 = Date.now();
     for (const e of stage.events) write(e);
     emitter.span({ name: stage.span, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
   }
+  const t0 = Date.now();
+  const batch = await renderBatch(usecase, emitter, ctx);
+  write({ type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: batch });
+  emitter.span({ name: "render", attrs: { kind: "render", latencyMs: Date.now() - t0 } });
   write({ type: "RUN_FINISHED" });
 }
 
@@ -107,30 +151,41 @@ export default {
       });
     }
 
-    // Optional BYOK: our own model key stays a Worker secret (the keyless default); a user key rides
-    // the Authorization header. The Phase-1 stub makes no model call, so we only trace that it arrived.
-    let model = "";
+    // Model access: a BYOK Authorization header wins, else the OPENROUTER_KEY Worker secret; no key
+    // anywhere = the canned stub (keyless demo). Track A ignores this (always stub).
+    let prompt = "";
+    let bodyModel = "";
     try {
-      const body = (await request.json()) as { model?: string };
-      model = body.model ?? "";
+      const body = (await request.json()) as { prompt?: string; model?: string };
+      prompt = body.prompt ?? "";
+      bodyModel = body.model ?? "";
     } catch {
-      // missing/invalid body is fine for the stub
+      // missing/invalid body is fine
     }
+    const auth = request.headers.get("Authorization") ?? "";
+    const byokKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+    const key = byokKey || env.OPENROUTER_KEY || "";
+    const modelCtx: ModelCtx = {
+      key,
+      model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
+      baseURL: env.AI_GATEWAY_URL || OPENROUTER_BASE,
+      prompt,
+    };
     const runAttrs = {
       usecase,
       reqId: crypto.randomUUID(),
-      model: model || "(worker default)",
-      byok: request.headers.has("authorization"),
+      model: key && usecase === "founders-copilot" ? modelCtx.model : "(stub)",
+      byok: byokKey.length > 0,
     };
 
     const emitter = makeEmitter(env);
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
-      start(controller) {
+      async start(controller) {
         const write = (e: AgentEvent): void => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
         };
-        runStages(usecase, emitter, write, runAttrs);
+        await runStages(usecase, emitter, write, runAttrs, modelCtx);
         controller.close();
       },
     });
