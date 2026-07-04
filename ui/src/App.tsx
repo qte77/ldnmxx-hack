@@ -107,7 +107,10 @@ function Dashboard() {
             <button
               key={u.id}
               type="button"
-              onClick={() => setUsecase(u.id)}
+              onClick={() => {
+                setUsecase(u.id);
+                setPrompt(u.example); // swap the query to match the track
+              }}
               title={u.hint}
               className={`px-3 py-1 rounded border text-sm transition-colors ${
                 u.id === usecase
