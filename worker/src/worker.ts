@@ -9,6 +9,7 @@ export interface Env {
   OPENROUTER_KEY?: string; // Worker secret; the keyless default falls back to the stub
   AI_GATEWAY_URL?: string; // optional OpenAI-compatible base (Cloudflare AI Gateway); else OpenRouter
   DEFAULT_MODEL?: string;
+  PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
 }
 
 interface AgentEvent {
@@ -31,6 +32,7 @@ interface ModelCtx {
 const USECASES = new Set(["founders-copilot", "on-it"]);
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const FALLBACK_MODEL = "anthropic/claude-haiku-4.5";
+const DEFAULT_PACE_MS = 450;
 
 const FOUNDERS_SYSTEM = `You are Groundwork's Founder's Copilot. Given a founder's idea and a JSON list of candidate funding opportunities, pick the best-matched ones and render OPPORTUNITY CARDS. For each matched opportunity: a Card whose child is a Column of Text — the title (usageHint "h3"), "<org> · <category>" (caption), one line on why it fits THIS idea (body), and "Score <n> · deadline <d> · <eligibility>" (caption). Use ONLY the provided opportunities — never invent grants.
 
@@ -39,6 +41,9 @@ ${A2UI_RULES}`;
 function foundersUser(idea: string): string {
   return `Idea: ${idea || "(not provided)"}\n\nCandidate opportunities (JSON):\n${JSON.stringify(opportunitiesData)}\n\nRender the matched opportunity cards.`;
 }
+
+const sleep = (ms: number): Promise<void> =>
+  ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
 
 // Canned plan/tool stages per usecase (the render stage is handled separately, possibly by the model).
 function preRenderStages(usecase: string): StageDef[] {
@@ -111,20 +116,61 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   };
 }
 
+// Resolve model access (BYOK header > OPENROUTER_KEY secret > keyless stub) + the span attrs + pacing.
+async function resolveRun(
+  request: Request,
+  env: Env,
+  usecase: string
+): Promise<{ modelCtx: ModelCtx; runAttrs: Record<string, unknown>; paceMs: number }> {
+  let prompt = "";
+  let bodyModel = "";
+  try {
+    const body = (await request.json()) as { prompt?: string; model?: string };
+    prompt = body.prompt ?? "";
+    bodyModel = body.model ?? "";
+  } catch {
+    // missing/invalid body is fine
+  }
+  const auth = request.headers.get("Authorization") ?? "";
+  const byokKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+  const key = byokKey || env.OPENROUTER_KEY || "";
+  const modelCtx: ModelCtx = {
+    key,
+    model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
+    baseURL: env.AI_GATEWAY_URL || OPENROUTER_BASE,
+    prompt,
+  };
+  const runAttrs = {
+    usecase,
+    reqId: crypto.randomUUID(),
+    model: key && usecase === "founders-copilot" ? modelCtx.model : "(stub)",
+    byok: byokKey.length > 0,
+  };
+  // Pace the keyless path so it "streams" like an agent working; the model path is paced by real
+  // latency. Overridable via PACE_MS (tests set "0").
+  const paceMs = env.PACE_MS !== undefined ? Number(env.PACE_MS) : key ? 0 : DEFAULT_PACE_MS;
+  return { modelCtx, runAttrs, paceMs };
+}
+
 async function runStages(
   usecase: string,
   emitter: Emitter,
   write: (e: AgentEvent) => void,
   runAttrs: Record<string, unknown>,
-  ctx: ModelCtx
+  ctx: ModelCtx,
+  paceMs: number
 ): Promise<void> {
   emitter.span({ name: "run", attrs: runAttrs });
   write({ type: "RUN_STARTED" });
   for (const stage of preRenderStages(usecase)) {
     const t0 = Date.now();
-    for (const e of stage.events) write(e);
+    for (const e of stage.events) {
+      await sleep(paceMs);
+      write(e);
+    }
     emitter.span({ name: stage.span, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
   }
+  await sleep(paceMs);
   const t0 = Date.now();
   const batch = await renderBatch(usecase, emitter, ctx);
   write({ type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: batch });
@@ -151,33 +197,7 @@ export default {
       });
     }
 
-    // Model access: a BYOK Authorization header wins, else the OPENROUTER_KEY Worker secret; no key
-    // anywhere = the canned stub (keyless demo). Track A ignores this (always stub).
-    let prompt = "";
-    let bodyModel = "";
-    try {
-      const body = (await request.json()) as { prompt?: string; model?: string };
-      prompt = body.prompt ?? "";
-      bodyModel = body.model ?? "";
-    } catch {
-      // missing/invalid body is fine
-    }
-    const auth = request.headers.get("Authorization") ?? "";
-    const byokKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
-    const key = byokKey || env.OPENROUTER_KEY || "";
-    const modelCtx: ModelCtx = {
-      key,
-      model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
-      baseURL: env.AI_GATEWAY_URL || OPENROUTER_BASE,
-      prompt,
-    };
-    const runAttrs = {
-      usecase,
-      reqId: crypto.randomUUID(),
-      model: key && usecase === "founders-copilot" ? modelCtx.model : "(stub)",
-      byok: byokKey.length > 0,
-    };
-
+    const { modelCtx, runAttrs, paceMs } = await resolveRun(request, env, usecase);
     const emitter = makeEmitter(env);
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
@@ -185,7 +205,7 @@ export default {
         const write = (e: AgentEvent): void => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
         };
-        await runStages(usecase, emitter, write, runAttrs, modelCtx);
+        await runStages(usecase, emitter, write, runAttrs, modelCtx, paceMs);
         controller.close();
       },
     });
