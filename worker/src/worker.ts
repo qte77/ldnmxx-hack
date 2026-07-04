@@ -120,7 +120,8 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
 async function resolveRun(
   request: Request,
   env: Env,
-  usecase: string
+  usecase: string,
+  demo: boolean
 ): Promise<{ modelCtx: ModelCtx; runAttrs: Record<string, unknown>; paceMs: number }> {
   let prompt = "";
   let bodyModel = "";
@@ -133,7 +134,9 @@ async function resolveRun(
   }
   const auth = request.headers.get("Authorization") ?? "";
   const byokKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
-  const key = byokKey || env.OPENROUTER_KEY || "";
+  // `demo` (auto-run / example) forces the free deterministic stub even when a key is set, so page
+  // loads and bots can't burn the model key — only an explicit manual Run uses the model.
+  const key = demo ? "" : byokKey || env.OPENROUTER_KEY || "";
   const modelCtx: ModelCtx = {
     key,
     model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
@@ -197,7 +200,8 @@ export default {
       });
     }
 
-    const { modelCtx, runAttrs, paceMs } = await resolveRun(request, env, usecase);
+    const demo = url.searchParams.get("demo") === "1";
+    const { modelCtx, runAttrs, paceMs } = await resolveRun(request, env, usecase, demo);
     const emitter = makeEmitter(env);
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({

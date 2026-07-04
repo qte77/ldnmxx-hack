@@ -111,4 +111,18 @@ describe("worker /run", () => {
     expect(res.status).toBe(204);
     expect(res.headers.get("access-control-allow-methods")).toContain("POST");
   });
+
+  it("forces the stub (no model span, no network) when ?demo=1 even with a key set", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const keyedEnv = { ...env, OPENROUTER_KEY: "sk-test" };
+    const req = new Request("https://w.example/run?usecase=founders-copilot&demo=1", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://qte77.github.io" },
+      body: JSON.stringify({ prompt: "x" }),
+    });
+    await worker.fetch(req, keyedEnv, ctx).then((r) => r.text());
+    const spans = spy.mock.calls.filter((c) => c[0] === "⌁ span").map((c) => c[1]);
+    expect(spans).not.toContain("model:openrouter");
+    expect(spans).toContain("render");
+  });
 });
