@@ -6,6 +6,7 @@ compatibility_date = "2026-07-01"
 
 [observability]
 enabled = true
+head_sampling_rate = 1  # capture 100% of invocations → the ⌁ spans + request traces show in the Cloudflare dashboard (Workers ▸ Observability)
 
 [vars]
 # CORS allowlist: local Vite dev + the GitHub Pages origin (the Pages SPA calls the Worker cross-origin).

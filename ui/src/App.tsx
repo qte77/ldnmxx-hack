@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type SyntheticEvent } from "react";
+import { useA2UIActions } from "@a2ui/react";
 import { A2UISurfaceProvider, A2UISurface } from "./A2UISurface";
 import { EventStream } from "./EventStream";
+import { CatalogViewer } from "./CatalogViewer";
+import { buildCatalogBatch } from "./catalog";
 import { useAgentSSE, type Byok } from "./agent/useAgentSSE";
 
 // The two workflows the one engine serves — swap the usecase id, swap the app (the modularity proof).
@@ -55,7 +58,8 @@ function ThemeToggle() {
 
 function Dashboard() {
   const { eventLog, isRunning, error, run, stop } = useAgentSSE();
-  const [usecase, setUsecase] = useState<string>(USECASES[0].id);
+  const { processMessages, clearSurfaces } = useA2UIActions();
+  const [usecase, setUsecase] = useState<string>(USECASES[1].id);
   const [prompt, setPrompt] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_BYOK_API_KEY ?? "");
@@ -72,14 +76,20 @@ function Dashboard() {
     [run, usecase, prompt, apiKey, model]
   );
 
+  // Render one live example of each core A2UI component on the surface (the catalog).
+  const renderCatalog = useCallback(() => {
+    clearSurfaces();
+    processMessages(buildCatalogBatch() as Parameters<typeof processMessages>[0]);
+  }, [processMessages, clearSurfaces]);
+
   // Auto-play an example on first load so visitors see the agent work without typing (keyless = the
-  // free deterministic stub; does not send BYOK).
+  // free deterministic stub; does not send BYOK). Track A leads — it's the engine/modularity proof.
   const didAutoRun = useRef(false);
   useEffect(() => {
     if (didAutoRun.current) return;
     didAutoRun.current = true;
-    setPrompt(USECASES[0].example);
-    void run(USECASES[0].id, USECASES[0].example, undefined, true); // demo=true → free stub, not the model
+    setPrompt(USECASES[1].example);
+    void run(USECASES[1].id, USECASES[1].example, undefined, true); // demo=true → free stub, not the model
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, []);
 
@@ -108,6 +118,7 @@ function Dashboard() {
               {u.label}
             </button>
           ))}
+          <CatalogViewer onRenderLive={renderCatalog} />
           <button
             type="button"
             onClick={() => setShowKey((v) => !v)}
