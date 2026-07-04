@@ -5,4 +5,4 @@
 //   the first `wrangler deploy` (worker CORS allowlists the Pages origin).
 export const WORKER_BASE: string = import.meta.env.DEV
   ? (import.meta.env.VITE_WORKER_BASE ?? "")
-  : "https://ldnmxx-hack-worker.workers.dev"; // deploy step: replace with the real workers.dev subdomain after `wrangler deploy`
+  : "https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev";
