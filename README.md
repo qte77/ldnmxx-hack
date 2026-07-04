@@ -21,9 +21,20 @@
 
 ```bash
 make help    # all targets
-make dev     # boot worker + ui locally (keyless)
-make seed    # one-shot scrape → KV
+make dev     # boot worker (:8787) + ui (:5173) locally, keyless
+make test    # ui + worker tests
 ```
+
+One `POST /run?usecase=<id>` endpoint streams AG-UI SSE events that render built-in **A2UI cards**.
+Two workflows share the one engine — toggle them in the UI (the modularity proof):
+
+- **`founders-copilot`** (Track B) — grants matched to your idea, with a qualify-first gate.
+- **`on-it`** (Track A, thin) — a step-free London route.
+
+Optional **BYOK**: paste a model key in the dashboard (held in memory only); otherwise the Worker uses
+its own key. Observability: `cd worker && npm run tail` shows one Arize span per stage.
+
+**Demo (GitHub Pages):** <https://qte77.github.io/ldnmxx-hack/> — the SPA calls the deployed Worker.
 
 Build it: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md). Design:
 [`docs/architecture.md`](docs/architecture.md).
