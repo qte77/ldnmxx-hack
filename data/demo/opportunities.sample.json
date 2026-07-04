@@ -1,0 +1,35 @@
+[
+  {
+    "id": "demo-001",
+    "title": "Innovate UK Smart Grants (demo)",
+    "org": "Innovate UK",
+    "deadline": "2026-09-24",
+    "category": "grant",
+    "score": 88,
+    "whyItFits": "Non-dilutive R&D funding for early-stage deep-tech; matches your stage and sector.",
+    "sourceUrl": "https://www.ukri.org/",
+    "eligibility": { "qualified": true, "met": ["UK-registered (or will be)", "pre-revenue R&D"], "missed": [] }
+  },
+  {
+    "id": "demo-002",
+    "title": "SEIS-eligible pre-seed (demo)",
+    "org": "HMRC / SEIS",
+    "deadline": "rolling",
+    "category": "scheme",
+    "score": 82,
+    "whyItFits": "Tax-advantaged investment scheme for very early companies under 3 years old.",
+    "sourceUrl": "https://www.gov.uk/guidance/seed-enterprise-investment-scheme-background",
+    "eligibility": { "qualified": false, "met": ["under 3 years"], "missed": ["must be incorporated first"] }
+  },
+  {
+    "id": "demo-003",
+    "title": "Mayor's Civic Innovation Challenge (demo)",
+    "org": "Greater London Authority",
+    "deadline": "2026-08-15",
+    "category": "accelerator",
+    "score": 79,
+    "whyItFits": "London-focused civic-tech accelerator; strong fit for council-facing tools.",
+    "sourceUrl": "https://www.london.gov.uk/",
+    "eligibility": { "qualified": true, "met": ["London-based", "civic use-case"], "missed": [] }
+  }
+]

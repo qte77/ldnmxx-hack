@@ -1,0 +1,19 @@
+# deps / build
+node_modules/
+dist/
+.wrangler/
+.venv/
+__pycache__/
+*.pyc
+
+# secrets / env
+.dev.vars
+.env
+*.local
+
+# ToU-gated scraped data (only data/demo/ is committed)
+data/real/
+
+# misc
+*.log
+.DS_Store
