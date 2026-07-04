@@ -3,7 +3,20 @@
 ## One core, three seams
 
 One `POST /run?usecase=<id>` endpoint → a ~60-LOC `runStages` engine (plan → tool → render) → an A2UI
-HUD. Flip **Track B ⇄ A** by loading a different `usecases/*.json`; only three seams change:
+HUD. Flip **Track B ⇄ A** by loading a different `usecases/*.json`:
+
+```text
+              ┌─ Track B · founders-copilot.json
+   swap JSON ─┤  one toggle, same engine
+              └─ Track A · on-it.json
+              │
+              ▼
+User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
+▲       AG-UI runStages   OpenRtr  A2UI + HUD      │
+└─────────────── renders back to user ─────────────┘
+```
+
+Only three seams change:
 
 | Seam | Track B (Founder's Copilot) | Track A (On It) |
 |---|---|---|
