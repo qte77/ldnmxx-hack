@@ -1,0 +1,15 @@
+ldnmxx-hack
+Copyright 2026 qte77
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Reuses / builds on (attribution):
+- qte77/agenthud-agui-a2ui — SPA + Worker base (Apache-2.0)
+- qte77/polyfetch-scrape — scraping toolkit (Apache-2.0)
+- @a2ui/react, @ag-ui/core — generative-UI protocol stack
+- Leaflet — map rendering (BSD-2-Clause)
+
+Data & map attribution (required in-app):
+- Map tiles & accessibility data © OpenStreetMap contributors (ODbL) — display OSM attribution.
+- Civic data via postcodes.io, Transport for London (TfL) Unified API, Overpass API — used under their terms.
+- Incorporation links reference GOV.UK / Companies House (Open Government Licence).

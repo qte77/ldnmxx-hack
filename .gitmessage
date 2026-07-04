@@ -1,0 +1,9 @@
+# <type>(<scope>): <subject>        # imperative, <=72 chars, no trailing period
+#
+# <body>                            # what & why (not how); wrap ~72
+#
+# <footer>                          # BREAKING CHANGE: … / Refs #123
+#
+# types: feat fix docs chore refactor test build ci perf
+#
+# Co-Authored-By: Claude <noreply@anthropic.com>

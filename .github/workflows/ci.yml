@@ -1,0 +1,65 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read   # least-privilege; escalate per-job only when needed
+
+# NOTE: pin actions to commit SHAs before relying on this in anger (supply-chain). Kept as tags for brevity.
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx --yes markdownlint-cli2 "**/*.md" "#node_modules"
+
+  ui:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('ui/package.json') != '' }}   # activates once scaffolded
+    defaults: { run: { working-directory: ui } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: ui/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env: { CI: "true" }
+
+  worker:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('worker/package.json') != '' }}
+    defaults: { run: { working-directory: worker } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: worker/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  ingest:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('ingest/pyproject.toml') != '' }}
+    defaults: { run: { working-directory: ingest } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: gitleaks (secrets)
+        uses: gitleaks/gitleaks-action@v2
+      - name: semgrep (SAST)
+        uses: semgrep/semgrep-action@v1
+        with: { config: p/typescript }

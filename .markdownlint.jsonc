@@ -1,0 +1,8 @@
+{
+  // Lenient config so prose docs don't fail CI on cosmetic rules.
+  "default": true,
+  "MD013": false,              // line length — we wrap at prose width, not 80
+  "MD033": false,              // inline HTML (badges, <details>, <picture>)
+  "MD041": false,              // first line need not be H1 (YAML frontmatter)
+  "MD024": { "siblings_only": true }  // duplicate headings OK if not siblings
+}
