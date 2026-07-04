@@ -1,17 +1,23 @@
+---
+title: "Submission — ldnmxx-hack (7-slide template, Track B emphasis)"
+type: submission
+updated: 2026-07-04
+---
+
 # Submission — ldnmxx-hack
 
-Prefilled markdown deck for **Londonmaxxing 003**, mirroring the official 7-slide template.
-`[confirm]` = fill/decide before submitting. Judging criteria mapped at the end.
+Prefilled deck. **Emphasis = Track B (Founder's Copilot);** Track A ("On It") appears as the *modularity
+example*. `[confirm]` = decide before submitting.
 
 ---
 
 ## 1 · Cover
 
-# ldnmxx-hack
-### *one agent core, two Londons*
+# Founder's Copilot
+### from idea to incorporated — one click
 
-- **Builder:** `[your name]` (qte77)
-- **Track:** **Live London** `[confirm — or flip to Build London; see note at end]`
+- **Builder:** `[your name]`
+- **Track:** **Build London**  *(the same engine also powers a Live-London demo — slide 4)*
 
 ---
 
@@ -19,75 +25,71 @@ Prefilled markdown deck for **Londonmaxxing 003**, mirroring the official 7-slid
 
 > *"The specific challenge I want to address is…"*
 
-Mobility-constrained Londoners (wheelchair, buggy, injury) hit broken infrastructure daily — lifts out,
-step-free routes blocked — and must juggle 3+ siloed apps to reroute **and** report. Routing and reporting
-are the **same moment**, but nothing joins them.
+An early-stage London founder with an idea has to work out — alone — **what stage they're at, which grants
+fit, who to talk to, and how to actually incorporate**, then re-key the same answers into every scheme
+(4–8h each). No single tool does the journey, and a generic chatbot **invents** the links.
 
 > *"I came across this challenge because…"*
 
-It's a **structural** gap, not a technical one: TfL, FixMyStreet and boroughs can't unify without
-multi-year inter-agency agreement — incumbents are *barred* from closing it. `[confirm it's on
-Londonmaxxing's "What Londoners are asking for" list and mirror the wording — cheapest idea-validation
-point]`
+`[your founder story]`. Honest: there's no official "founder demand" list, so we lean on the concrete
+time-saving, the **qualify-first** gate, and a **verified (not hallucinated) incorporation path**.
 
 ---
 
 ## 3 · The Opportunity
 
-One **modular agent core — "one core, three seams"** — that swaps its entire use-case by loading a
-different JSON. The **same engine serves both** London tracks, so the modularity itself is the moat
-against one-off builds. Keyless civic APIs (postcodes.io, TfL) make the cross-agency join buildable by an
-independent **in a day** — exactly what incumbents structurally can't ship.
+A **one-click founder copilot** on a modular agent core. Describe your idea once → it runs the whole
+early-stage journey. The wedge a generic chatbot **can't** match: a **verified, personalised incorporation
+path** (real gov.uk / Companies House links) + a **qualify-first grant gate** — because a chatbot doesn't
+have your context and hallucinates the links.
 
 ---
 
 ## 4 · The Solution
 
-- **On It (Live London):** speak a step-free request → postcodes.io (borough) → TfL Journey (step-free
-  route + disruption) → a **RouteCard** in a watch-it-work HUD. **Voice = accessible by default.**
-- **Founder's Copilot (Build London) — same engine:** describe an idea once → a **one-click journey** in
-  A2UI cards: **assess stage → matched grants → who to talk to → get incorporation-ready** (Companies House).
-- **The reveal:** one toggle flips `?usecase=` — *same endpoint, same `runStages`, swap the JSON.* Built on
-  Cloudflare **Workers + Pages + KV** · **OpenRouter** via AI Gateway · **Arize** · A2UI/AG-UI. Secrets
-  Worker-only.
+- **Founder's Copilot (Build London) — the star:** describe your idea once → **assess stage → matched
+  grants (qualify ✓/⚠️) → who to talk to → get incorporation-ready** (verified gov.uk / Companies House
+  links). One click, A2UI cards, a watch-it-work HUD.
+- **Same engine, one JSON away — *On It* (Live London, example):** swap `founders-copilot.json` →
+  `on-it.json` and the *same core* becomes a **voice-driven step-free civic router** (postcodes.io + TfL +
+  an OSM accessibility map). Proof the architecture is real, not a one-off.
+- Built on Cloudflare **Workers + Pages + KV** · **OpenRouter** via AI Gateway · **Arize** · A2UI/AG-UI.
+  Secrets Worker-only.
 
 ---
 
 ## 5 · Demo
 
-60 seconds, **keyless/offline** (pre-baked replay = safety net):
-1. **[Live]** speak *"step-free from E8 3GT to Westminster"* → the step-free route renders live on an **OSM map** in the HUD.
-2. **[toggle]** → `UsecaseInspector` shows the JSON swap.
-3. **[Build]** describe an idea → stage → matched grants → contacts → **incorporation-ready in one click**
-   (the joy moment).
-
-*One core, two Londons, proven live.*
+60 seconds, **keyless/offline** (replays = safety net):
+1. **[Build — the star]** describe an idea → the copilot renders the journey: **stage → matched grants →
+   contacts → incorporation-ready in one click** (the joy moment; real verified links).
+2. **[Modularity — the example]** one toggle → `UsecaseInspector` shows the JSON swap → *On It* runs: speak
+   a destination → **step-free route on an OSM map, read back**. *"Same engine — we swapped a JSON."*
 
 ---
 
 ## 6 · Next Steps
 
-- **Full civic action:** Open311 `file_report` + `ReportCard` — report the broken lift, get a reference id
-  → **council pilot**.
-- **Founder-copilot depth:** real Companies House filing (auth + fee); eligibility oracle across more
-  programs; the grant-application draft.
-- **Deferred backlog:** AG Grid data grid, ElevenLabs TTS, A2A endpoint, ingest cron.
+- **Founder-copilot depth:** live Companies House filing; a grounded contacts corpus; the grant-application
+  draft; eligibility oracle across more programs.
+- **Full Track A:** Open311 report + ReportCard → council pilot.
+- **Deferred:** AG Grid, A2A endpoint, ingest cron, D1.
 
 ---
 
 ## 7 · Thank you
 
-# ldnmxx-hack
-**one agent core, two Londons.**
+# Founder's Copilot
+**from idea to incorporated — one click · one core, two Londons.**
 Builder: `[name]` · Reuse: `qte77/agenthud-agui-a2ui` + `qte77/polyfetch-scrape`
 
 ---
 
 ### Judging map + open `[confirm]`s
 
-- **Idea validation** → slide 2 · **Technical approach** → slide 4 · **Project readiness** → slide 5 ·
-  **UX/design** → slides 4–5.
-- **Track decision:** *Live London* wins idea-validation (real Londoner demand); *Build London* has the
-  fully-built copilot + the joy moment. **Recommended: Live London primary**, with the Build-London copilot
-  as the demo's second-act reveal (so its one-click incorporation lands as "the same engine also does *this*").
-- **Confirm:** project name · builder name(s) · primary track · the Track-A ask is on the demand list.
+- **Idea validation** → slide 2 (founder friction + the *verified* path). ⚠️ B's soft spot (no
+  Londoner-demand list) — strongest counters: the qualify-first gate + "a chatbot can't do this safely,"
+  **and** the Track-A mention nods to a validated Live-London need on the same engine.
+- **Technical** → slide 4 (modular engine + Companies House). **Readiness** → slide 5 (fully-built B +
+  replays). **UX** → slides 4–5 (one-click journey, the joy moment).
+- **Confirm:** project name (*Founder's Copilot*?) · builder name(s).
