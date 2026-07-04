@@ -23,7 +23,7 @@ const consoleEmitter: Emitter = {
 // Stub for the real Arize/OpenInference exporter (Phase 2, behind ARIZE_API_KEY). Same interface —
 // Phase 2 only fills in the OTLP exporter + token/cost attrs; until then we still log so the seam is
 // exercised end-to-end with no network dependency.
-function arizeEmitter(_env: TraceEnv): Emitter {
+function arizeEmitter(): Emitter {
   return {
     span(s: Span): void {
       console.log("⌁ span[arize-stub]", s.name, JSON.stringify(s.attrs ?? {}));
@@ -36,5 +36,5 @@ function arizeEmitter(_env: TraceEnv): Emitter {
 
 // Injectable emitter: keyless console by default; the real adapter activates only when a key is set.
 export function makeEmitter(env: TraceEnv): Emitter {
-  return env.ARIZE_API_KEY ? arizeEmitter(env) : consoleEmitter;
+  return env.ARIZE_API_KEY ? arizeEmitter() : consoleEmitter;
 }
