@@ -104,7 +104,7 @@ export function useAgentSSE() {
   );
 
   const run = useCallback(
-    async (usecase: string, prompt: string, byok?: Byok): Promise<void> => {
+    async (usecase: string, prompt: string, byok?: Byok, demo = false): Promise<void> => {
       if (isRunning) return;
       setIsRunning(true);
       setError(null);
@@ -122,7 +122,9 @@ export function useAgentSSE() {
       };
 
       try {
-        const res = await fetch(`${WORKER_BASE}/run?usecase=${encodeURIComponent(usecase)}`, {
+        const res = await fetch(
+          `${WORKER_BASE}/run?usecase=${encodeURIComponent(usecase)}${demo ? "&demo=1" : ""}`,
+          {
           method: "POST",
           headers: buildHeaders(byok),
           body: JSON.stringify({ prompt, model: byok?.model ?? "" }),

@@ -1,4 +1,4 @@
-import { useCallback, useState, type SyntheticEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { A2UISurfaceProvider, A2UISurface } from "./A2UISurface";
 import { EventStream } from "./EventStream";
 import { useAgentSSE, type Byok } from "./agent/useAgentSSE";
@@ -10,14 +10,48 @@ const USECASES = [
     label: "Founder's Copilot",
     hint: "Track B — grants matched to your idea",
     placeholder: "Describe your idea, e.g. an AI copilot for London founders",
+    example: "an AI copilot for London founders",
   },
   {
     id: "on-it",
     label: "On It",
     hint: "Track A — step-free London route",
     placeholder: "e.g. step-free from E8 3GT to Westminster",
+    example: "step-free from E8 3GT to Westminster",
   },
 ] as const;
+
+// Minimal light/dark toggle: flips the `data-theme` attribute the EyeRest theme + anti-FOUC script read.
+type Theme = "light" | "dark";
+function readTheme(): Theme {
+  const attr = document.documentElement.getAttribute("data-theme");
+  if (attr === "light" || attr === "dark") return attr;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>(readTheme);
+  const toggle = useCallback(() => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("qte77-theme", next);
+    } catch {
+      /* storage disabled — non-fatal */
+    }
+    setTheme(next);
+  }, [theme]);
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      title="Toggle light / dark"
+      aria-label="Toggle light or dark theme"
+      className="px-2 py-1 rounded border border-border text-sm text-text-muted hover:border-primary"
+    >
+      {theme === "dark" ? "☀" : "☾"}
+    </button>
+  );
+}
 
 function Dashboard() {
   const { eventLog, isRunning, error, run, stop } = useAgentSSE();
@@ -37,6 +71,17 @@ function Dashboard() {
     },
     [run, usecase, prompt, apiKey, model]
   );
+
+  // Auto-play an example on first load so visitors see the agent work without typing (keyless = the
+  // free deterministic stub; does not send BYOK).
+  const didAutoRun = useRef(false);
+  useEffect(() => {
+    if (didAutoRun.current) return;
+    didAutoRun.current = true;
+    setPrompt(USECASES[0].example);
+    void run(USECASES[0].id, USECASES[0].example, undefined, true); // demo=true → free stub, not the model
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, []);
 
   return (
     <div className="h-screen flex flex-col max-w-7xl mx-auto w-full">
@@ -71,6 +116,7 @@ function Dashboard() {
           >
             ⚙ Key
           </button>
+          <ThemeToggle />
         </div>
       </header>
 
