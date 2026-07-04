@@ -1,0 +1,13 @@
+{
+  "origin": "E8 3GT",
+  "destination": "Westminster",
+  "stepFree": true,
+  "durationMin": 42,
+  "legs": [
+    { "mode": "walk", "instruction": "Walk to Hackney Central (step-free entrance)", "stepFree": true, "durationMin": 6 },
+    { "mode": "overground", "instruction": "Overground to Highbury & Islington", "stepFree": true, "durationMin": 9 },
+    { "mode": "tube", "instruction": "Victoria line to Victoria (lift access both ends)", "stepFree": true, "durationMin": 14 },
+    { "mode": "walk", "instruction": "Step-free walk to Westminster via Birdcage Walk", "stepFree": true, "durationMin": 13 }
+  ],
+  "disruptions": ["Victoria line: minor delays"]
+}
