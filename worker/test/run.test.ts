@@ -15,7 +15,7 @@ interface Frame {
   a2uiMessages?: Batch[];
 }
 
-const env = { ALLOWED_ORIGINS: "https://qte77.github.io,http://localhost:5173" };
+const env = { ALLOWED_ORIGINS: "https://qte77.github.io,http://localhost:5173", PACE_MS: "0" };
 const ctx = {
   waitUntil: () => undefined,
   passThroughOnException: () => undefined,
