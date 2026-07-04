@@ -100,14 +100,24 @@ export async function callRenderModel(opts: ModelCall): Promise<ModelResult | nu
         tools: [RENDER_UI_TOOL],
         tool_choice: { type: "function", function: { name: "render_ui" } },
         temperature: 0.2,
-        max_tokens: 1500,
+        max_tokens: 8000, // the A2UI batch is a large JSON; too low truncates the tool call → fallback
       }),
       signal: opts.signal,
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn("model fallback: HTTP", res.status);
+      return null;
+    }
     const data = (await res.json()) as ORResponse;
     const batch = extractBatch(data);
-    if (!batch || !isValidBatch(batch)) return null;
+    if (!batch) {
+      console.warn("model fallback: no/empty render_ui tool call (raise max_tokens if truncated)");
+      return null;
+    }
+    if (!isValidBatch(batch)) {
+      console.warn("model fallback: invalid batch");
+      return null;
+    }
     return {
       batch,
       model: opts.model,
