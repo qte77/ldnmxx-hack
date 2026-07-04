@@ -6,6 +6,12 @@ updated: 2026-07-04
 
 # Plan — Phase 1 first E2E
 
+> **Status: DONE** (branch `feat/phase1-foundation`; see `../handoffs/003-phase1-done.md`).
+> Reconciled deltas from the original ticket: **both** usecases ship (`founders-copilot` + thin
+> `on-it`) via a UI toggle; the Pages demo is backed by the **live deployed Worker** (no baked
+> replay); an **optional dashboard BYOK** field was added (runtime-only; the Worker key stays the
+> keyless default); the console **Arize span per stage** was kept.
+
 **For the next session — this is the kickoff ticket.** Read `plans/001-build-plan.md` for the full
 **code/file/source map** (exact reuse paths, pinned versions, A2UI pitfalls) and `handoffs/001-onboarding-handoff.md`
 for onboarding — **don't re-gather context**. Execute via **strict TDD** (tests first for modules, not

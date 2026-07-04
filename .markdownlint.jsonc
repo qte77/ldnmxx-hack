@@ -17,5 +17,6 @@
   "MD031": false, // fenced code surrounded by blank lines
   "MD032": false, // lists surrounded by blank lines
   "MD009": false, // trailing spaces
-  "MD047": false  // single trailing newline
+  "MD047": false, // single trailing newline
+  "MD060": false  // table pipe spacing (compact tables in existing docs)
 }

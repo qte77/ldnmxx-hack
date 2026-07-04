@@ -1,0 +1,12 @@
+# Groundwork Worker — the one `/run` engine. Secrets (OPENROUTER_KEY, ARIZE_API_KEY, …) are set with
+# `wrangler secret put`, never here. `.dev.vars` supplies them for local `wrangler dev` (gitignored).
+name = "ldnmxx-hack-worker"
+main = "src/worker.ts"
+compatibility_date = "2026-07-01"
+
+[observability]
+enabled = true
+
+[vars]
+# CORS allowlist: local Vite dev + the GitHub Pages origin (the Pages SPA calls the Worker cross-origin).
+ALLOWED_ORIGINS = "http://localhost:5173,https://qte77.github.io"

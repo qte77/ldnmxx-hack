@@ -1,14 +1,21 @@
 # deps / build
 node_modules/
 dist/
+*.tsbuildinfo
 .wrangler/
 .venv/
 __pycache__/
 *.pyc
 
-# secrets / env
-.dev.vars
+# secrets / local env — never commit; *.example templates stay tracked. .env files scatter across
+# folders (ui/, worker/) — no leading slash, so these match at any depth.
 .env
+.env.*
+!.env.example
+!.env.*.example
+.dev.vars
+.dev.vars*
+!.dev.vars.example
 *.local
 
 # ToU-gated scraped data (only data/demo/ is committed)

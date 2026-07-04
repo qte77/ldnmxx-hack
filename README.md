@@ -1,45 +1,64 @@
-# ldnmxx-hack
+# Groundwork
 
-> A modular **AG-UI/A2UI** agent on a **Cloudflare Worker** — one core, three seams, two London
-> use-cases. Built for **Londonmaxxing 003** (Sat 4 Jul 2026).
+> One **AG-UI/A2UI** workflow engine on a **Cloudflare Worker** — *swap a JSON, swap the app.*
+> Two London workflows, one core. Built for **Londonmaxxing 003** (Sat 4 Jul 2026).
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.0.0-blue.svg)](CHANGELOG.md)
-[![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](.github/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CHANGELOG.md)
+[![CI](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml)
+[![CodeFactor](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack/badge)](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack)
 
 ## What
 
-- **One `POST /run?usecase=<id>` endpoint** + a ~60-LOC `runStages` engine — *swap a JSON, swap the app.*
-- **Track B — Founder's Copilot:** describe your idea once → a one-click journey (assess stage → grants →
-  who to talk to → incorporate).
-- **Track A — On It:** voice → step-free TfL route for a mobility-constrained Londoner.
-- Cloudflare **Workers + Pages + KV** · **OpenRouter** via AI Gateway · **Arize** tracing · **A2UI/AG-UI** HUD.
-- Keyless/offline demo path + a pre-baked replay safety net.
-- Secrets are Worker-only; scraped data is ToU-gated.
+- **One `POST /run?usecase=<id>` endpoint** + a small `runStages` engine — swap a JSON, swap the app.
+- Streams **AG-UI** SSE events that render built-in **A2UI cards** (AG Grid deferred).
+- **Track B — Founder's Copilot:** describe your idea → grants matched to your stage, qualify-first.
+- **Track A — On It (thin):** a step-free London route — the modularity proof, same engine + different JSON.
+- **Cloudflare Worker** trust boundary · **OpenRouter** (optional in-dashboard BYOK) · **Arize** span per stage.
+- Keyless demo path; secrets stay Worker-only.
+
+<details>
+<summary>Screenshots — one engine, two workflows</summary>
+
+**Track B — Founder's Copilot** · grants matched to the idea, qualify-first gate, live AG-UI event stream.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/groundwork-founders-dark.png">
+  <img alt="Groundwork Founder's Copilot: opportunity cards + AG-UI event stream" src="assets/images/groundwork-founders-light.png">
+</picture>
+
+**Track A — On It** · a step-free London route — same engine, different `usecase` JSON.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/groundwork-on-it-dark.png">
+  <img alt="Groundwork On It: step-free route cards" src="assets/images/groundwork-on-it-light.png">
+</picture>
+
+</details>
 
 ## How
 
 ```bash
 make help    # all targets
-make dev     # boot worker + ui locally (keyless)
-make seed    # one-shot scrape → KV
+make dev     # worker (:8787) + ui (:5173) locally, keyless
+make test    # ui + worker tests
 ```
 
-Build it: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md). Design:
-[`docs/architecture.md`](docs/architecture.md).
+Toggle the two workflows in the UI; `cd worker && npm run tail` shows one Arize span per stage.
+**Demo:** <https://qte77.github.io/ldnmxx-hack/>. Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
 
 ## Why
 
-London's builders and residents both need agents that do real work across fragmented systems — but
-funding discovery has no single API, and civic data (TfL ↔ council) is siloed by mandate, not tech.
-Incumbents can't join it; a modular agent built in a day can. We prove one core across both of London's
-tracks. See [`docs/usecase-workflows.md`](docs/usecase-workflows.md).
+Funding discovery has no single API, and civic data (TfL ↔ council) is siloed by mandate, not tech — so
+incumbents can't join it. A modular agent built in a day can, and proves it across *both* of London's
+tracks from one core. See [`docs/usecase-workflows.md`](docs/usecase-workflows.md).
 
 ## Refs
 
 - [Architecture](docs/architecture.md) · [User stories](docs/UserStory.md) ·
   [Use-case workflows](docs/usecase-workflows.md) · [Build plan](docs/plans/001-build-plan.md) ·
-  [Submission](docs/submission.md) · [Design](docs/design.md) · [Demo script](docs/demo-script.md)
+  [Submission](docs/submission.md) · [Design](docs/design.md) · [Demo script](docs/demo-script.md) ·
+  [Resume point](docs/handoffs/003-phase1-done.md)
 - Reuse base: [`qte77/agenthud-agui-a2ui`](https://github.com/qte77/agenthud-agui-a2ui) · fetcher:
   [`qte77/polyfetch-scrape`](https://github.com/qte77/polyfetch-scrape)
 
