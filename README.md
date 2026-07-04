@@ -17,6 +17,25 @@
 - **Cloudflare Worker** trust boundary · **OpenRouter** (optional in-dashboard BYOK) · **Arize** span per stage.
 - Keyless demo path; secrets stay Worker-only.
 
+<details>
+<summary>Screenshots — one engine, two workflows</summary>
+
+**Track B — Founder's Copilot** · grants matched to the idea, qualify-first gate, live AG-UI event stream.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/groundwork-founders-dark.png">
+  <img alt="Groundwork Founder's Copilot: opportunity cards + AG-UI event stream" src="assets/images/groundwork-founders-light.png">
+</picture>
+
+**Track A — On It** · a step-free London route — same engine, different `usecase` JSON.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/groundwork-on-it-dark.png">
+  <img alt="Groundwork On It: step-free route cards" src="assets/images/groundwork-on-it-light.png">
+</picture>
+
+</details>
+
 ## How
 
 ```bash
