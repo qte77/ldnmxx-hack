@@ -1,6 +1,10 @@
 # Use-case workflows
 
-The two `usecases/*.json` workflows the Worker's `runStages` interprets, + judging alignment.
+> **This doc is the TARGET design.** Only a subset ships today — see the shipped/planned tags below.
+> Today, stages are hardcoded TypeScript switches in `worker/src/worker.ts`, not `usecases/*.json` files
+> (externalizing them is planned, #28); the schema below describes the planned JSON shape.
+
+The two workflows the Worker's `runStages` interprets, + judging alignment.
 One endpoint: `POST /run?usecase=<id>`. Render = **built-in A2UI cards** (AG Grid deferred).
 
 ## Stage-def schema (KISS — zod-validated at load)
@@ -24,6 +28,10 @@ event + one Arize span.
 
 ## Track B — Founder's Copilot (one-click founder journey)
 
+**Shipped today:** only `search_opportunities` (→ grant cards, real model call with a deterministic stub
+fallback). `assess_stage` (#18), `find_contacts` (#9), and `incorporate` (#12) below are **target
+design, not built**.
+
 **User:** an early-stage London founder (idea → prototype → pre-incorporation). **Describe the idea once →
 the journey renders progressively (feels like one click):**
 
@@ -36,13 +44,14 @@ RUN  /run?usecase=founders-copilot   (one-line idea + optional artifacts)
     → tool(incorporate)          → render IncorporateCard  (name check + pre-filled pack + one-click CTA)
 ```
 
-- **assess_stage** — LLM over the idea (no API): stage + the 1–2 things that unlock the next stage. Fast, keyless.
-- **search_opportunities** — KV/scraped grants (no funding API in the pack). Record
+- **assess_stage** *(PLANNED, #18)* — LLM over the idea (no API): stage + the 1–2 things that unlock the next stage. Fast, keyless.
+- **search_opportunities** *(SHIPPED)* — real model call (deterministic stub fallback) over
+  `data/demo/opportunities.sample.json` (no KV, no funding API in the pack). Record
   `{id,title,org,deadline,category,score,whyItFits,sourceUrl}` + `eligibility{qualified,met[],missed[]}` (qualify-first gate).
-- **find_contacts** — **pre-scraped `contacts` KV corpus** (accelerators · grant offices · London
+- **find_contacts** *(PLANNED, #9)* — **pre-scraped `contacts` corpus** (accelerators · grant offices · London
   startup-support orgs · public investor lists) → match to the idea + the surfaced grant orgs. Pre-scraping
   **fixes the earlier softness** (real, verifiable contacts, not LLM-hallucinated); the LLM only ranks/explains.
-- **incorporate** — **Companies House API** (a Build-London pack resource): name-availability check (read) +
+- **incorporate** *(PLANNED, #12)* — **Companies House API** (a Build-London pack resource): name-availability check (read) +
   pre-filled pack + one-click CTA. **Not a live filing** (needs auth + £50 fee + PSC data) — honest one-click *feel*. **New joy moment.** **Verified how-to pack** (curated real links, *never* LLM-generated),
   lightly personalised (suggested name + matched SIC). Verified 2026-07: name check →
   `find-and-update.company-information.service.gov.uk` · SIC → `resources.companieshouse.gov.uk/sic/` ·
@@ -56,6 +65,8 @@ RUN  /run?usecase=founders-copilot   (one-line idea + optional artifacts)
   grounded by the pre-scraped `contacts` corpus (no longer the soft spot). Drop the weakest only if time is tight.
 
 **Track B data — pre-scrape as much as possible (→ KV; keyless at request time):**
+*(PLANNED — no KV binding exists today; `search_opportunities` reads
+`data/demo/opportunities.sample.json` directly. KV wire-or-drop is tracked in #29.)*
 - `opportunities` — grants/accelerators (polyfetch seed). The core corpus.
 - `contacts` — accelerators · grant offices · support orgs · public investor lists (grounds `find_contacts`).
 - `eligibility` — structured criteria of the top 3–5 programs → machine-readable rules (the qualify gate / Eligibility Oracle).
@@ -67,6 +78,10 @@ the founder's own idea (`assess_stage` input) and Companies House **name availab
 name (live, or mocked for the demo). Staleness → re-seed = cron (deferred #12); `data/demo/` = offline fallback.
 
 ## Track A — On It (thin swap)
+
+**Shipped today:** none of this — Track A is a **canned stub** (static `buildRouteCards()` text,
+always the same demo route, no live tools). Everything below (voice, postcodes.io, TfL, OSM/Overpass,
+the replay) is **target design, not yet built**.
 
 **User:** a mobility-constrained Londoner. **Thin = route only** (the modularity proof):
 
@@ -109,12 +124,15 @@ RUN  /run?usecase=on-it   (voice: "step-free from E8 3GT to Westminster")
 
 ## Judging alignment
 
+Target design, not a status report — see shipped/planned tags above. Honest today-state:
+
 | Criterion | Track B | Track A |
 |---|---|---|
-| **Idea validation** (Londoner evidence) | ⚠️ off-resource; lean on JTBD + qualify gate | ✅ Live-London demand list + structural gap |
-| **Technical** (stack) | ✅ runStages, KV, OpenRouter/AI-Gateway, Arize, **Companies House**, built-in A2UI | ✅ same engine, swapped JSON + keyless APIs + voice |
-| **Project readiness** | ✅ fully built + joy moment | ✅ thin but complete E2E |
-| **UX/design** | ✅ watch-it-work HUD, one-click journey, EyeRest theme | ✅ voice = accessible |
+| **Idea validation** (Londoner evidence) | ⚠️ off-resource; lean on JTBD + qualify gate | target design only — canned stub today, no live demand signal |
+| **Technical** (stack) | shipped: `runStages`, real OpenRouter render + stub fallback, Arize console spans, built-in A2UI. Planned: KV, AI Gateway wiring (#29), Companies House | planned only: same engine, but no live tools/voice yet — stub renders static cards |
+| **Project readiness** | grants beat fully built; stage/contacts/incorporate planned | thin canned stub; full E2E is planned |
+| **UX/design** | ✅ watch-it-work HUD, one-click journey, EyeRest theme | planned: voice accessibility — not shipped |
 
 **Strategy:** A carries idea-validation; B carries the UX joy. Pitch primary track → one-click swap to the
-other = the single move that covers all four criteria. See `submission.md`.
+other = the single move that covers all four criteria (once the planned work above lands). See
+`submission.md`.

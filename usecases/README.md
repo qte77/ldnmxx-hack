@@ -1,5 +1,7 @@
-# usecases/ — declarative stage defs
+# usecases/ — declarative stage defs (PLANNED)
 
-One JSON per use-case — `founders-copilot.json` (Track B), `on-it.json` (Track A) — defining the
-plan→tool→render stages the Worker's `runStages` interprets at runtime. **Swapping the file = swapping the
-app** (B ⇄ A); same engine, same `/run` endpoint. Schema + both workflows: `docs/usecase-workflows.md`.
+**Not built yet.** No `usecases/*.json` files exist today — the plan→tool→render stages for both
+workflows are hardcoded TypeScript switches in `worker/src/worker.ts` (`preRenderStages`/`renderBatch`),
+selected today via the `?usecase=founders-copilot|on-it` query param. Externalizing them to one JSON per
+use-case here — so **swapping the file = swapping the app**, same engine, same `/run` endpoint — is
+planned (#28). Target schema + both workflows: `docs/usecase-workflows.md`.

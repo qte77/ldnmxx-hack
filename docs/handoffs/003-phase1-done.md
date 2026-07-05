@@ -4,6 +4,9 @@ type: handoff
 updated: 2026-07-04
 ---
 
+> **Superseded** by [`docs/handoffs/004-post-mvp-priorities.md`](004-post-mvp-priorities.md) — resume
+> there, not here.
+
 # Handoff — next session starts here
 
 **Status:** Phase 1 first E2E is **built and green** on branch `feat/phase1-foundation` (supersedes
