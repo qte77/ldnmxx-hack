@@ -1,10 +1,10 @@
 ---
-title: "Plan 003 — post-MVP priorities: doc-truth + `usecases/*.json` + flagship depth"
+title: "Plan 004 — post-MVP priorities: doc-truth + `usecases/*.json` + flagship depth"
 type: plan
 updated: 2026-07-04
 ---
 
-# Plan 003 — post-MVP priorities
+# Plan 004 — post-MVP priorities
 
 Phase 1 is **done and live** (SPA → `/run` SSE → A2UI cards, both tracks, real model on Track B). This
 plan is the **prioritized roadmap after that**, plus a **doc-truth pass** (several docs drifted from what
