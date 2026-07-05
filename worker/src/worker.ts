@@ -1,5 +1,5 @@
 import { makeEmitter, type Emitter } from "./trace/arize";
-import { buildOpportunityCards, buildRouteCards } from "./a2ui/cards";
+import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/cards";
 import { callRenderModel, A2UI_RULES } from "./agent/model";
 import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent } from "./usecases";
 import opportunitiesData from "../../data/demo/opportunities.sample.json";
@@ -41,7 +41,8 @@ const sleep = (ms: number): Promise<void> =>
 // model errors/times out.
 async function renderBatch(render: RenderDef, emitter: Emitter, ctx: ModelCtx): Promise<unknown[]> {
   if (render.mode === "route") return buildRouteCards();
-  const stub = buildOpportunityCards();
+  // Founders render = grant cards (model or stub) + the deterministic verified incorporate card.
+  const stub = withIncorporate(buildOpportunityCards());
   if (!ctx.key) return stub;
   const ac = new AbortController();
   const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
@@ -56,7 +57,7 @@ async function renderBatch(render: RenderDef, emitter: Emitter, ctx: ModelCtx): 
     });
     if (!result) return stub;
     emitter.span({ name: "model:openrouter", attrs: { model: result.model, ...result.usage } });
-    return result.batch;
+    return withIncorporate(result.batch);
   } finally {
     clearTimeout(timer);
   }

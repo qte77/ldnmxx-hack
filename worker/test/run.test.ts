@@ -84,11 +84,17 @@ describe("worker /run", () => {
     if (batch) assertSelfContained(batch);
   });
 
-  it("emits one Arize span per stage (run/plan/tool/render)", async () => {
+  it("emits one Arize span per stage (run/plan/tool×2/render)", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     await worker.fetch(post("founders-copilot"), env, ctx).then((r) => r.text());
     const spans = spy.mock.calls.filter((c) => c[0] === "⌁ span").map((c) => c[1]);
-    expect(spans).toEqual(["run", "plan", "tool:search_opportunities", "render"]);
+    expect(spans).toEqual([
+      "run",
+      "plan",
+      "tool:search_opportunities",
+      "tool:incorporate",
+      "render",
+    ]);
   });
 
   it("rejects an unknown usecase with 400", async () => {

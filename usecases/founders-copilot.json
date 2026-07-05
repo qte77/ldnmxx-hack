@@ -18,6 +18,14 @@
         { "type": "TOOL_CALL_START", "text": "search_opportunities" },
         { "type": "TOOL_CALL_END", "text": "search_opportunities" }
       ]
+    },
+    {
+      "span": "tool:incorporate",
+      "kind": "tool",
+      "events": [
+        { "type": "TOOL_CALL_START", "text": "incorporate" },
+        { "type": "TOOL_CALL_END", "text": "incorporate" }
+      ]
     }
   ]
 }

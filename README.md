@@ -8,7 +8,8 @@
 > <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>.
 >
 > **Shipped:** real OpenRouter Track-B render (grant cards) with a deterministic stub fallback ·
-> optional BYOK key field · theme toggle · live A2UI component catalog · `?demo=1` keyless auto-run.
+> verified incorporate how-to pack · optional BYOK key field · theme toggle · live A2UI component
+> catalog · `?demo=1` keyless auto-run.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CHANGELOG.md)
@@ -41,7 +42,8 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
 - **Generative UI:** the agent streams **AG-UI** events that render as built-in **A2UI cards** — it
   paints the interface, not just text (AG Grid deferred).
 - **Example workflow — Founder's Copilot (flagship):** describe your idea → grants matched to it,
-  qualify-first (shipped today). Stage assessment (#18) and verified incorporate steps (#12) are planned.
+  qualify-first, plus a verified incorporate how-to pack (shipped today). Stage assessment (#18) and the
+  live Companies House filing (#12) are planned.
 - **Example workflow — On It (interchange proof):** a step-free London route — same engine, one
   `usecase` away (a canned stub today; live tools are planned).
 - Keyless demo path; secrets stay Worker-only *(stack rationale below)*.
