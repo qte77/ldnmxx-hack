@@ -1,30 +1,33 @@
 # Use-case workflows
 
-> **This doc is the TARGET design.** Only a subset ships today — see the shipped/planned tags below.
-> Today, stages are hardcoded TypeScript switches in `worker/src/worker.ts`, not `usecases/*.json` files
-> (externalizing them is planned, #28); the schema below describes the planned JSON shape.
+> **Stage choreography ships as `usecases/*.json`** (#28) — the schema below is the real, shipped shape,
+> read at runtime by the `runUsecase` interpreter (`worker/src/usecases.ts`). Deeper *tool behaviours*
+> (assess_stage reasoning, live routing, …) remain **target design** — see the shipped/planned tags per section.
 
-The two workflows the Worker's `runStages` interprets, + judging alignment.
+The two workflows the Worker's `runUsecase` interpreter plays, + judging alignment.
 One endpoint: `POST /run?usecase=<id>`. Render = **built-in A2UI cards** (AG Grid deferred).
 
-## Stage-def schema (KISS — zod-validated at load)
+## Stage-def schema (shipped — guarded at load)
 
 ```jsonc
 {
   "id": "founders-copilot",
   "title": "Founder's Copilot",
-  "systemPrompt": "…catalog-authoring rules + task framing…",  // top-level (adapter), not per-stage
-  "tools": ["assess_stage", "search_opportunities", "find_contacts", "incorporate"],
+  "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned)
   "stages": [
-    { "kind": "plan",   "id": "understand" },
-    { "kind": "tool",   "id": "stage",  "tool": "assess_stage" },
-    { "kind": "render", "id": "s-card", "component": "StageCard", "from": "stage" }
+    { "span": "plan", "kind": "plan", "events": [
+      { "type": "STEP_STARTED", "text": "understand the idea" },
+      { "type": "TEXT_MESSAGE_CONTENT", "text": "Assessing your stage and matching funding…" } ] },
+    { "span": "tool:search_opportunities", "kind": "tool", "events": [
+      { "type": "TOOL_CALL_START", "text": "search_opportunities" },
+      { "type": "TOOL_CALL_END", "text": "search_opportunities" } ] }
   ]
 }
 ```
-`kind ∈ {plan,tool,render}` · `render.component` = a built-in A2UI structure (Column/Card/Text) ·
-`render.from` = the stage id whose output it renders. Each stage → one SSE `{type,text,a2uiMessages}`
-event + one Arize span.
+Each pre-render `stage` plays its `events` (paced) over SSE and emits one Arize span named `span`. The
+final render stage is dispatched by `render.mode` to a code path — prompts, card builders and the model
+call stay in `worker/src/worker.ts`, not embedded in JSON — emitting the `render_ui` batch + a `render`
+span. Adding a JSON (plus its render mode, if new) adds a workflow.
 
 ## Track B — Founder's Copilot (one-click founder journey)
 
@@ -129,7 +132,7 @@ Target design, not a status report — see shipped/planned tags above. Honest to
 | Criterion | Track B | Track A |
 |---|---|---|
 | **Idea validation** (Londoner evidence) | ⚠️ off-resource; lean on JTBD + qualify gate | target design only — canned stub today, no live demand signal |
-| **Technical** (stack) | shipped: `runStages`, real OpenRouter render + stub fallback, Arize console spans, built-in A2UI. Planned: KV, AI Gateway wiring (#29), Companies House | planned only: same engine, but no live tools/voice yet — stub renders static cards |
+| **Technical** (stack) | shipped: `runUsecase` over `usecases/*.json`, real OpenRouter render + stub fallback, Arize console spans, built-in A2UI. Planned: KV, AI Gateway wiring (#29), Companies House | planned only: same engine, but no live tools/voice yet — stub renders static cards |
 | **Project readiness** | grants beat fully built; stage/contacts/incorporate planned | thin canned stub; full E2E is planned |
 | **UX/design** | ✅ watch-it-work HUD, one-click journey, EyeRest theme | planned: voice accessibility — not shipped |
 

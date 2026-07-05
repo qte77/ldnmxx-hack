@@ -16,3 +16,6 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 - Live A2UI component catalog + Track-A default on load + 100% worker observability (#24).
 - Usecase toggle now swaps the example input query to match the selected track (#25).
 - A2UI render-surface theming, EyeRest-branded (port of base PR #168) (#31).
+- Externalized both workflows' plan→tool→render choreography to `usecases/*.json`, read at runtime by a
+  small `runUsecase` interpreter (`worker/src/usecases.ts`, guarded at load); render modes stay in code.
+  "Swap a JSON, swap the app" is now literal for stage choreography (#28).

@@ -16,7 +16,7 @@ Modular **AG-UI/A2UI** hackathon app on a **Cloudflare Worker** (Londonmaxxing 0
 - **Clean root.** Runnable code in self-contained subdirs: `ui/` (SPA), `worker/` (CF Worker),
   `ingest/` (Python). Data in `data/`; stage defs in `usecases/`. No root `package.json`/`pyproject`.
 - **Cloudflare Workers**, not *Workflows*. Stage defs are **JSON**, read at runtime by a ~60-LOC
-  `runStages`. One `/run?usecase=<id>` endpoint.
+  `runUsecase`. One `/run?usecase=<id>` endpoint.
 - Thin **`Makefile`** is the only cross-language launcher — `make help`. Tests external to `src/`.
 - **Reuse**, don't rebuild: base = `qte77/agenthud-agui-a2ui`; fetcher = `qte77/polyfetch-scrape`.
 
