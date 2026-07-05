@@ -114,15 +114,13 @@ demonstrably swaps the app.
    (not canned pre-render). Add a text-completion helper to `worker/src/agent/model.ts`; wire into
    `runStages`. +latency/cost — keep behind the demo-gate.
 
-**Tier 3 — post-hackathon (leave tracked, don't touch today):** #4 (Track A voice), #8 (Open311),
-#9 (find_contacts + corpus), #21 (Arize export), KV grounding, #10 (cron), #13 (D1), #6 (AG Grid),
-#7 (ElevenLabs), #11 (A2A).
+**Tier 3 — post-hackathon (leave tracked, don't touch today):** issues #4 (Track A voice), #8 (Open311), #9 (find_contacts + corpus), #21 (Arize export), KV grounding, #10 (cron), #13 (D1), #6 (AG Grid), #7 (ElevenLabs), #11 (A2A).
 
 ## Issue hygiene
 - **Close #3** (Phase-2 Track B) — near-duplicate of the up-to-date **#18**; comment that the render-stage
   model call already landed (PRs #19/#22).
 - **Open 3 issues:** (a) externalize `usecases/*.json` (Tier 1); (b) wire **or explicitly drop** AI Gateway
-  + KV from the pitch; (c) doc-truth corrections (Tier 0, if not done inline).
+  and KV from the pitch; (c) doc-truth corrections (Tier 0, if not done inline).
 - Deferred #6–#13 verified unbuilt — leave open.
 
 ## Verify (reuse, don't reinvent)
