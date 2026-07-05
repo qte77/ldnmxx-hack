@@ -22,7 +22,8 @@ criterion **without breaking the brand's guardrails**.
 3. **Motion carries the shine** (the brand forbids gradients and decorative shadows, not motion):
    - Cards **fade + rise** as each stage renders (the progressive journey unfolding).
    - Text **streams** token-by-token (the "agent is working" feel).
-   - The **B⇄A swap** cross-fades; the UsecaseInspector JSON diff highlights.
+   - The **B⇄A swap** cross-fades. *(The UsecaseInspector JSON diff highlight is planned — no such
+     component exists yet; today the swap is a UI toggle over `?usecase=`, not a JSON diff.)*
    - Keep it **subtle + fast** (120–200ms, ease-out). Jank reads worse than still.
 4. **One over-polished signature moment** (pick ONE, make it sing): the **incorporate "✓ ready"** beat —
    the amber primary fills, a check draws in, the verified links slide up. That's the memory judges keep.
@@ -45,7 +46,7 @@ the signature moment, the sponsor footer. Full design freedom there.
 - A live **cost/latency chip** (amber) = trust + techy shine. **Skeleton loaders** while a tool runs.
 
 ## Polish checklist (cheap → do)
-- [ ] Port EyeRest tokens (#20) · dark-first · BluBlock variant
+- [x] Port EyeRest tokens (#20) · dark-first · BluBlock variant
 - [ ] Fade-rise card reveals + streaming text (120–200ms)
 - [ ] The one signature moment (incorporate ✓)
 - [ ] Focus rings + aria + contrast pass

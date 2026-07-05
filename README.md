@@ -1,7 +1,14 @@
 # Groundwork
 
-> **One AG-UI/A2UI workflow engine** on a **Cloudflare Worker** — *swap a JSON, swap the app.*
+> **One AG-UI/A2UI workflow engine** on a **Cloudflare Worker** — *swap a JSON, swap the app* (target
+> design; stages are hardcoded TypeScript today — externalizing to `usecases/*.json` is planned, #28).
 > Two London workflows, one core. Built for **Londonmaxxing 003** (Sat 4 Jul 2026).
+>
+> **Live:** SPA at <https://qte77.github.io/ldnmxx-hack/> · Worker at
+> <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>.
+>
+> **Shipped:** real OpenRouter Track-B render (grant cards) with a deterministic stub fallback ·
+> optional BYOK key field · theme toggle · live A2UI component catalog · `?demo=1` keyless auto-run.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CHANGELOG.md)
@@ -12,28 +19,31 @@
 
 Groundwork is the **engine** — for **builders** who want agent apps as *config, not code*, and the
 Londoners each workflow serves (founders; step-free travellers). Two pillars: a **swappable workflow
-engine** (swap a JSON, swap the app) and **generative UI** (the agent streams the interface, not just
-text). The two workflows below are **interchangeable examples** — add your own by dropping in a
-`usecases/*.json`.
+engine** (swap a JSON, swap the app — target design; today stages are hardcoded TypeScript in the Worker)
+and **generative UI** (the agent streams the interface, not just text). The two workflows below are
+**interchangeable examples**, selected today via the `?usecase=` query param; externalizing each into a
+dropped-in `usecases/*.json` is planned (#28).
 
 ```text
-              ┌─ Founder's Copilot · founders-copilot.json
-   swap JSON ─┤  one toggle, same engine
-              └─ On It · on-it.json
-              │
-              ▼
+                  ┌─ Founder's Copilot · usecase=founders-copilot
+   swap usecase ──┤  one toggle, same engine
+                  └─ On It · usecase=on-it
+                  │
+                  ▼
 User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
 ▲       AG-UI runStages   OpenRtr  A2UI + HUD       │
 └────────────── renders back to user ──────────────┘
 ```
 
 - **The engine:** one `POST /run?usecase=<id>` + a small `runStages` loop (plan → tool → render) —
-  each workflow is one declarative `usecases/*.json`, swapped live with no new app.
+  each workflow is a hardcoded TypeScript stage sequence today, selected by the `usecase` query param;
+  externalizing to a declarative `usecases/*.json` is planned (#28).
 - **Generative UI:** the agent streams **AG-UI** events that render as built-in **A2UI cards** — it
   paints the interface, not just text (AG Grid deferred).
-- **Example workflow — Founder's Copilot (flagship):** describe your idea → grants matched to your
-  stage, qualify-first → verified steps to incorporate.
-- **Example workflow — On It (interchange proof):** a step-free London route — same engine, one JSON away.
+- **Example workflow — Founder's Copilot (flagship):** describe your idea → grants matched to it,
+  qualify-first (shipped today). Stage assessment (#18) and verified incorporate steps (#12) are planned.
+- **Example workflow — On It (interchange proof):** a step-free London route — same engine, one
+  `usecase` away (a canned stub today; live tools are planned).
 - Keyless demo path; secrets stay Worker-only *(stack rationale below)*.
 
 <details>
@@ -69,28 +79,37 @@ make test    # ui + worker tests
 ```
 
 Toggle the two example workflows in the UI; `cd worker && npm run tail` shows one Arize span per stage.
-**Demo:** <https://qte77.github.io/ldnmxx-hack/>. Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
+**Demo:** <https://qte77.github.io/ldnmxx-hack/> (SPA) · <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>
+(Worker API). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
+
+**Switches:** `?usecase=founders-copilot|on-it` picks the workflow · `?demo=1` forces the keyless
+deterministic stub even with a model key set · `?theme=light|dark` overrides the theme · BYOK sends
+`Authorization: Bearer <key>` to the Worker instead of its server-side key.
 
 ## Why
 
-One engine, many workflows — each a JSON. Two examples prove it: funding discovery (no single API) and
-civic routing (TfL ↔ council data siloed by mandate, not tech). A modular agent built in a day joins what
-incumbents can't, and swaps between both from one core. See [`docs/usecase-workflows.md`](docs/usecase-workflows.md).
+One engine, many workflows — each swapped today via the `usecase` query param over hardcoded stage
+sequences (externalizing to one-JSON-per-workflow is planned, #28). Two examples prove it: funding
+discovery (no single API) and civic routing (TfL ↔ council data siloed by mandate, not tech). A modular
+agent built in a day joins what incumbents can't, and swaps between both from one core. See
+[`docs/usecase-workflows.md`](docs/usecase-workflows.md).
 
 ## Stack — why these tools
 
-- **Cloudflare** (Workers · Pages · KV · AI Gateway) — one serverless edge deploy, zero-ops; the Worker is
-  the **trust boundary** (secrets server-side, sole egress), KV caches data, AI Gateway fronts the LLM.
+- **Cloudflare** (Workers · Pages) — one serverless edge deploy, zero-ops; the Worker is the **trust
+  boundary** (secrets server-side, sole egress). AI Gateway is supported in code but not yet configured
+  in prod (#29); no KV binding exists — `data/demo/*.json` is the live data source.
 - **OpenRouter** — one key, many models; route or swap the LLM with no code change (optional BYOK) — the
   "swap a JSON" idea, applied to models.
-- **Arize** — LLM tracing: one span per stage makes `plan → tool → render` observable, debuggable, provable.
+- **Arize** — LLM tracing: one span per stage makes `plan → tool → render` observable in the console/CF
+  dashboard today (a real OTLP export is planned, #21).
 
 ## Refs
 
 - [Architecture](docs/architecture.md) · [User stories](docs/UserStory.md) ·
   [Use-case workflows](docs/usecase-workflows.md) · [Build plan](docs/plans/001-build-plan.md) ·
   [Submission](docs/submission.md) · [Design](docs/design.md) · [Demo script](docs/demo-script.md) ·
-  [Resume point](docs/handoffs/003-phase1-done.md)
+  [Resume point](docs/handoffs/004-post-mvp-priorities.md)
 - Reuse base: [`qte77/agenthud-agui-a2ui`](https://github.com/qte77/agenthud-agui-a2ui) · fetcher:
   [`qte77/polyfetch-scrape`](https://github.com/qte77/polyfetch-scrape)
 

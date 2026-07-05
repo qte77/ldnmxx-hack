@@ -4,16 +4,18 @@
 
 # --- Model (Track B + planning) ---
 OPENROUTER_KEY=           # OpenRouter API key (Worker secret)
-AI_GATEWAY_URL=          # Cloudflare AI Gateway OpenRouter URL
-CF_ACCOUNT_ID=           # Cloudflare account id (for AI Gateway)
-CF_GATEWAY_ID=           # AI Gateway id
+DEFAULT_MODEL=anthropic/claude-haiku-4.5  # read by worker/src/worker.ts; falls back to this if unset
+PACE_MS=450              # per-step reveal delay (ms) for the keyless path; read by worker/src/worker.ts
+AI_GATEWAY_URL=          # Cloudflare AI Gateway OpenRouter URL; read by code but NOT configured in prod today (dormant, #29)
+CF_ACCOUNT_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)
+CF_GATEWAY_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)
 
 # --- Observability (OPTIONAL; console default when unset) ---
-ARIZE_API_KEY=           # set to enable the Arize emitter; UNSET = console spans via `wrangler tail` (Phase-1 default)
-ARIZE_SPACE_ID=
+ARIZE_API_KEY=           # setting this only routes to a console-only stub emitter today (⌁ span[arize-stub]); a real Arize/OTLP export is tracked in #21
+ARIZE_SPACE_ID=          # NOT yet read by code — reserved for the real Arize export (#21)
 
-# --- Track B: incorporate (optional) ---
-COMPANIES_HOUSE_KEY=     # only for the live name-availability check; demo uses the verified pack
+# --- Track B: incorporate (optional, NOT yet read by code — incorporate is planned, #12) ---
+COMPANIES_HOUSE_KEY=     # reserved for the live name-availability check; demo uses the verified pack
 
 # --- CORS / origins (also mirrored in wrangler.toml [vars]) ---
 ALLOWED_ORIGINS=http://localhost:5173,https://qte77.github.io
