@@ -9,10 +9,10 @@ updated: 2026-07-04
 **Status:** Phase 1 is **done and LIVE** — SPA <https://qte77.github.io/ldnmxx-hack/> → deployed Worker
 (`POST /run?usecase=<id>` → AG-UI SSE → A2UI cards); **Track B renders real OpenRouter model output**,
 Track A + auto-run use a deterministic stub, keys are set, CF observability is on. Supersedes handoff 003.
-Your job: pick up **plan `003-post-mvp-priorities.md`** (the ticket).
+Your job: pick up **plan `004-post-mvp-priorities.md`** (the ticket).
 
 ## Read first (don't re-gather context)
-1. **`docs/plans/003-post-mvp-priorities.md`** — the plan **+ a full code/file/source map + env gotchas +
+1. **`docs/plans/004-post-mvp-priorities.md`** — the plan **+ a full code/file/source map + env gotchas +
    the doc-truth audit**. Everything you need to act without re-mapping the repo.
 2. `docs/handoffs/003-phase1-done.md` — what Phase 1 built (now partly superseded; note its "no model call"
    line is stale). `docs/usecase-workflows.md` — the `usecases/*.json` stage-def schema for Tier 1.
