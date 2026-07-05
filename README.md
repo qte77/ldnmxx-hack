@@ -31,7 +31,7 @@ param; add your own by dropping in a `usecases/*.json`.
                   │
                   ▼
 User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
-▲       AG-UI runStages   OpenRtr  A2UI + HUD       │
+▲       AG-UI runUsecase  OpenRtr  A2UI + HUD       │
 └────────────── renders back to user ──────────────┘
 ```
 

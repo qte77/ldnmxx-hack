@@ -17,7 +17,7 @@ in code. Only three seams change:
 
 ```
 user input → SPA useAgentSSE ──POST /run?usecase=<id>──▶ Worker  [TRUST BOUNDARY — secrets here]
-                                                          runStages: plan → tool → render
+                                                          runUsecase: plan → tool → render
                                        ◀── SSE {type,text,a2uiMessages} + RUN_FINISHED ──
    SPA: parse frames → AgentEvent → applyA2UIEvent (validate vs contract.ts) → render seam
         → A2UI surface (built-in Column/Card render)  +  EventStream (live log)
