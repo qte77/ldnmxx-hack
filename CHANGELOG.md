@@ -19,3 +19,7 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 - Externalized both workflows' plan→tool→render choreography to `usecases/*.json`, read at runtime by a
   small `runUsecase` interpreter (`worker/src/usecases.ts`, guarded at load); render modes stay in code.
   "Swap a JSON, swap the app" is now literal for stage choreography (#28).
+- Track-B **incorporate how-to-pack card**: a verified, static set of real gov.uk / Companies House
+  links (clickable markdown anchors, never LLM-generated), appended to the founders render on both the
+  stub and model paths, plus a `tool:incorporate` HUD stage. Not a live filing (#12; the live filing
+  stays deferred).

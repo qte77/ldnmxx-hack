@@ -31,6 +31,12 @@ Open the catalog view — every registered A2UI component rendered live, proof t
 The dashboard has an optional API-key field — paste a key to run your own OpenRouter model instead of
 the Worker's server-side key.
 
+**Incorporate — the verified how-to pack.**
+After the grants, an **incorporate** Card renders the *real* gov.uk / Companies House links — name
+check · SIC code · identity (One Login) · register (£50) · set-up steps — as clickable markdown
+anchors. Curated + verified, never LLM-generated.
+> "It doesn't fake a filing — it hands you the real, verified path to incorporate."
+
 ### Cut lines (if behind)
 
 - Anything flaky → fall back to `?demo=1` (guaranteed deterministic render, no network dependency).
@@ -55,12 +61,11 @@ Hit the toggle → the **UsecaseInspector** visually shows the JSON swap (`on-it
 `founders-copilot.json`). *(Planned: the inspector component isn't built yet — but the stage JSON is real
 now (`usecases/*.json`, #28); today the swap is a plain UI toggle over `?usecase=`.)*
 
-**Track B depth — incorporate.**
-**stage** ("pre-incorporation — here's what unlocks next") → matched grants → **incorporate**: a
-**verified, one-click how-to pack** with the actual gov.uk / Companies House links (name check · SIC
-code · register online).
-> "It doesn't fake a filing — it hands you the real, verified path to incorporate, personalised to your idea."
-*(Planned: only the grants step ships today; stage assessment is #18, incorporate is #12.)*
+**Track B depth — model-driven stage assessment.**
+The earlier **stage** step ("pre-incorporation — here's what unlocks next") becomes real streamed
+reasoning over the idea.
+*(Planned: stage assessment is #18; `find_contacts` is #9. The incorporate how-to-pack card already
+ships — see the shipped demo above. The live Companies House filing stays deferred, #12.)*
 
 **Close + rebuttal (works either way).**
 > "One core, two Londons. Why can't the incumbents just do this? A council app can't route on TfL's data,

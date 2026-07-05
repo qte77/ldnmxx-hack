@@ -31,9 +31,10 @@ span. Adding a JSON (plus its render mode, if new) adds a workflow.
 
 ## Track B — Founder's Copilot (one-click founder journey)
 
-**Shipped today:** only `search_opportunities` (→ grant cards, real model call with a deterministic stub
-fallback). `assess_stage` (#18), `find_contacts` (#9), and `incorporate` (#12) below are **target
-design, not built**.
+**Shipped today:** `search_opportunities` (→ grant cards, real model call with a deterministic stub
+fallback) and `incorporate` (→ the verified how-to-pack Card of real gov.uk / Companies House links).
+`assess_stage` (#18), `find_contacts` (#9), and the live Companies House *filing* (#12) below are
+**target design, not built**.
 
 **User:** an early-stage London founder (idea → prototype → pre-incorporation). **Describe the idea once →
 the journey renders progressively (feels like one click):**
@@ -54,7 +55,7 @@ RUN  /run?usecase=founders-copilot   (one-line idea + optional artifacts)
 - **find_contacts** *(PLANNED, #9)* — **pre-scraped `contacts` corpus** (accelerators · grant offices · London
   startup-support orgs · public investor lists) → match to the idea + the surfaced grant orgs. Pre-scraping
   **fixes the earlier softness** (real, verifiable contacts, not LLM-hallucinated); the LLM only ranks/explains.
-- **incorporate** *(PLANNED, #12)* — **Companies House API** (a Build-London pack resource): name-availability check (read) +
+- **incorporate** *(SHIPPED — verified how-to-pack card; live filing still #12)* — **Companies House API** (a Build-London pack resource): name-availability check (read) +
   pre-filled pack + one-click CTA. **Not a live filing** (needs auth + £50 fee + PSC data) — honest one-click *feel*. **New joy moment.** **Verified how-to pack** (curated real links, *never* LLM-generated),
   lightly personalised (suggested name + matched SIC). Verified 2026-07: name check →
   `find-and-update.company-information.service.gov.uk` · SIC → `resources.companieshouse.gov.uk/sic/` ·
@@ -133,7 +134,7 @@ Target design, not a status report — see shipped/planned tags above. Honest to
 |---|---|---|
 | **Idea validation** (Londoner evidence) | ⚠️ off-resource; lean on JTBD + qualify gate | target design only — canned stub today, no live demand signal |
 | **Technical** (stack) | shipped: `runUsecase` over `usecases/*.json`, real OpenRouter render + stub fallback, Arize console spans, built-in A2UI. Planned: KV, AI Gateway wiring (#29), Companies House | planned only: same engine, but no live tools/voice yet — stub renders static cards |
-| **Project readiness** | grants beat fully built; stage/contacts/incorporate planned | thin canned stub; full E2E is planned |
+| **Project readiness** | grants + incorporate cards built; stage/contacts planned | thin canned stub; full E2E is planned |
 | **UX/design** | ✅ watch-it-work HUD, one-click journey, EyeRest theme | planned: voice accessibility — not shipped |
 
 **Strategy:** A carries idea-validation; B carries the UX joy. Pitch primary track → one-click swap to the
