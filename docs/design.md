@@ -9,7 +9,9 @@ criterion **without breaking the brand's guardrails**.
   never hex** — so scheme/variant flips re-resolve everything.
 - **Type:** Inter (UI/prose) + JetBrains Mono (numeric/code), self-hosted. No third font.
 - **Shapes:** 4/6/12px radii. **8px** spacing unit.
-- **Hard rules (do NOT break):** no blue accent · no gradients · no decorative shadows · no third font · no hardcoded hex.
+- **Hard rules (do NOT break):** no blue accent · no gradients · no decorative shadows *(one functional-elevation
+  token, `--shadow-card`, is allowed for the A2UI card surface — ported from base PR #168; decoration still banned)* ·
+  no third font · no hardcoded hex.
 
 ## The "shiny" layer (project choices, all on-brand)
 1. **Dark by default.** The brand says *dark = default for dashboards* — ldnmxx is a HUD, so ship dark-first.
@@ -17,7 +19,7 @@ criterion **without breaking the brand's guardrails**.
 2. **Pick the vibrant variant: BluBlock.** Its amber is the punchiest on-brand accent
    (`#c06010` light / **`#e89030`** dark) — still zero-blue. Use it as the app default for extra pop.
    *(Default EyeRest amber `#7a6010`/`#c8a858` is the quieter fallback.)*
-3. **Motion carries the shine** (the brand forbids gradients/shadows, not motion):
+3. **Motion carries the shine** (the brand forbids gradients and decorative shadows, not motion):
    - Cards **fade + rise** as each stage renders (the progressive journey unfolding).
    - Text **streams** token-by-token (the "agent is working" feel).
    - The **B⇄A swap** cross-fades; the UsecaseInspector JSON diff highlights.
