@@ -23,3 +23,5 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
   links (clickable markdown anchors, never LLM-generated), appended to the founders render on both the
   stub and model paths, plus a `tool:incorporate` HUD stage. Not a live filing (#12; the live filing
   stays deferred).
+- Style A2UI-surface markdown links (`<a>`) as links (primary colour + underline) so the incorporate
+  card's verified links read as clickable (they were already anchors; this is the visible affordance).
