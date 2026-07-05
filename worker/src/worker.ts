@@ -1,6 +1,7 @@
 import { makeEmitter, type Emitter } from "./trace/arize";
 import { buildOpportunityCards, buildRouteCards } from "./a2ui/cards";
 import { callRenderModel, A2UI_RULES } from "./agent/model";
+import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent } from "./usecases";
 import opportunitiesData from "../../data/demo/opportunities.sample.json";
 
 export interface Env {
@@ -12,16 +13,6 @@ export interface Env {
   PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
 }
 
-interface AgentEvent {
-  type: string;
-  text?: string;
-  a2uiMessages?: unknown[];
-}
-interface StageDef {
-  span: string;
-  kind: string;
-  events: AgentEvent[];
-}
 interface ModelCtx {
   key: string;
   model: string;
@@ -29,7 +20,6 @@ interface ModelCtx {
   prompt: string;
 }
 
-const USECASES = new Set(["founders-copilot", "on-it"]);
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const FALLBACK_MODEL = "anthropic/claude-haiku-4.5";
 const DEFAULT_PACE_MS = 450;
@@ -45,41 +35,12 @@ function foundersUser(idea: string): string {
 const sleep = (ms: number): Promise<void> =>
   ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
 
-// Canned plan/tool stages per usecase (the render stage is handled separately, possibly by the model).
-function preRenderStages(usecase: string): StageDef[] {
-  if (usecase === "on-it") {
-    return [
-      { span: "plan", kind: "plan", events: [
-        { type: "STEP_STARTED", text: "parse origin + destination" },
-        { type: "TEXT_MESSAGE_CONTENT", text: "Finding a step-free route…" },
-      ] },
-      { span: "tool:lookup_postcode", kind: "tool", events: [
-        { type: "TOOL_CALL_START", text: "lookup_postcode" },
-        { type: "TOOL_CALL_END", text: "lookup_postcode" },
-      ] },
-      { span: "tool:get_tfl_journey", kind: "tool", events: [
-        { type: "TOOL_CALL_START", text: "get_tfl_journey" },
-        { type: "TOOL_CALL_END", text: "get_tfl_journey" },
-      ] },
-    ];
-  }
-  return [
-    { span: "plan", kind: "plan", events: [
-      { type: "STEP_STARTED", text: "understand the idea" },
-      { type: "TEXT_MESSAGE_CONTENT", text: "Assessing your stage and matching funding…" },
-    ] },
-    { span: "tool:search_opportunities", kind: "tool", events: [
-      { type: "TOOL_CALL_START", text: "search_opportunities" },
-      { type: "TOOL_CALL_END", text: "search_opportunities" },
-    ] },
-  ];
-}
-
-// Render the card batch. Track A stays canned (a model-invented step-free route would hallucinate;
-// real routing is Phase 3). Track B asks the model to generate the cards grounded in the demo data,
-// falling back to the deterministic stub when there's no key or the model errors/times out.
-async function renderBatch(usecase: string, emitter: Emitter, ctx: ModelCtx): Promise<unknown[]> {
-  if (usecase === "on-it") return buildRouteCards();
+// Render the card batch, dispatched by the usecase's render mode. `route` stays canned (a model-invented
+// step-free route would hallucinate; real routing is Phase 3). `founders` asks the model to generate the
+// cards grounded in the demo data, falling back to the deterministic stub when there's no key or the
+// model errors/times out.
+async function renderBatch(render: RenderDef, emitter: Emitter, ctx: ModelCtx): Promise<unknown[]> {
+  if (render.mode === "route") return buildRouteCards();
   const stub = buildOpportunityCards();
   if (!ctx.key) return stub;
   const ac = new AbortController();
@@ -120,7 +81,7 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
 async function resolveRun(
   request: Request,
   env: Env,
-  usecase: string,
+  def: UsecaseDef,
   demo: boolean
 ): Promise<{ modelCtx: ModelCtx; runAttrs: Record<string, unknown>; paceMs: number }> {
   let prompt = "";
@@ -144,9 +105,9 @@ async function resolveRun(
     prompt,
   };
   const runAttrs = {
-    usecase,
+    usecase: def.id,
     reqId: crypto.randomUUID(),
-    model: key && usecase === "founders-copilot" ? modelCtx.model : "(stub)",
+    model: key && def.render.mode === "founders" ? modelCtx.model : "(stub)",
     byok: byokKey.length > 0,
   };
   // Pace the keyless path so it "streams" like an agent working; the model path is paced by real
@@ -155,8 +116,10 @@ async function resolveRun(
   return { modelCtx, runAttrs, paceMs };
 }
 
-async function runStages(
-  usecase: string,
+// The data-driven interpreter: play each stage's events (paced) with one span per stage, then render.
+// Exported so an arbitrary UsecaseDef can be driven directly in tests ("swap a JSON, swap the app").
+export async function runUsecase(
+  def: UsecaseDef,
   emitter: Emitter,
   write: (e: AgentEvent) => void,
   runAttrs: Record<string, unknown>,
@@ -165,7 +128,7 @@ async function runStages(
 ): Promise<void> {
   emitter.span({ name: "run", attrs: runAttrs });
   write({ type: "RUN_STARTED" });
-  for (const stage of preRenderStages(usecase)) {
+  for (const stage of def.stages) {
     const t0 = Date.now();
     for (const e of stage.events) {
       await sleep(paceMs);
@@ -175,7 +138,7 @@ async function runStages(
   }
   await sleep(paceMs);
   const t0 = Date.now();
-  const batch = await renderBatch(usecase, emitter, ctx);
+  const batch = await renderBatch(def.render, emitter, ctx);
   write({ type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: batch });
   emitter.span({ name: "render", attrs: { kind: "render", latencyMs: Date.now() - t0 } });
   write({ type: "RUN_FINISHED" });
@@ -193,15 +156,16 @@ export default {
     }
 
     const usecase = url.searchParams.get("usecase") ?? "";
-    if (!USECASES.has(usecase)) {
-      return new Response(JSON.stringify({ error: `unknown usecase: ${usecase || "(none)"}` }), {
-        status: 400,
-        headers: { ...cors, "content-type": "application/json" },
-      });
+    const def = getUsecase(usecase);
+    if (!def) {
+      return new Response(
+        JSON.stringify({ error: `unknown usecase: ${usecase || "(none)"}; valid: ${usecaseIds.join(", ")}` }),
+        { status: 400, headers: { ...cors, "content-type": "application/json" } }
+      );
     }
 
     const demo = url.searchParams.get("demo") === "1";
-    const { modelCtx, runAttrs, paceMs } = await resolveRun(request, env, usecase, demo);
+    const { modelCtx, runAttrs, paceMs } = await resolveRun(request, env, def, demo);
     const emitter = makeEmitter(env);
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
@@ -209,7 +173,7 @@ export default {
         const write = (e: AgentEvent): void => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
         };
-        await runStages(usecase, emitter, write, runAttrs, modelCtx, paceMs);
+        await runUsecase(def, emitter, write, runAttrs, modelCtx, paceMs);
         controller.close();
       },
     });

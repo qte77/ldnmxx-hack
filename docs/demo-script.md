@@ -52,8 +52,8 @@ recording does not exist yet.)*
 **The reveal (modularity) — UsecaseInspector.**
 > "That's one agent. Here's the trick — same endpoint, same engine."
 Hit the toggle → the **UsecaseInspector** visually shows the JSON swap (`on-it.json` →
-`founders-copilot.json`). *(Planned: no such component exists yet — stages are hardcoded TypeScript
-today, not per-usecase JSON; externalizing them is #28.)*
+`founders-copilot.json`). *(Planned: the inspector component isn't built yet — but the stage JSON is real
+now (`usecases/*.json`, #28); today the swap is a plain UI toggle over `?usecase=`.)*
 
 **Track B depth — incorporate.**
 **stage** ("pre-incorporation — here's what unlocks next") → matched grants → **incorporate**: a

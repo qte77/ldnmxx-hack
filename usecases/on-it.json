@@ -1,0 +1,31 @@
+{
+  "id": "on-it",
+  "title": "On It",
+  "render": { "mode": "route" },
+  "stages": [
+    {
+      "span": "plan",
+      "kind": "plan",
+      "events": [
+        { "type": "STEP_STARTED", "text": "parse origin + destination" },
+        { "type": "TEXT_MESSAGE_CONTENT", "text": "Finding a step-free route…" }
+      ]
+    },
+    {
+      "span": "tool:lookup_postcode",
+      "kind": "tool",
+      "events": [
+        { "type": "TOOL_CALL_START", "text": "lookup_postcode" },
+        { "type": "TOOL_CALL_END", "text": "lookup_postcode" }
+      ]
+    },
+    {
+      "span": "tool:get_tfl_journey",
+      "kind": "tool",
+      "events": [
+        { "type": "TOOL_CALL_START", "text": "get_tfl_journey" },
+        { "type": "TOOL_CALL_END", "text": "get_tfl_journey" }
+      ]
+    }
+  ]
+}

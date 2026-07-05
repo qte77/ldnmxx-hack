@@ -31,5 +31,5 @@ watch-it-work HUD; voice = accessible by default.
 
 ## Why one engine
 
-Both are agents doing real work across fragmented systems. The same `runStages` core serves both by
+Both are agents doing real work across fragmented systems. The same `runUsecase` core serves both by
 swapping a JSON — the modularity is the moat against one-off builds. See [`architecture.md`](architecture.md).

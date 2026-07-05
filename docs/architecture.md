@@ -2,10 +2,10 @@
 
 ## One core, three seams
 
-One `POST /run?usecase=<id>` endpoint → a ~60-LOC `runStages` engine (plan → tool → render) → an A2UI
-HUD. Flip **Track B ⇄ A** via a UI toggle over the `?usecase=` param — today the stage sequences are
-hardcoded TypeScript switches in `worker/src/worker.ts` (`preRenderStages`/`renderBatch`); externalizing
-them to a per-workflow `usecases/*.json` is planned (#28). Only three seams change:
+One `POST /run?usecase=<id>` endpoint → a small `runUsecase` interpreter (plan → tool → render) → an A2UI
+HUD. Flip **Track B ⇄ A** via a UI toggle over the `?usecase=` param — each workflow's stage choreography
+is a `usecases/*.json` read at runtime (`worker/src/usecases.ts`); render modes (`founders`/`route`) stay
+in code. Only three seams change:
 
 | Seam | Track B (Founder's Copilot) | Track A (On It) |
 |---|---|---|
@@ -30,8 +30,8 @@ user input → SPA useAgentSSE ──POST /run?usecase=<id>──▶ Worker  [TR
 ## Separation of concerns (module boundaries = single seams)
 
 - `contract.ts` = validation · `applyA2UIEvent.ts` = render seam · `useAgentSSE.ts` = transport ·
-  `runStages` + injectable emitter = observability. (Worker source is only `worker.ts`, `agent/model.ts`,
-  `a2ui/cards.ts`, `trace/arize.ts` — there is no separate `UseCaseAdapter` module.)
+  `runUsecase` + injectable emitter = observability · `usecases.ts` = the use-case seam (loads + guards
+  `usecases/*.json`). (Worker source: `worker.ts`, `usecases.ts`, `agent/model.ts`, `a2ui/cards.ts`, `trace/arize.ts`.)
 - **Trust boundary:** SPA holds no secrets; keys are Worker secrets only; Worker is the sole egress;
   the CORS allowlist is the gate. No third-party JS/fonts/tiles (self-hosted).
 

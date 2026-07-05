@@ -1,8 +1,8 @@
 # Groundwork
 
-> **One AG-UI/A2UI workflow engine** on a **Cloudflare Worker** — *swap a JSON, swap the app* (target
-> design; stages are hardcoded TypeScript today — externalizing to `usecases/*.json` is planned, #28).
-> Two London workflows, one core. Built for **Londonmaxxing 003** (Sat 4 Jul 2026).
+> **One AG-UI/A2UI workflow engine** on a **Cloudflare Worker** — *swap a JSON, swap the app*: each
+> workflow's stage choreography lives in `usecases/*.json`, read at runtime by one interpreter (render
+> modes stay in code). Two London workflows, one core. Built for **Londonmaxxing 003** (Sat 4 Jul 2026).
 >
 > **Live:** SPA at <https://qte77.github.io/ldnmxx-hack/> · Worker at
 > <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>.
@@ -19,10 +19,10 @@
 
 Groundwork is the **engine** — for **builders** who want agent apps as *config, not code*, and the
 Londoners each workflow serves (founders; step-free travellers). Two pillars: a **swappable workflow
-engine** (swap a JSON, swap the app — target design; today stages are hardcoded TypeScript in the Worker)
-and **generative UI** (the agent streams the interface, not just text). The two workflows below are
-**interchangeable examples**, selected today via the `?usecase=` query param; externalizing each into a
-dropped-in `usecases/*.json` is planned (#28).
+engine** (swap a JSON, swap the app — each workflow's stage choreography is a `usecases/*.json` read at
+runtime; render modes stay in code) and **generative UI** (the agent streams the interface, not just
+text). The two workflows below are **interchangeable examples**, selected via the `?usecase=` query
+param; add your own by dropping in a `usecases/*.json`.
 
 ```text
                   ┌─ Founder's Copilot · usecase=founders-copilot
@@ -35,9 +35,9 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
 └────────────── renders back to user ──────────────┘
 ```
 
-- **The engine:** one `POST /run?usecase=<id>` + a small `runStages` loop (plan → tool → render) —
-  each workflow is a hardcoded TypeScript stage sequence today, selected by the `usecase` query param;
-  externalizing to a declarative `usecases/*.json` is planned (#28).
+- **The engine:** one `POST /run?usecase=<id>` + a small `runUsecase` interpreter (plan → tool → render) —
+  each workflow's plan→tool→render choreography is a declarative `usecases/*.json`, selected by the
+  `usecase` query param; render modes (`founders`/`route`) stay in code.
 - **Generative UI:** the agent streams **AG-UI** events that render as built-in **A2UI cards** — it
   paints the interface, not just text (AG Grid deferred).
 - **Example workflow — Founder's Copilot (flagship):** describe your idea → grants matched to it,
@@ -88,8 +88,7 @@ deterministic stub even with a model key set · `?theme=light|dark` overrides th
 
 ## Why
 
-One engine, many workflows — each swapped today via the `usecase` query param over hardcoded stage
-sequences (externalizing to one-JSON-per-workflow is planned, #28). Two examples prove it: funding
+One engine, many workflows — each a `usecases/*.json` selected via the `usecase` query param. Two examples prove it: funding
 discovery (no single API) and civic routing (TfL ↔ council data siloed by mandate, not tech). A modular
 agent built in a day joins what incumbents can't, and swaps between both from one core. See
 [`docs/usecase-workflows.md`](docs/usecase-workflows.md).
