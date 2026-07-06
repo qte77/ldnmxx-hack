@@ -7,7 +7,7 @@
 founder-funding copilot and step-free routing · Londonmaxxing 003.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](CHANGELOG.md)
 [![CI](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack/badge)](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack)
 
