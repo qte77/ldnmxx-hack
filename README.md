@@ -1,15 +1,10 @@
 # Groundwork
 
-> **One AG-UI/A2UI workflow engine** on a **Cloudflare Worker** — *swap a JSON, swap the app*: each
-> workflow's stage choreography lives in `usecases/*.json`, read at runtime by one interpreter (render
-> modes stay in code). Two London workflows, one core. Built for **Londonmaxxing 003** (Sat 4 Jul 2026).
->
-> **Live:** SPA at <https://qte77.github.io/ldnmxx-hack/> · Worker at
-> <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>.
->
-> **Shipped:** real OpenRouter Track-B render (grant cards) with a deterministic stub fallback ·
-> verified incorporate how-to pack · optional BYOK key field · theme toggle · live A2UI component
-> catalog · `?demo=1` keyless auto-run.
+> **A config-driven agent that streams its own UI.** On a single **Cloudflare Worker**, the model paints
+> a live **A2UI** interface — not just text — and *swap a JSON, swap the app*.
+
+**[▶ Live demo](https://qte77.github.io/ldnmxx-hack/)** · one engine, two London workflows — a
+founder-funding copilot and step-free routing · Londonmaxxing 003.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CHANGELOG.md)
