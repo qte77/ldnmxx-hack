@@ -11,3 +11,9 @@ head_sampling_rate = 1  # capture 100% of invocations → the ⌁ spans + reques
 [vars]
 # CORS allowlist: local Vite dev + the GitHub Pages origin (the Pages SPA calls the Worker cross-origin).
 ALLOWED_ORIGINS = "http://localhost:5173,https://qte77.github.io"
+
+# Per-IP throttle on POST /run → binding `RATE_LIMITER` (env.RATE_LIMITER.limit({key})). period is 10 or 60.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }

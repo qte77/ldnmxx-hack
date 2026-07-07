@@ -1,7 +1,9 @@
 import { makeEmitter, type Emitter } from "./trace/arize";
 import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/cards";
-import { callRenderModel, A2UI_RULES } from "./agent/model";
+import { callRenderModel } from "./agent/model";
 import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent } from "./usecases";
+import { FOUNDERS_SYSTEM, foundersUser } from "../../shared/prompt";
+import { detectInjection } from "../../shared/guard";
 import opportunitiesData from "../../data/demo/opportunities.sample.json";
 
 export interface Env {
@@ -11,6 +13,7 @@ export interface Env {
   AI_GATEWAY_URL?: string; // optional OpenAI-compatible base (Cloudflare AI Gateway); else OpenRouter
   DEFAULT_MODEL?: string;
   PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
+  RATE_LIMITER?: RateLimit; // per-IP limiter (wrangler [[ratelimits]]); absent in tests → skipped
 }
 
 interface ModelCtx {
@@ -23,14 +26,6 @@ interface ModelCtx {
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const FALLBACK_MODEL = "anthropic/claude-haiku-4.5";
 const DEFAULT_PACE_MS = 450;
-
-const FOUNDERS_SYSTEM = `You are Groundwork's Founder's Copilot. Given a founder's idea and a JSON list of candidate funding opportunities, pick the best-matched ones and render OPPORTUNITY CARDS. For each matched opportunity: a Card whose child is a Column of Text — the title (usageHint "h3"), "<org> · <category>" (caption), one line on why it fits THIS idea (body), and "Score <n> · deadline <d> · <eligibility>" (caption). Use ONLY the provided opportunities — never invent grants.
-
-${A2UI_RULES}`;
-
-function foundersUser(idea: string): string {
-  return `Idea: ${idea || "(not provided)"}\n\nCandidate opportunities (JSON):\n${JSON.stringify(opportunitiesData)}\n\nRender the matched opportunity cards.`;
-}
 
 const sleep = (ms: number): Promise<void> =>
   ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
@@ -52,7 +47,7 @@ async function renderBatch(render: RenderDef, emitter: Emitter, ctx: ModelCtx): 
       model: ctx.model,
       baseURL: ctx.baseURL,
       system: FOUNDERS_SYSTEM,
-      user: foundersUser(ctx.prompt),
+      user: foundersUser(ctx.prompt, opportunitiesData),
       signal: ac.signal,
     });
     if (!result) return stub;
@@ -96,9 +91,13 @@ async function resolveRun(
   }
   const auth = request.headers.get("Authorization") ?? "";
   const byokKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+  // Prompt-injection guard: a flagged prompt skips the model and falls back to the deterministic stub
+  // (never worse than today) on both the keyed and keyless paths.
+  const injection = detectInjection(prompt);
+  if (injection.flagged) console.warn("guard: prompt-injection flagged →", injection.reason);
   // `demo` (auto-run / example) forces the free deterministic stub even when a key is set, so page
   // loads and bots can't burn the model key — only an explicit manual Run uses the model.
-  const key = demo ? "" : byokKey || env.OPENROUTER_KEY || "";
+  const key = demo || injection.flagged ? "" : byokKey || env.OPENROUTER_KEY || "";
   const modelCtx: ModelCtx = {
     key,
     model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
@@ -110,6 +109,7 @@ async function resolveRun(
     reqId: crypto.randomUUID(),
     model: key && def.render.mode === "founders" ? modelCtx.model : "(stub)",
     byok: byokKey.length > 0,
+    blocked: injection.flagged,
   };
   // Pace the keyless path so it "streams" like an agent working; the model path is paced by real
   // latency. Overridable via PACE_MS (tests set "0").
@@ -154,6 +154,13 @@ export default {
     if (url.pathname !== "/run") return new Response("Not found", { status: 404, headers: cors });
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405, headers: cors });
+    }
+
+    // Per-IP rate-limit (wrangler [[ratelimits]] binding). Absent in unit tests → skipped.
+    if (env.RATE_LIMITER) {
+      const ip = request.headers.get("CF-Connecting-IP") ?? "anon";
+      const { success } = await env.RATE_LIMITER.limit({ key: ip });
+      if (!success) return new Response("Too Many Requests", { status: 429, headers: cors });
     }
 
     const usecase = url.searchParams.get("usecase") ?? "";
