@@ -3,6 +3,8 @@
 // Workers. Returns a validated batch + usage, or null on ANY failure so the caller falls back to the
 // deterministic stub — the demo can never break.
 
+import { RENDER_UI_TOOL, isSelfContainedBatch } from "../../../shared/renderTool";
+
 export interface ModelCall {
   apiKey: string;
   model: string;
@@ -22,20 +24,6 @@ interface ORResponse {
   usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
 }
 
-const RENDER_UI_TOOL = {
-  type: "function",
-  function: {
-    name: "render_ui",
-    description:
-      "Draw the on-screen UI by emitting a batch of A2UI messages on the 'main' surface.",
-    parameters: {
-      type: "object",
-      properties: { messages: { type: "array", items: { type: "object" } } },
-      required: ["messages"],
-    },
-  },
-};
-
 // Pull the render_ui batch out of an OpenAI-compatible tool-call response. Null if absent/malformed.
 export function extractBatch(data: ORResponse): unknown[] | null {
   const call = data.choices?.[0]?.message?.tool_calls?.[0]?.function;
@@ -48,39 +36,10 @@ export function extractBatch(data: ORResponse): unknown[] | null {
   }
 }
 
-// Structural self-containment guard (the UI's contract.ts re-checks, but reject a bad model batch here
-// so we fall back to the stub instead of surfacing a HUD error): root defined, every referenced child
-// id defined. Mirrors worker/test's assertSelfContained.
-export function isValidBatch(batch: unknown): batch is unknown[] {
-  if (!Array.isArray(batch)) return false;
-  let root: string | undefined;
-  const ids = new Set<string>();
-  const refs: string[] = [];
-  for (const msg of batch) {
-    const m = msg as {
-      beginRendering?: { root?: unknown };
-      surfaceUpdate?: { components?: unknown };
-    };
-    if (typeof m.beginRendering?.root === "string") root = m.beginRendering.root;
-    const comps = m.surfaceUpdate?.components;
-    if (!Array.isArray(comps)) continue;
-    for (const comp of comps) {
-      const c = comp as {
-        id?: unknown;
-        component?: Record<string, { child?: unknown; children?: { explicitList?: unknown } }>;
-      };
-      if (typeof c.id === "string") ids.add(c.id);
-      if (!c.component) continue;
-      const props = Object.values(c.component)[0];
-      const card = c.component.Card;
-      if (card && typeof card.child === "string") refs.push(card.child);
-      const list = props?.children?.explicitList;
-      if (Array.isArray(list)) for (const x of list) if (typeof x === "string") refs.push(x);
-    }
-  }
-  if (!root || !ids.has(root)) return false;
-  return refs.every((r) => ids.has(r));
-}
+// Structural self-containment guard, extracted to dependency-free shared/renderTool so both the Worker
+// and the browser-BYOK path (PR-4) validate identically. Re-exported under the original name so callers
+// and worker/test/model.test.ts keep importing `isValidBatch` from here.
+export const isValidBatch = isSelfContainedBatch;
 
 export async function callRenderModel(opts: ModelCall): Promise<ModelResult | null> {
   try {
@@ -131,13 +90,3 @@ export async function callRenderModel(opts: ModelCall): Promise<ModelResult | nu
     return null; // network error, timeout (AbortSignal), bad JSON — caller uses the stub
   }
 }
-
-// A2UI catalog-authoring rules (condensed from the agenthud SYSTEM_PROMPT — the proven shape).
-export const A2UI_RULES = `Answer by calling the \`render_ui\` tool to draw the UI on the "main" surface — never prose. Make exactly ONE render_ui call with the COMPLETE interface.
-
-An A2UI batch is an array of messages:
-- { "beginRendering": { "surfaceId": "main", "root": "root" } }   (send first; "root" = id of your TOP component)
-- { "surfaceUpdate": { "surfaceId": "main", "components": [ ...Component ] } }
-A Component is { "id": string, "component": { <Type>: <props> } } with exactly one Type. Exactly ONE component must have id "root".
-Shapes: Text { "Text": { "text": { "literalString": "Hi" }, "usageHint": "h3|body|caption" } } · Card { "Card": { "child": "id" } } (ONE child id) · Column { "Column": { "children": { "explicitList": ["id1","id2"] } } }.
-Values are TYPED literals: { "literalString": "..." }. RULES: define EVERY id you reference in the same call (no dangling refs); the tree must be ACYCLIC; never leave an explicitList empty. Use Column, not List.`;
