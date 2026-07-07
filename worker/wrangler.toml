@@ -17,3 +17,7 @@ ALLOWED_ORIGINS = "http://localhost:5173,https://qte77.github.io"
 name = "RATE_LIMITER"
 namespace_id = "1001"
 simple = { limit = 20, period = 60 }
+
+# Cloudflare Workers AI — the first (free, keyless) render provider → binding `AI` (env.AI).
+[ai]
+binding = "AI"

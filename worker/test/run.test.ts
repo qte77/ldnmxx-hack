@@ -60,6 +60,29 @@ function assertSelfContained(batch: Batch[]): void {
   }
 }
 
+// A minimal valid Column-root render_ui batch + its OpenAI-compatible tool-call wrapper, for faking a
+// free provider (e.g. Workers AI) that returns a real model render on a keyless run.
+const goodBatch = [
+  { beginRendering: { surfaceId: "main", root: "root" } },
+  {
+    surfaceUpdate: {
+      surfaceId: "main",
+      components: [
+        { id: "root", component: { Column: { children: { explicitList: ["c1"] } } } },
+        { id: "c1", component: { Card: { child: "t1" } } },
+        { id: "t1", component: { Text: { text: { literalString: "Hi" }, usageHint: "h3" } } },
+      ],
+    },
+  },
+];
+function toolOutput(batch: unknown): unknown {
+  return {
+    choices: [
+      { message: { tool_calls: [{ function: { name: "render_ui", arguments: JSON.stringify({ messages: batch }) } }] } },
+    ],
+  };
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -156,5 +179,18 @@ describe("worker /run", () => {
     const okEnv = { ...env, RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: true }) } };
     const res = await worker.fetch(post("founders-copilot"), okEnv as never, ctx);
     expect(res.status).toBe(200);
+  });
+
+  it("renders via the Workers AI free provider (model:workers-ai span) on a keyless run with the AI binding", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const aiEnv = { ...env, AI: { run: vi.fn().mockResolvedValue(toolOutput(goodBatch)) } };
+    const res = await worker.fetch(post("founders-copilot"), aiEnv as never, ctx);
+    const text = await res.text();
+    const spans = spy.mock.calls.filter((c) => c[0] === "⌁ span").map((c) => c[1]);
+    expect(spans).toContain("model:workers-ai");
+    expect(spans).not.toContain("model:openrouter");
+    const batch = parseFrames(text).find((f) => f.a2uiMessages)?.a2uiMessages;
+    expect(batch).toBeTruthy();
+    if (batch) assertSelfContained(batch);
   });
 });

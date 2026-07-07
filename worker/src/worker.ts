@@ -1,6 +1,7 @@
 import { makeEmitter, type Emitter } from "./trace/arize";
 import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/cards";
 import { callRenderModel } from "./agent/model";
+import { buildProviders, renderFree, type Provider } from "./agent/providers";
 import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent } from "./usecases";
 import { FOUNDERS_SYSTEM, foundersUser } from "../../shared/prompt";
 import { detectInjection } from "../../shared/guard";
@@ -9,18 +10,24 @@ import opportunitiesData from "../../data/demo/opportunities.sample.json";
 export interface Env {
   ARIZE_API_KEY?: string;
   ALLOWED_ORIGINS?: string;
-  OPENROUTER_KEY?: string; // Worker secret; the keyless default falls back to the stub
+  OPENROUTER_KEY?: string; // Worker secret; feeds the keyless free chain (:free ids), never a paid call
   AI_GATEWAY_URL?: string; // optional OpenAI-compatible base (Cloudflare AI Gateway); else OpenRouter
   DEFAULT_MODEL?: string;
   PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
   RATE_LIMITER?: RateLimit; // per-IP limiter (wrangler [[ratelimits]]); absent in tests → skipped
+  AI?: Ai; // Cloudflare Workers AI binding (first keyless free provider); absent → skipped
+  GITHUB_MODELS_TOKEN?: string; // GitHub Models free-tier token (last free provider; retires 2026-07-30)
+  WORKERS_AI_MODEL?: string; // override the default Workers AI model id
+  OPENROUTER_FREE_MODEL?: string; // override the default OpenRouter :free model id
+  GITHUB_MODEL?: string; // override the default GitHub Models model id
 }
 
 interface ModelCtx {
-  key: string;
+  key: string; // BYOK paid key (Authorization header) → keyed path; empty ⇒ keyless free chain / stub
   model: string;
   baseURL: string;
   prompt: string;
+  providers: Provider[]; // keyless free chain (empty when keyed or forcing the stub)
 }
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
@@ -31,28 +38,31 @@ const sleep = (ms: number): Promise<void> =>
   ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
 
 // Render the card batch, dispatched by the usecase's render mode. `route` stays canned (a model-invented
-// step-free route would hallucinate; real routing is Phase 3). `founders` asks the model to generate the
-// cards grounded in the demo data, falling back to the deterministic stub when there's no key or the
-// model errors/times out.
+// step-free route would hallucinate; real routing is Phase 3). `founders` generates the cards grounded in
+// the demo data: a BYOK key calls the chosen model directly (keyed path), otherwise the keyless free
+// chain runs; either falls back to the deterministic stub when there's nothing to call or it errors.
 async function renderBatch(render: RenderDef, emitter: Emitter, ctx: ModelCtx): Promise<unknown[]> {
   if (render.mode === "route") return buildRouteCards();
-  // Founders render = grant cards (model or stub) + the deterministic verified incorporate card.
   const stub = withIncorporate(buildOpportunityCards());
-  if (!ctx.key) return stub;
+  if (!ctx.key && ctx.providers.length === 0) return stub;
   const ac = new AbortController();
   const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
   try {
-    const result = await callRenderModel({
-      apiKey: ctx.key,
-      model: ctx.model,
-      baseURL: ctx.baseURL,
+    const args = {
       system: FOUNDERS_SYSTEM,
       user: foundersUser(ctx.prompt, opportunitiesData),
       signal: ac.signal,
-    });
-    if (!result) return stub;
-    emitter.span({ name: "model:openrouter", attrs: { model: result.model, ...result.usage } });
-    return withIncorporate(result.batch);
+    };
+    if (ctx.key) {
+      const result = await callRenderModel({ apiKey: ctx.key, model: ctx.model, baseURL: ctx.baseURL, ...args });
+      if (!result) return stub;
+      emitter.span({ name: "model:openrouter", attrs: { model: result.model, ...result.usage } });
+      return withIncorporate(result.batch);
+    }
+    const free = await renderFree(ctx.providers, args);
+    if (!free) return stub;
+    emitter.span({ name: `model:${free.provider}`, attrs: { model: free.result.model, ...free.result.usage } });
+    return withIncorporate(free.result.batch);
   } finally {
     clearTimeout(timer);
   }
@@ -73,7 +83,9 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   };
 }
 
-// Resolve model access (BYOK header > OPENROUTER_KEY secret > keyless stub) + the span attrs + pacing.
+// Resolve model access + the span attrs + pacing. Keyed (paid) path = a BYOK header only; our
+// OPENROUTER_KEY feeds the keyless free chain (:free ids) instead of a paid call, so the Worker never
+// spends. A demo/auto-run or a flagged prompt forces the deterministic stub.
 async function resolveRun(
   request: Request,
   env: Env,
@@ -91,29 +103,44 @@ async function resolveRun(
   }
   const auth = request.headers.get("Authorization") ?? "";
   const byokKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
-  // Prompt-injection guard: a flagged prompt skips the model and falls back to the deterministic stub
-  // (never worse than today) on both the keyed and keyless paths.
+  // Prompt-injection guard: a flagged prompt (or a demo/auto-run) forces the deterministic stub — never
+  // worse than today, and page loads / bots can't drive any model.
   const injection = detectInjection(prompt);
   if (injection.flagged) console.warn("guard: prompt-injection flagged →", injection.reason);
-  // `demo` (auto-run / example) forces the free deterministic stub even when a key is set, so page
-  // loads and bots can't burn the model key — only an explicit manual Run uses the model.
-  const key = demo || injection.flagged ? "" : byokKey || env.OPENROUTER_KEY || "";
+  const forceStub = demo || injection.flagged;
+  const key = forceStub ? "" : byokKey;
+  // Free chain: only when there's no BYOK key and we're not forcing the stub. Built from whatever
+  // bindings/secrets are present (Workers AI → OpenRouter :free → GitHub Models), cheapest-first.
+  const providers =
+    !forceStub && !key
+      ? buildProviders({
+          ai: env.AI,
+          openRouterKey: env.OPENROUTER_KEY,
+          githubToken: env.GITHUB_MODELS_TOKEN,
+          workersAiModel: env.WORKERS_AI_MODEL,
+          openRouterFreeModel: env.OPENROUTER_FREE_MODEL,
+          githubModel: env.GITHUB_MODEL,
+        })
+      : [];
   const modelCtx: ModelCtx = {
     key,
     model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
     baseURL: env.AI_GATEWAY_URL || OPENROUTER_BASE,
     prompt,
+    providers,
   };
   const runAttrs = {
     usecase: def.id,
     reqId: crypto.randomUUID(),
-    model: key && def.render.mode === "founders" ? modelCtx.model : "(stub)",
+    model:
+      def.render.mode !== "founders" ? "(stub)" : key ? modelCtx.model : providers.length ? "free-chain" : "(stub)",
     byok: byokKey.length > 0,
     blocked: injection.flagged,
   };
-  // Pace the keyless path so it "streams" like an agent working; the model path is paced by real
-  // latency. Overridable via PACE_MS (tests set "0").
-  const paceMs = env.PACE_MS !== undefined ? Number(env.PACE_MS) : key ? 0 : DEFAULT_PACE_MS;
+  // Pace the pure-stub path so it "streams" like an agent working; a real model path (keyed or free
+  // chain) is paced by its own latency. Overridable via PACE_MS (tests set "0").
+  const realModel = key.length > 0 || providers.length > 0;
+  const paceMs = env.PACE_MS !== undefined ? Number(env.PACE_MS) : realModel ? 0 : DEFAULT_PACE_MS;
   return { modelCtx, runAttrs, paceMs };
 }
 
