@@ -7,6 +7,7 @@ import {
   type EventLogEntry,
 } from "./applyA2UIEvent";
 import { WORKER_BASE } from "../config";
+import { detectInjection } from "../../../shared/guard";
 
 // Optional bring-your-own-key: held in memory only, forwarded to the Worker per request. Our own
 // model key stays a Worker secret (the keyless default) — this is just an optional runtime override.
@@ -63,6 +64,15 @@ function buildHeaders(byok?: Byok): Record<string, string> {
   return headers;
 }
 
+// Fire-and-forget browser spans to the Worker's /trace forwarder (best-effort; never blocks the UI).
+function postTraceSpans(spans: { name: string; attrs?: Record<string, unknown> }[]): void {
+  void fetch(`${WORKER_BASE}/trace`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ spans }),
+  }).catch(() => undefined);
+}
+
 // Read the SSE body to completion, dispatching each parsed AgentEvent. Buffers partial frames and
 // flushes a trailing frame that lacked its terminating blank line.
 async function readSSE(
@@ -84,10 +94,54 @@ async function readSSE(
   for (const event of tail.events) onEvent(event);
 }
 
+// Browser-BYOK founders path: the model call goes DIRECT from the browser (the user's key never touches
+// our Worker), guarded by the same injection filter; browser spans are forwarded to /trace afterward.
+async function runByokPath(
+  byok: Byok,
+  usecase: string,
+  prompt: string,
+  dispatch: (e: AgentEvent) => void,
+  signal: AbortSignal
+): Promise<void> {
+  const injection = detectInjection(prompt);
+  if (injection.flagged) {
+    dispatch({ type: "RUN_ERROR", text: `blocked: ${injection.reason ?? "prompt-injection"}` });
+    return;
+  }
+  const { runLiveAgent } = await import("./liveAgent"); // lazy: keeps the ai SDK out of the main bundle
+  await runLiveAgent({ apiKey: byok.apiKey, model: byok.model }, prompt, dispatch, { signal });
+  postTraceSpans([
+    { name: "run", attrs: { usecase, byok: true } },
+    { name: "model:byok", attrs: { model: byok.model } },
+  ]);
+}
+
+// Keyless / Worker path: open the Worker SSE stream and dispatch each parsed AG-UI event.
+async function runWorkerPath(
+  usecase: string,
+  prompt: string,
+  byok: Byok | undefined,
+  demo: boolean,
+  dispatch: (e: AgentEvent) => void,
+  signal: AbortSignal
+): Promise<void> {
+  const res = await fetch(
+    `${WORKER_BASE}/run?usecase=${encodeURIComponent(usecase)}${demo ? "&demo=1" : ""}`,
+    {
+      method: "POST",
+      headers: buildHeaders(byok),
+      body: JSON.stringify({ prompt, model: byok?.model ?? "" }),
+      signal,
+    }
+  );
+  if (!res.ok || !res.body) throw new Error(`Worker responded ${String(res.status)}`);
+  await readSSE(res.body, dispatch);
+}
+
 /**
- * Live transport seam: open `POST /run?usecase=<id>` (fetch + ReadableStream + AbortController),
- * parse the AG-UI SSE stream, and drive the SAME `applyA2UIEvent` render+log seam the contract
- * guards. Replaces agenthud's in-browser BYOK `liveAgent` — the agent now runs in the Worker.
+ * Live transport seam. A manual founders Run with a BYOK key streams the model DIRECT from the browser
+ * (`runByokPath` → `liveAgent`); every other run opens the Worker `POST /run?usecase=<id>` SSE stream
+ * (`runWorkerPath`). Both drive the SAME `applyA2UIEvent` render+log seam the contract guards.
  */
 export function useAgentSSE() {
   const { processMessages, clearSurfaces } = useA2UIActions();
@@ -121,17 +175,15 @@ export function useAgentSSE() {
         setEventLog((prev) => appendLogEntry(prev, entry));
       };
 
+      // Manual founders Run with a key → browser-BYOK (direct); everything else → the Worker stream.
+      const useByok = !!byok?.apiKey && !demo && usecase === "founders-copilot";
+
       try {
-        const res = await fetch(
-          `${WORKER_BASE}/run?usecase=${encodeURIComponent(usecase)}${demo ? "&demo=1" : ""}`,
-          {
-          method: "POST",
-          headers: buildHeaders(byok),
-          body: JSON.stringify({ prompt, model: byok?.model ?? "" }),
-          signal: ac.signal,
-        });
-        if (!res.ok || !res.body) throw new Error(`Worker responded ${String(res.status)}`);
-        await readSSE(res.body, dispatch);
+        if (useByok) {
+          await runByokPath(byok, usecase, prompt, dispatch, ac.signal);
+        } else {
+          await runWorkerPath(usecase, prompt, byok, demo, dispatch, ac.signal);
+        }
       } catch (err) {
         if (!ac.signal.aborted) setError(toConnectionError(err));
       } finally {
