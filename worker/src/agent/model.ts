@@ -19,7 +19,9 @@ export interface ModelResult {
   usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
 }
 
-interface ORResponse {
+// The OpenAI-compatible chat-completions response shape we consume (OpenRouter, GitHub Models, and —
+// same shape — Cloudflare Workers AI's ChatCompletions output). Exported for the provider chain (PR-2).
+export interface ORResponse {
   choices?: { message?: { tool_calls?: { function?: { name?: string; arguments?: string } }[] } }[];
   usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
 }

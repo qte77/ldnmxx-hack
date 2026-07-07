@@ -40,7 +40,7 @@ describe("runUsecase — swap-a-JSON proof", () => {
     const events: { type: string; text?: string; a2uiMessages?: unknown[] }[] = [];
     const spans: string[] = [];
     const emitter: Emitter = { span: (s) => spans.push(s.name), flush: () => Promise.resolve() };
-    const ctx = { key: "", model: "", baseURL: "", prompt: "" };
+    const ctx = { key: "", model: "", baseURL: "", prompt: "", providers: [] };
 
     await runUsecase(fixture, emitter, (e) => events.push(e), { usecase: "demo-x" }, ctx, 0);
 
