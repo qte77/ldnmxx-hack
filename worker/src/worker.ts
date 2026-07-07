@@ -83,6 +83,25 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   };
 }
 
+// The keyless free chain, built from whatever bindings/secrets are present (cheapest-first).
+function freeChain(env: Env): Provider[] {
+  return buildProviders({
+    ai: env.AI,
+    openRouterKey: env.OPENROUTER_KEY,
+    githubToken: env.GITHUB_MODELS_TOKEN,
+    workersAiModel: env.WORKERS_AI_MODEL,
+    openRouterFreeModel: env.OPENROUTER_FREE_MODEL,
+    githubModel: env.GITHUB_MODEL,
+  });
+}
+
+// The "run" span's informational model label: the paid model, the free chain, or the stub.
+function modelLabel(def: UsecaseDef, key: string, providerCount: number, model: string): string {
+  if (def.render.mode !== "founders") return "(stub)";
+  if (key) return model;
+  return providerCount > 0 ? "free-chain" : "(stub)";
+}
+
 // Resolve model access + the span attrs + pacing. Keyed (paid) path = a BYOK header only; our
 // OPENROUTER_KEY feeds the keyless free chain (:free ids) instead of a paid call, so the Worker never
 // spends. A demo/auto-run or a flagged prompt forces the deterministic stub.
@@ -109,19 +128,8 @@ async function resolveRun(
   if (injection.flagged) console.warn("guard: prompt-injection flagged →", injection.reason);
   const forceStub = demo || injection.flagged;
   const key = forceStub ? "" : byokKey;
-  // Free chain: only when there's no BYOK key and we're not forcing the stub. Built from whatever
-  // bindings/secrets are present (Workers AI → OpenRouter :free → GitHub Models), cheapest-first.
-  const providers =
-    !forceStub && !key
-      ? buildProviders({
-          ai: env.AI,
-          openRouterKey: env.OPENROUTER_KEY,
-          githubToken: env.GITHUB_MODELS_TOKEN,
-          workersAiModel: env.WORKERS_AI_MODEL,
-          openRouterFreeModel: env.OPENROUTER_FREE_MODEL,
-          githubModel: env.GITHUB_MODEL,
-        })
-      : [];
+  // Free chain only when there's no BYOK key and we're not forcing the stub.
+  const providers = !forceStub && !key ? freeChain(env) : [];
   const modelCtx: ModelCtx = {
     key,
     model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
@@ -132,8 +140,7 @@ async function resolveRun(
   const runAttrs = {
     usecase: def.id,
     reqId: crypto.randomUUID(),
-    model:
-      def.render.mode !== "founders" ? "(stub)" : key ? modelCtx.model : providers.length ? "free-chain" : "(stub)",
+    model: modelLabel(def, key, providers.length, modelCtx.model),
     byok: byokKey.length > 0,
     blocked: injection.flagged,
   };
