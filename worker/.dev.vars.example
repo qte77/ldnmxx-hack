@@ -2,17 +2,28 @@
 # `wrangler dev`. In prod set each with `wrangler secret put <NAME>`. NEVER commit real values or put
 # them in the SPA bundle. (Cloudflare DEPLOY-time auth lives in worker/.env.example, not here.)
 
-# --- Model (Track B + planning) ---
-OPENROUTER_KEY=           # OpenRouter API key (Worker secret)
-DEFAULT_MODEL=anthropic/claude-haiku-4.5  # read by worker/src/worker.ts; falls back to this if unset
-PACE_MS=450              # per-step reveal delay (ms) for the keyless path; read by worker/src/worker.ts
-AI_GATEWAY_URL=          # Cloudflare AI Gateway OpenRouter URL; read by code but NOT configured in prod today (dormant, #29)
+# --- Model access: keyed (BYOK) + keyless free chain (#37) ---
+# A BYOK Authorization header calls the chosen model directly (paid, span model:openrouter). Keyless runs
+# use a free chain (Workers AI → OpenRouter :free → GitHub Models → stub), first-valid-wins — so the
+# Worker rarely/never spends. Every tier is structurally validated; a bad tier falls through to the stub.
+OPENROUTER_KEY=           # OpenRouter API key — feeds the keyless :free provider (never a paid call)
+GITHUB_MODELS_TOKEN=      # GitHub Models free-tier token — last free provider (service retires 2026-07-30)
+DEFAULT_MODEL=anthropic/claude-haiku-4.5  # model for the BYOK keyed path when the request omits one
+PACE_MS=450              # per-step reveal delay (ms) for the pure-stub path; a real model paces by latency
+AI_GATEWAY_URL=          # optional OpenAI-compatible base for the keyed path (else OpenRouter); AI Gateway dormant (#29)
 CF_ACCOUNT_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)
 CF_GATEWAY_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)
+# Model-id overrides for the free chain (optional; sensible defaults in worker/src/agent/providers.ts):
+WORKERS_AI_MODEL=        # e.g. @cf/zai-org/glm-4.7-flash (must be a ChatCompletions-typed model)
+OPENROUTER_FREE_MODEL=   # e.g. meta-llama/llama-3.3-70b-instruct:free
+GITHUB_MODEL=            # e.g. openai/gpt-4o-mini
 
-# --- Observability (OPTIONAL; console default when unset) ---
-ARIZE_API_KEY=           # setting this only routes to a console-only stub emitter today (⌁ span[arize-stub]); a real Arize/OTLP export is tracked in #21
-ARIZE_SPACE_ID=          # NOT yet read by code — reserved for the real Arize export (#21)
+# --- Observability: Arize (OPTIONAL; console default when unset) ---
+# Set BOTH to enable the real OTLP export (OpenInference spans → https://otlp.arize.com/v1/traces);
+# with neither/one set, spans only log to the console (⌁ span). Browser spans arrive via POST /trace.
+ARIZE_API_KEY=           # Arize API key (Worker-only; also used by the /trace forwarder)
+ARIZE_SPACE_ID=          # Arize space id — required alongside the key for the OTLP export
+ARIZE_PROJECT=           # optional OTLP resource service.name (defaults to "groundwork")
 
 # --- Track B: incorporate (optional, NOT yet read by code — incorporate is planned, #12) ---
 COMPANIES_HOUSE_KEY=     # reserved for the live name-availability check; demo uses the verified pack
@@ -20,4 +31,4 @@ COMPANIES_HOUSE_KEY=     # reserved for the live name-availability check; demo u
 # --- CORS / origins (also mirrored in wrangler.toml [vars]) ---
 ALLOWED_ORIGINS=http://localhost:5173,https://qte77.github.io
 
-# KV bindings (OPPORTUNITIES, etc.) live in worker/wrangler.toml, not here.
+# Bindings (NOT secrets) live in worker/wrangler.toml: [ai] AI (Workers AI) + [[ratelimits]] RATE_LIMITER.

@@ -1,4 +1,4 @@
-import { makeEmitter, type Emitter } from "./trace/arize";
+import { makeEmitter, exportSpans, MAX_TRACE_SPANS, type Emitter, type Span } from "./trace/arize";
 import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/cards";
 import { callRenderModel } from "./agent/model";
 import { buildProviders, renderFree, type Provider } from "./agent/providers";
@@ -9,6 +9,8 @@ import opportunitiesData from "../../data/demo/opportunities.sample.json";
 
 export interface Env {
   ARIZE_API_KEY?: string;
+  ARIZE_SPACE_ID?: string; // with ARIZE_API_KEY, enables the real OTLP export (else console only)
+  ARIZE_PROJECT?: string; // OTLP resource service.name
   ALLOWED_ORIGINS?: string;
   OPENROUTER_KEY?: string; // Worker secret; feeds the keyless free chain (:free ids), never a paid call
   AI_GATEWAY_URL?: string; // optional OpenAI-compatible base (Cloudflare AI Gateway); else OpenRouter
@@ -102,6 +104,19 @@ function modelLabel(def: UsecaseDef, key: string, providerCount: number, model: 
   return providerCount > 0 ? "free-chain" : "(stub)";
 }
 
+// Validate + cap a browser-posted span batch for the /trace forwarder (each element must have a name).
+async function readSpans(request: Request): Promise<Span[]> {
+  try {
+    const body = (await request.json()) as { spans?: unknown };
+    if (!Array.isArray(body.spans)) return [];
+    return body.spans
+      .filter((s): s is Span => !!s && typeof (s as Span).name === "string")
+      .slice(0, MAX_TRACE_SPANS);
+  } catch {
+    return [];
+  }
+}
+
 // Resolve model access + the span attrs + pacing. Keyed (paid) path = a BYOK header only; our
 // OPENROUTER_KEY feeds the keyless free chain (:free ids) instead of a paid call, so the Worker never
 // spends. A demo/auto-run or a flagged prompt forces the deterministic stub.
@@ -185,16 +200,24 @@ export default {
     const cors = corsHeaders(request, env);
 
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-    if (url.pathname !== "/run") return new Response("Not found", { status: 404, headers: cors });
+    const isRun = url.pathname === "/run";
+    const isTrace = url.pathname === "/trace";
+    if (!isRun && !isTrace) return new Response("Not found", { status: 404, headers: cors });
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405, headers: cors });
     }
 
-    // Per-IP rate-limit (wrangler [[ratelimits]] binding). Absent in unit tests → skipped.
+    // Per-IP rate-limit (wrangler [[ratelimits]] binding) for both endpoints. Absent in unit tests → skipped.
     if (env.RATE_LIMITER) {
       const ip = request.headers.get("CF-Connecting-IP") ?? "anon";
       const { success } = await env.RATE_LIMITER.limit({ key: ip });
       if (!success) return new Response("Too Many Requests", { status: 429, headers: cors });
+    }
+
+    // /trace: forward a browser-collected span batch to Arize (keeps ARIZE_API_KEY Worker-only).
+    if (isTrace) {
+      ctx.waitUntil(exportSpans(env, await readSpans(request)));
+      return new Response(null, { status: 202, headers: cors });
     }
 
     const usecase = url.searchParams.get("usecase") ?? "";

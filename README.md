@@ -92,13 +92,13 @@ agent built in a day joins what incumbents can't, and swaps between both from on
 
 ## Stack — why these tools
 
-- **Cloudflare** (Workers · Pages) — one serverless edge deploy, zero-ops; the Worker is the **trust
-  boundary** (secrets server-side, sole egress). AI Gateway is supported in code but not yet configured
-  in prod (#29); no KV binding exists — `data/demo/*.json` is the live data source.
-- **OpenRouter** — one key, many models; route or swap the LLM with no code change (optional BYOK) — the
-  "swap a JSON" idea, applied to models.
-- **Arize** — LLM tracing: one span per stage makes `plan → tool → render` observable in the console/CF
-  dashboard today (a real OTLP export is planned, #21).
+- **Cloudflare** (Workers · Pages · Workers AI) — one serverless edge deploy, zero-ops; the Worker is the
+  **trust boundary** (secrets server-side, sole egress). Workers AI serves the keyless free render chain;
+  `data/demo/*.json` is the live data source (no KV; AI Gateway dormant, #29).
+- **OpenRouter** — one key, many models. A BYOK key swaps the model with no code change; keyless runs use a
+  **free chain** (Workers AI → OpenRouter `:free` → GitHub Models → stub), so the Worker rarely/never spends.
+- **Arize** — LLM tracing: one span per stage (`plan → tool → render`), exported to Arize over **OTLP** when
+  `ARIZE_API_KEY`+`ARIZE_SPACE_ID` are set (console otherwise); browser spans forward via `POST /trace`.
 
 ## Refs
 

@@ -7,6 +7,13 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- Two-path model access (#37) — shared dependency-free `shared/` foundation (prompt/tool/validator), a
+  prompt-injection guard (flagged prompt → deterministic stub), and a per-IP rate-limit (429) on `/run` (#42).
+- Keyless free-fallback render chain: Workers AI → OpenRouter `:free` → GitHub Models → stub, first-valid
+  wins with each tier structurally validated; a BYOK header stays the paid path, our key feeds `:free`
+  (never a paid call), so the Worker rarely/never spends (#43).
+- Real Arize **OTLP** export (OpenInference spans → `otlp.arize.com` when `ARIZE_API_KEY`+`ARIZE_SPACE_ID`
+  are set; console otherwise) + a CORS-allowlisted `POST /trace` forwarder for browser spans (closes #21).
 - A2UI render-surface theming, EyeRest-branded (port of base PR #168) (#31).
 - Externalized both workflows' plan→tool→render choreography to `usecases/*.json`, read at runtime by a
   small `runUsecase` interpreter (`worker/src/usecases.ts`, guarded at load); render modes stay in code.
