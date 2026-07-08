@@ -22,9 +22,10 @@ list of 6 verified free+tools models) · **#47** (incorporate card moved to `sha
 path too).
 
 Live-verified 2026-07-08 (real keys): ✅ render mechanism (claude-haiku → self-contained batch) · ✅
-OpenRouter `:free` default live · ✅ Arize OTLP **JSON** accepted (no protobuf). Still open (need env):
-❌ Workers AI glm — CF token missing **Workers AI Read** permission; ⛔ `ARIZE_SPACE_ID` — read from the
-Arize Space Settings page (not creatable via REST for us). **Resume:** `docs/handoffs/006-two-path-shipped.md`.
+OpenRouter `:free` chain live · ✅ Workers AI (`@cf/openai/gpt-oss-120b`, now the default; glm-4.7-flash
+`429`s) · ✅ Arize OTLP export **code** (proven correct against Arize's own SDK). Open: Arize **live
+ingestion** blocked account-side (entitlement — Arize support; zero code change once fixed). **Resume:**
+`docs/handoffs/006-two-path-shipped.md`.
 
 ## Why / intended outcome
 
