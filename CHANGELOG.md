@@ -7,6 +7,8 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- Docs: a themed (light/dark) **demo GIF** in the README — the Founder's Copilot workflow captured on the
+  live site via polyfetch's Playwright tier, shown via `<picture>` (GitHub theme-aware).
 - UI: **Track B (Founder's Copilot) is the default workflow**, with its example prefilled; the workflow
   **no longer auto-runs on page load** — it runs only when the visitor clicks Run.
 - Workers AI default model → `@cf/openai/gpt-oss-120b` (live-verified 2026-07-08; `@cf/zai-org/glm-4.7-flash`
