@@ -14,7 +14,7 @@ const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const GITHUB_MODELS_BASE = "https://models.github.ai/inference"; // OpenAI-compatible; retires 2026-07-30
 
 // Defaults are tuning knobs (overridable via env) — the guard makes a wrong pick non-fatal (falls through).
-export const DEFAULT_WORKERS_AI_MODEL = "@cf/zai-org/glm-4.7-flash";
+export const DEFAULT_WORKERS_AI_MODEL = "@cf/openai/gpt-oss-120b"; // verified 2026-07-08; @cf/zai-org/glm-4.7-flash hits capacity 429
 export const DEFAULT_GITHUB_MODEL = "openai/gpt-4o-mini";
 // A LIST of currently-live free + tool-capable OpenRouter models (verified 2026-07-08). :free models
 // rate-limit (HTTP 429) and rotate often, so we fall through several before giving up to the next tier.
