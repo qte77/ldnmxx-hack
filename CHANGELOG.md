@@ -7,6 +7,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- Free chain: the OpenRouter `:free` tier now walks a fallback **list** of 6 verified free + tool-capable
+  models (they rate-limit / rotate), first-valid-wins, each miss logged for `wrangler tail`; the winning
+  model id rides into the render span. Override via `OPENROUTER_FREE_MODELS` (csv). (#37 fast-follow)
 - Two-path model access (#37) — shared dependency-free `shared/` foundation (prompt/tool/validator), a
   prompt-injection guard (flagged prompt → deterministic stub), and a per-IP rate-limit (429) on `/run` (#42).
 - Keyless free-fallback render chain: Workers AI → OpenRouter `:free` → GitHub Models → stub, first-valid

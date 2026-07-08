@@ -20,7 +20,8 @@ export interface Env {
   AI?: Ai; // Cloudflare Workers AI binding (first keyless free provider); absent → skipped
   GITHUB_MODELS_TOKEN?: string; // GitHub Models free-tier token (last free provider; retires 2026-07-30)
   WORKERS_AI_MODEL?: string; // override the default Workers AI model id
-  OPENROUTER_FREE_MODEL?: string; // override the default OpenRouter :free model id
+  OPENROUTER_FREE_MODEL?: string; // override the OpenRouter :free model (single)
+  OPENROUTER_FREE_MODELS?: string; // override the OpenRouter :free fallback list (comma-separated)
   GITHUB_MODEL?: string; // override the default GitHub Models model id
 }
 
@@ -85,14 +86,21 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   };
 }
 
-// The keyless free chain, built from whatever bindings/secrets are present (cheapest-first).
+// The keyless free chain, built from whatever bindings/secrets are present (cheapest-first). The
+// OpenRouter :free tier walks a fallback list — OPENROUTER_FREE_MODELS (csv) wins, else the single
+// OPENROUTER_FREE_MODEL, else the built-in defaults.
 function freeChain(env: Env): Provider[] {
+  const openRouterFreeModels = env.OPENROUTER_FREE_MODELS
+    ? env.OPENROUTER_FREE_MODELS.split(",").map((s) => s.trim()).filter(Boolean)
+    : env.OPENROUTER_FREE_MODEL
+      ? [env.OPENROUTER_FREE_MODEL]
+      : undefined;
   return buildProviders({
     ai: env.AI,
     openRouterKey: env.OPENROUTER_KEY,
     githubToken: env.GITHUB_MODELS_TOKEN,
     workersAiModel: env.WORKERS_AI_MODEL,
-    openRouterFreeModel: env.OPENROUTER_FREE_MODEL,
+    openRouterFreeModels,
     githubModel: env.GITHUB_MODEL,
   });
 }

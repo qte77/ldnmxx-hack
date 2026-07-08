@@ -4,6 +4,8 @@
 // worse than the stub. The chain is built only from the bindings/secrets actually present, cheapest-first
 // (Cloudflare Workers AI → OpenRouter :free using our key → GitHub Models → stub). No spend on our part:
 // Workers AI is free, OpenRouter runs :free model ids, GitHub Models is free-tier (and retires 2026-07-30).
+// The OpenRouter tier itself walks a LIST of :free models (they rate-limit / rotate constantly), logging
+// each fall-through for `wrangler tail`; the winning model id lands in the render span's `model` attr.
 
 import { RENDER_UI_TOOL, isSelfContainedBatch } from "../../../shared/renderTool";
 import { callRenderModel, extractBatch, type ModelResult, type ORResponse } from "./model";
@@ -13,8 +15,17 @@ const GITHUB_MODELS_BASE = "https://models.github.ai/inference"; // OpenAI-compa
 
 // Defaults are tuning knobs (overridable via env) — the guard makes a wrong pick non-fatal (falls through).
 export const DEFAULT_WORKERS_AI_MODEL = "@cf/zai-org/glm-4.7-flash";
-export const DEFAULT_OPENROUTER_FREE_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 export const DEFAULT_GITHUB_MODEL = "openai/gpt-4o-mini";
+// A LIST of currently-live free + tool-capable OpenRouter models (verified 2026-07-08). :free models
+// rate-limit (HTTP 429) and rotate often, so we fall through several before giving up to the next tier.
+export const DEFAULT_OPENROUTER_FREE_MODELS = [
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "openai/gpt-oss-120b:free",
+  "openai/gpt-oss-20b:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+];
 
 export interface RenderArgs {
   system: string;
@@ -60,13 +71,23 @@ export function workersAiProvider(ai: Ai, model: string = DEFAULT_WORKERS_AI_MOD
   };
 }
 
-// OpenRouter restricted to a :free model id — uses our OPENROUTER_KEY but never spends. Reuses the
-// hand-rolled OpenAI-compatible fetch (callRenderModel already extracts + validates + returns usage).
-export function openRouterFreeProvider(key: string, model: string = DEFAULT_OPENROUTER_FREE_MODEL): Provider {
+// OpenRouter restricted to :free model ids — uses our OPENROUTER_KEY but never spends. Walks the model
+// list in order (first valid batch wins), logging each fall-through so it's visible in `wrangler tail`;
+// the winning model id rides back in ModelResult.model → the render span's `model` attr.
+export function openRouterFreeProvider(
+  key: string,
+  models: string[] = DEFAULT_OPENROUTER_FREE_MODELS
+): Provider {
   return {
     name: "openrouter-free",
-    tryRender: ({ system, user, signal }) =>
-      callRenderModel({ apiKey: key, model, baseURL: OPENROUTER_BASE, system, user, signal }),
+    async tryRender({ system, user, signal }) {
+      for (const model of models) {
+        const result = await callRenderModel({ apiKey: key, model, baseURL: OPENROUTER_BASE, system, user, signal });
+        if (result) return result;
+        console.warn("openrouter-free: fell through", model);
+      }
+      return null;
+    },
   };
 }
 
@@ -113,13 +134,13 @@ export function buildProviders(opts: {
   openRouterKey?: string;
   githubToken?: string;
   workersAiModel?: string;
-  openRouterFreeModel?: string;
+  openRouterFreeModels?: string[];
   githubModel?: string;
 }): Provider[] {
   const list: Provider[] = [];
   if (opts.ai) list.push(workersAiProvider(opts.ai, opts.workersAiModel || DEFAULT_WORKERS_AI_MODEL));
   if (opts.openRouterKey)
-    list.push(openRouterFreeProvider(opts.openRouterKey, opts.openRouterFreeModel || DEFAULT_OPENROUTER_FREE_MODEL));
+    list.push(openRouterFreeProvider(opts.openRouterKey, opts.openRouterFreeModels ?? DEFAULT_OPENROUTER_FREE_MODELS));
   if (opts.githubToken) list.push(githubModelsProvider(opts.githubToken, opts.githubModel || DEFAULT_GITHUB_MODEL));
   return list;
 }

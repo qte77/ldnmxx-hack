@@ -85,9 +85,30 @@ describe("buildProviders", () => {
 describe("fetch-based providers reuse callRenderModel", () => {
   it("openrouter-free returns a validated batch on a good response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(toolOutput(goodBatch)) }));
-    const r = await openRouterFreeProvider("k", "x:free").tryRender({ system: "s", user: "u" });
+    const r = await openRouterFreeProvider("k", ["x:free"]).tryRender({ system: "s", user: "u" });
     expect(r?.batch).toEqual(goodBatch);
   });
+
+  it("openrouter-free walks the fallback list: first valid wins, misses logged, winner in result.model", async () => {
+    const fetchMock = vi.fn(async (_url: unknown, init: { body: string }) => {
+      const model = JSON.parse(init.body).model as string;
+      return model === "m1:free"
+        ? { ok: false, json: () => Promise.resolve({}) }
+        : { ok: true, json: () => Promise.resolve(toolOutput(goodBatch)) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const r = await openRouterFreeProvider("k", ["m1:free", "m2:free"]).tryRender({ system: "s", user: "u" });
+    expect(r?.batch).toEqual(goodBatch);
+    expect(r?.model).toBe("m2:free");
+    expect(warn).toHaveBeenCalledWith("openrouter-free: fell through", "m1:free");
+  });
+
+  it("openrouter-free returns null when every model in the list fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) }));
+    expect(await openRouterFreeProvider("k", ["a:free", "b:free"]).tryRender({ system: "s", user: "u" })).toBeNull();
+  });
+
   it("github-models returns null on a non-2xx response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) }));
     expect(await githubModelsProvider("t", "m").tryRender({ system: "s", user: "u" })).toBeNull();
