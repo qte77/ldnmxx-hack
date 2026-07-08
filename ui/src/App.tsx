@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type SyntheticEvent } from "react";
+import { useCallback, useState, type SyntheticEvent } from "react";
 import { useA2UIActions } from "@a2ui/react";
 import { A2UISurfaceProvider, A2UISurface } from "./A2UISurface";
 import { EventStream } from "./EventStream";
@@ -59,8 +59,8 @@ function ThemeToggle() {
 function Dashboard() {
   const { eventLog, isRunning, error, run, stop } = useAgentSSE();
   const { processMessages, clearSurfaces } = useA2UIActions();
-  const [usecase, setUsecase] = useState<string>(USECASES[1].id);
-  const [prompt, setPrompt] = useState("");
+  const [usecase, setUsecase] = useState<string>(USECASES[0].id); // Track B (Founder's Copilot) leads
+  const [prompt, setPrompt] = useState<string>(USECASES[0].example);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_BYOK_API_KEY ?? "");
   const [model, setModel] = useState(import.meta.env.VITE_BYOK_MODEL ?? "");
@@ -82,16 +82,8 @@ function Dashboard() {
     processMessages(buildCatalogBatch() as Parameters<typeof processMessages>[0]);
   }, [processMessages, clearSurfaces]);
 
-  // Auto-play an example on first load so visitors see the agent work without typing (keyless = the
-  // free deterministic stub; does not send BYOK). Track A leads — it's the engine/modularity proof.
-  const didAutoRun = useRef(false);
-  useEffect(() => {
-    if (didAutoRun.current) return;
-    didAutoRun.current = true;
-    setPrompt(USECASES[1].example);
-    void run(USECASES[1].id, USECASES[1].example, undefined, true); // demo=true → free stub, not the model
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
-  }, []);
+  // No auto-run on load: Track B (Founder's Copilot) is preselected with its example prefilled, but the
+  // workflow runs only when the visitor clicks Run (so a page refresh never fires a request).
 
   return (
     <div className="h-screen flex flex-col max-w-7xl mx-auto w-full">
