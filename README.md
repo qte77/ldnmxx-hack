@@ -11,10 +11,15 @@ founder-funding copilot and step-free routing · Londonmaxxing 003.
 [![CI](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack/badge)](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack)
 
+<details>
+<summary>▶ Demo — Founder's Copilot: type an idea → Run → live AG-UI events + A2UI grant cards</summary>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/images/groundwork-demo-dark.gif">
   <img alt="Groundwork — Founder's Copilot: type an idea, click Run, and the agent streams AG-UI events that render as A2UI grant cards" src="assets/images/groundwork-demo-light.gif">
 </picture>
+
+</details>
 
 ## What
 
