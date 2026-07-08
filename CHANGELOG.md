@@ -7,6 +7,8 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- Browser-BYOK founders render now appends the **same** verified incorporate card as the Worker: the
+  how-to pack moved to dependency-free `shared/incorporate.ts`, imported by both paths (#37 fast-follow).
 - Free chain: the OpenRouter `:free` tier now walks a fallback **list** of 6 verified free + tool-capable
   models (they rate-limit / rotate), first-valid-wins, each miss logged for `wrangler tail`; the winning
   model id rides into the render span. Override via `OPENROUTER_FREE_MODELS` (csv). (#37 fast-follow)

@@ -6,6 +6,7 @@ import type { AgentEvent } from "./applyA2UIEvent";
 import { toConnectionError } from "./useAgentSSE";
 import { FOUNDERS_SYSTEM, foundersUser } from "../../../shared/prompt";
 import { RENDER_UI_TOOL } from "../../../shared/renderTool";
+import { appendIncorporate } from "../../../shared/incorporate";
 import opportunitiesData from "../../../data/demo/opportunities.sample.json";
 
 // Browser-BYOK: the founders model call runs DIRECTLY from the browser (the user's key never touches
@@ -47,10 +48,12 @@ export function streamPartToEvent(part: StreamPart): AgentEvent | null {
     case "tool-call": {
       if (part.toolName === "render_ui") {
         const messages = (part.input as { messages?: unknown[] } | undefined)?.messages;
+        // Append the verified incorporate card so the browser-BYOK founders render matches the Worker's
+        // (guarded: only appends when the model's batch has a Column root, else returns it unchanged).
         return {
           type: "TOOL_CALL_END",
           text: part.toolName,
-          a2uiMessages: Array.isArray(messages) ? messages : [],
+          a2uiMessages: appendIncorporate(Array.isArray(messages) ? messages : []),
         };
       }
       return { type: "TOOL_CALL_END", text: part.toolName };
