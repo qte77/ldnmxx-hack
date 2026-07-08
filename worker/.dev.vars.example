@@ -14,7 +14,7 @@ AI_GATEWAY_URL=          # optional OpenAI-compatible base for the keyed path (e
 CF_ACCOUNT_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)
 CF_GATEWAY_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)
 # Model-id overrides for the free chain (optional; sensible defaults in worker/src/agent/providers.ts):
-WORKERS_AI_MODEL=        # e.g. @cf/zai-org/glm-4.7-flash (must be a ChatCompletions-typed model)
+WORKERS_AI_MODEL=        # default @cf/openai/gpt-oss-120b; any ChatCompletions-typed model (glm-4.7-flash 429s on capacity)
 OPENROUTER_FREE_MODEL=   # override the OpenRouter :free model (single)
 OPENROUTER_FREE_MODELS=  # override the :free fallback LIST (comma-separated); default = 6 verified free+tools models, tried in order
 GITHUB_MODEL=            # e.g. openai/gpt-4o-mini

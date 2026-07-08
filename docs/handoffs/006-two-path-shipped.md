@@ -32,13 +32,15 @@ resume point (supersedes handoff 005).
   earlier failure was a transient `429`, now mitigated by the #46 fallback list.
 - ✅ **Arize OTLP JSON accepted** — Arize added OTLP/HTTP **JSON** support (Mar 2026); the JSON exporter
   is correct, no protobuf migration needed.
-- ❌ **Workers AI glm (Spike 1) — still unverified.** `worker/.env` `CLOUDFLARE_API_TOKEN` returns `401`
-  on `/ai/run`: the token is **missing the Workers AI Read permission** (distinct from "Workers Scripts"
-  / deploy). Add **Account · Workers AI · Read** to the token, re-copy into `worker/.env`, then re-verify.
-- ⛔ **Arize `space_id` — still missing.** The OTLP export needs `ARIZE_SPACE_ID` **and** the key. Read it
-  from **app.arize.com → Space Settings** (next to the API key); it is NOT practically creatable via
-  REST/CLI for us (that needs an org-scoped *User Key*; our `ARIZE_API_KEY` is space-scoped). Put it in
-  `worker/.dev.vars`, then re-verify.
+- ✅ **Workers AI (Spike 1) — VERIFIED.** With the CF token granted **Workers AI Read**, `/ai/run`
+  authenticates; `@cf/openai/gpt-oss-120b` returns a valid self-contained batch → now the default
+  (`@cf/zai-org/glm-4.7-flash` hits capacity `429`; kept as an override).
+- ⚠️ **Arize (Spike 2) — code VERIFIED; live-ingestion blocked account-side.** Our export is proven
+  correct: **Arize's own official SDK** (`@opentelemetry/exporter-trace-otlp-proto`) with a freshly-created
+  space key + the correct `space_id` returns the SAME `500 "unable to validate authorization from span"`.
+  So it's not our code, the JSON/protobuf encoding, the resource attrs, or the `space_id` — it's an
+  **account-side ingestion entitlement** issue. Fix is via Arize support; **zero code change** once
+  resolved. Tracked in its own issue.
 
 ## To finish verification
 

@@ -7,6 +7,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- Workers AI default model → `@cf/openai/gpt-oss-120b` (live-verified 2026-07-08; `@cf/zai-org/glm-4.7-flash`
+  hits capacity `429`). Documented the required Cloudflare API-token permissions (incl. **Workers AI Read**
+  for `/ai/run`) + Arize ingestion setup in `worker/README.md`.
 - Browser-BYOK founders render now appends the **same** verified incorporate card as the Worker: the
   how-to pack moved to dependency-free `shared/incorporate.ts`, imported by both paths (#37 fast-follow).
 - Free chain: the OpenRouter `:free` tier now walks a fallback **list** of 6 verified free + tool-capable
