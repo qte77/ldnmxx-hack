@@ -1,18 +1,30 @@
 ---
 title: "Plan 005 — two-path model access (browser-BYOK + keyless Worker free-chain) + guards + Arize-everywhere"
 type: plan
-updated: 2026-07-06
+updated: 2026-07-08
 issues: [37]
 closes: [21]
 ---
 
 # Plan 005 — two-path model access (#37)
 
-**Approved, 0% built.** Minimize using our own key; maximize reuse of the base `qte77/agenthud-agui-a2ui`;
+**SHIPPED (2026-07-08) — see the Status section below.** Minimize using our own key; maximize reuse of the base `qte77/agenthud-agui-a2ui`;
 **share** cross-cutting code; both paths carry **rate-limiting** + a **prompt-injection guard**; **Arize
 spans every path** (pulls in + closes **#21**). Phased **4 PRs**, each its own strict-TDD PR with a check-in
 (NOT one mega-PR). `submission.md` PARKED. Standard workflow: branch → Conventional Commit → CI-gated PR →
 squash → prune; git identity noreply, `--no-gpg-sign`, prefix git/gh with `env -u GH_TOKEN -u GITHUB_TOKEN`.
+
+## Status (2026-07-08) — SHIPPED
+
+All 4 PRs merged: **#42** (`shared/` + guard + rate-limit) · **#43** (free chain) · **#44** (Arize OTLP +
+`/trace`, closed **#21**) · **#45** (browser-BYOK, closed **#37**). Follow-ups: **#46** (`:free` fallback
+list of 6 verified free+tools models) · **#47** (incorporate card moved to `shared/`, now on the browser
+path too).
+
+Live-verified 2026-07-08 (real keys): ✅ render mechanism (claude-haiku → self-contained batch) · ✅
+OpenRouter `:free` default live · ✅ Arize OTLP **JSON** accepted (no protobuf). Still open (need env):
+❌ Workers AI glm — CF token missing **Workers AI Read** permission; ⛔ `ARIZE_SPACE_ID` — read from the
+Arize Space Settings page (not creatable via REST for us). **Resume:** `docs/handoffs/006-two-path-shipped.md`.
 
 ## Why / intended outcome
 
