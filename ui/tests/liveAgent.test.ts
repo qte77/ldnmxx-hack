@@ -32,6 +32,26 @@ describe("streamPartToEvent", () => {
     });
   });
 
+  it("appends the verified incorporate card when the render_ui batch has a Column root", () => {
+    const messages = [
+      { beginRendering: { surfaceId: "main", root: "root" } },
+      {
+        surfaceUpdate: {
+          surfaceId: "main",
+          components: [
+            { id: "root", component: { Column: { children: { explicitList: ["card-x"] } } } },
+            { id: "card-x", component: { Card: { child: "t-x" } } },
+            { id: "t-x", component: { Text: { text: { literalString: "hi" }, usageHint: "h3" } } },
+          ],
+        },
+      },
+    ];
+    const ev = streamPartToEvent({ type: "tool-call", toolName: "render_ui", input: { messages } });
+    const json = JSON.stringify(ev?.a2uiMessages);
+    expect(json).toContain("card-incorporate");
+    expect(json).toContain("https://www.gov.uk/set-up-limited-company");
+  });
+
   it("defaults a render_ui call with no messages to an empty batch", () => {
     expect(streamPartToEvent({ type: "tool-call", toolName: "render_ui", input: {} })).toEqual({
       type: "TOOL_CALL_END",

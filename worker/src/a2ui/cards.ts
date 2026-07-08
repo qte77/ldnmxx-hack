@@ -1,5 +1,6 @@
 import opportunitiesJson from "../../../data/demo/opportunities.sample.json";
 import routeJson from "../../../data/demo/route.sample.json";
+import { appendIncorporate } from "../../../shared/incorporate";
 
 interface Opportunity {
   id: string;
@@ -122,38 +123,7 @@ export function buildRouteCards(r: Route = route): unknown[] {
   return cardsBatch([summary, ...legs]);
 }
 
-// Track B — the incorporate "how-to pack": a static, verified set of gov.uk / Companies House links
-// (curated, NEVER LLM-generated — the hard rule in #12). A2UI Text renders markdown, so `[label](url)`
-// lines are clickable anchors — no Button.onAction (unwired) needed. Verified 2026-07 (see
-// docs/usecase-workflows.md). This is the how-to pack, NOT a live filing (that stays deferred, #12).
-function incorporateSpec(): CardSpec {
-  return {
-    key: "incorporate",
-    title: "✓ Ready to incorporate",
-    lines: [
-      "Your verified path to register a UK limited company — real gov.uk / Companies House links, not a filing.",
-      "[Check the name is available](https://find-and-update.company-information.service.gov.uk)",
-      "[Find your SIC code](https://resources.companieshouse.gov.uk/sic/)",
-      "[Verify your identity — GOV.UK One Login (now required)](https://identity.company-information.service.gov.uk)",
-      "[Register online (£50)](https://www.gov.uk/limited-company-formation/register-your-company)",
-      "[Full set-up steps](https://www.gov.uk/set-up-limited-company)",
-    ],
-  };
-}
-
-// Append the deterministic incorporate card to a founders batch (stub OR model). Both are
-// self-contained batches whose "root" is a Column with an explicitList; the incorporate card id + its
-// components are pushed in. If the root shape is unexpected, the batch is returned unchanged.
-export function withIncorporate(batch: unknown[]): unknown[] {
-  const msgs = batch as { surfaceUpdate?: { components?: { id: string; component: Record<string, unknown> }[] } }[];
-  const update = msgs.find((m) => m.surfaceUpdate)?.surfaceUpdate;
-  if (!update || !Array.isArray(update.components)) return batch;
-  const root = update.components.find((c) => c.id === "root");
-  const col = root?.component.Column as { children?: { explicitList?: string[] } } | undefined;
-  const list = col?.children?.explicitList;
-  if (!Array.isArray(list)) return batch;
-  const { cardId, components } = cardComponents(incorporateSpec());
-  list.push(cardId);
-  update.components.push(...(components as { id: string; component: Record<string, unknown> }[]));
-  return batch;
-}
+// Track B — the incorporate "how-to pack" now lives in dependency-free shared/incorporate.ts so the
+// browser-BYOK founders render appends the SAME verified card. withIncorporate stays the Worker's entry
+// point (re-export): append the deterministic incorporate card to a founders batch (stub OR model).
+export const withIncorporate = appendIncorporate;
