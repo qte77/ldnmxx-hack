@@ -19,14 +19,14 @@ stages from `usecases/founders-copilot.json` (static `plan` / `search_opportunit
 strings), then makes ONE forced `render_ui` call grounded in **pre-scored** demo data — `score` /
 `whyItFits` / `eligibility` are hard-coded in `data/demo/opportunities.sample.json`. **No stage reasons.**
 
-#18 wants the early stages genuinely model-driven:
+Issue #18 wants the early stages genuinely model-driven:
 - **`assess_stage`** — LLM classifies the founder's stage + the 1–2 things that unlock the next stage.
 - **`search_opportunities`** — LLM ranks/filters/explains over the corpus (not canned, not pre-scored).
 - Each model stage streams real reasoning + emits its own Arize **LLM** span; a **cost chip** (token/cost)
   shows in the HUD.
 
 Track A (`on-it`) stays canned (real routing is Phase 3, #4). Builds directly on the two-path model access
-+ free-chain shipped in #37 (handoff 006).
+and free-chain shipped in #37 (handoff 006).
 
 **Locked decisions (planning session, 2026-07-09):**
 - Per-stage reasoning is delivered **structured, at stage-end** — a FORCED tool with a `reasoning` field →
@@ -37,8 +37,8 @@ Track A (`on-it`) stays canned (real routing is Phase 3, #4). Builds directly on
 - **Full scope + up-front generic plumbing was chosen deliberately** (over a thinner one-stage slice /
   minimal-duplication plumbing) after two KISS/YAGNI/AHA pushbacks — accepting the earlier abstraction
   because ≥3 tools (`render_ui` + `assess_stage` + `search_opportunities`) justify it.
-- **Usecase expansion is the capstone** (PR-5): once the render is corpus-agnostic, add `benefits-copilot`
-  + `tender-finder` + `support-finder` as JSON + synthetic-corpus drops reusing the Phase-2 pipeline — the
+- **Usecase expansion is the capstone** (PR-5): once the render is corpus-agnostic, add `benefits-copilot`,
+  `tender-finder` and `support-finder` as JSON + synthetic-corpus drops reusing the Phase-2 pipeline — the
   "swap a JSON, swap the app" proof, now with real reasoning behind it.
 
 ## Approach
@@ -185,7 +185,7 @@ shell-substitute → `:free: command not found`). `docs/submission.md` PARKED.
 - **Arize:** once a valid ingestion credential is set (#50), confirm the per-stage LLM + usage spans land
   on the dashboard (blocked account-side until then).
 - **New usecases:** drive each of `benefits-copilot` / `tender-finder` / `support-finder` → real reasoning
-  + matched cards over its OWN corpus, no code change beyond the JSON + data (the "swap a JSON" proof);
+  and matched cards over its OWN corpus, no code change beyond the JSON + data (the "swap a JSON" proof);
   `founders-copilot` unchanged.
 - **Drive it:** recapture the demo GIF (polyfetch) to show the streamed reasoning (+ a usecase swap).
 
