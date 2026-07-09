@@ -7,6 +7,11 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- Phase 2 groundwork (#18): generalized the forced-tool model call into `callModelTool` / `extractToolArgs`
+  (runs any tool), with `callRenderModel` now a thin `render_ui` wrapper — no behavior change; added
+  dependency-free `shared/assessTool.ts` + `shared/searchTool.ts` (tool schemas + structural validators; the
+  search validator rejects invented opportunity ids) as the contracts for the upcoming live `assess_stage` /
+  `search_opportunities` stages.
 - UI: **Track B (Founder's Copilot) is the default workflow**, with its example prefilled; the workflow
   **no longer auto-runs on page load** — it runs only when the visitor clicks Run.
 - Workers AI default model → `@cf/openai/gpt-oss-120b` (live-verified 2026-07-08; `@cf/zai-org/glm-4.7-flash`
