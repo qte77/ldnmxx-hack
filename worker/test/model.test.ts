@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { extractBatch, isValidBatch, callRenderModel } from "../src/agent/model";
+import {
+  extractBatch,
+  extractToolArgs,
+  isValidBatch,
+  callRenderModel,
+  callModelTool,
+  type ORResponse,
+} from "../src/agent/model";
 
 const goodBatch = [
   { beginRendering: { surfaceId: "main", root: "root" } },
@@ -74,5 +81,52 @@ describe("callRenderModel", () => {
     const invalid = [{ beginRendering: { surfaceId: "main", root: "nope" } }];
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(toolResponse(invalid)) }));
     expect(await callRenderModel({ apiKey: "k", model: "m", baseURL: "https://x/v1", system: "s", user: "u" })).toBeNull();
+  });
+});
+
+// A tiny non-render tool to exercise the generic path without coupling to render_ui.
+const echoTool = { type: "function", function: { name: "echo" } };
+function echoResponse(args: unknown): unknown {
+  return {
+    choices: [{ message: { tool_calls: [{ function: { name: "echo", arguments: JSON.stringify(args) } }] } }],
+    usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 },
+  };
+}
+
+describe("extractToolArgs", () => {
+  it("parses the named tool's arguments object", () => {
+    expect(extractToolArgs(echoResponse({ text: "hi" }) as ORResponse, "echo")).toEqual({ text: "hi" });
+  });
+  it("returns null when the first tool call is a different tool", () => {
+    expect(extractToolArgs(echoResponse({ text: "hi" }) as ORResponse, "other")).toBeNull();
+  });
+  it("returns null on non-JSON arguments", () => {
+    const r = { choices: [{ message: { tool_calls: [{ function: { name: "echo", arguments: "{bad" } }] } }] };
+    expect(extractToolArgs(r as ORResponse, "echo")).toBeNull();
+  });
+});
+
+describe("callModelTool (generic forced-tool core)", () => {
+  const base = { apiKey: "k", model: "m", baseURL: "https://x/v1", system: "s", user: "u" };
+  const extract = (d: ORResponse): { text?: unknown } | null => extractToolArgs(d, "echo");
+  const validate = (v: { text?: unknown }): boolean => typeof v.text === "string";
+
+  it("returns the validated value + usage on a good response", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(echoResponse({ text: "hi" })) }));
+    const r = await callModelTool({ ...base, tool: echoTool, toolName: "echo", extract, validate });
+    expect(r?.value).toEqual({ text: "hi" });
+    expect(r?.usage.totalTokens).toBe(3);
+  });
+  it("returns null when validation fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(echoResponse({ text: 123 })) }));
+    expect(await callModelTool({ ...base, tool: echoTool, toolName: "echo", extract, validate })).toBeNull();
+  });
+  it("returns null on a non-2xx response", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) }));
+    expect(await callModelTool({ ...base, tool: echoTool, toolName: "echo", extract, validate })).toBeNull();
+  });
+  it("returns null when fetch throws (network/timeout)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("boom")));
+    expect(await callModelTool({ ...base, tool: echoTool, toolName: "echo", extract, validate })).toBeNull();
   });
 });
