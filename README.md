@@ -39,9 +39,9 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
   `usecase` query param; render modes (`founders`/`route`) stay in code.
 - **Generative UI:** the agent streams **AG-UI** events that render as built-in **A2UI cards** — it
   paints the interface, not just text (AG Grid deferred).
-- **Example workflow — Founder's Copilot (flagship):** describe your idea → grants matched to it,
-  qualify-first, plus a verified incorporate how-to pack (shipped today). Stage assessment (#18) and the
-  live Companies House filing (#12) are planned.
+- **Example workflow — Founder's Copilot (flagship):** describe your idea → the model **assesses your
+  stage** and **ranks matching grants** (two live model tools that stream their reasoning, #18),
+  qualify-first, plus a verified incorporate how-to pack. The live Companies House filing (#12) is planned.
 - **Example workflow — On It (interchange proof):** a step-free London route — same engine, one
   `usecase` away (a canned stub today; live tools are planned).
 - Keyless demo path; secrets stay Worker-only *(stack rationale below)*.
