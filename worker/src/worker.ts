@@ -53,15 +53,23 @@ const sleep = (ms: number): Promise<void> =>
 // step-free route would hallucinate; real routing is Phase 3). `founders` generates the cards grounded in
 // the demo data: a BYOK key calls the chosen model directly (keyed path), otherwise the keyless free
 // chain runs; either falls back to the deterministic stub when there's nothing to call or it errors.
+// `meta` describes the model that produced a live render (model/provider/usage); null for the canned route
+// cards and the deterministic stub. runUsecase reads it to derive the honest mode + accumulate tokens.
+interface RenderMeta {
+  model: string;
+  provider: string;
+  usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+}
+
 async function renderBatch(
   render: RenderDef,
   emitter: Emitter,
   ctx: ModelCtx,
   matches?: OpportunityMatch[]
-): Promise<unknown[]> {
-  if (render.mode === "route") return buildRouteCards();
+): Promise<{ batch: unknown[]; meta: RenderMeta | null }> {
+  if (render.mode === "route") return { batch: buildRouteCards(), meta: null };
   const stub = withIncorporate(buildOpportunityCards());
-  if (!ctx.key && ctx.providers.length === 0) return stub;
+  if (!ctx.key && ctx.providers.length === 0) return { batch: stub, meta: null };
   const ac = new AbortController();
   const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
   try {
@@ -75,14 +83,17 @@ async function renderBatch(
     };
     if (ctx.key) {
       const result = await callRenderModel({ apiKey: ctx.key, model: ctx.model, baseURL: ctx.baseURL, ...args });
-      if (!result) return stub;
+      if (!result) return { batch: stub, meta: null };
       emitter.span({ name: "model:openrouter", attrs: { model: result.model, ...result.usage } });
-      return withIncorporate(result.batch);
+      return { batch: withIncorporate(result.batch), meta: { model: result.model, provider: "openrouter", usage: result.usage } };
     }
     const free = await renderFree(ctx.providers, args);
-    if (!free) return stub;
+    if (!free) return { batch: stub, meta: null };
     emitter.span({ name: `model:${free.provider}`, attrs: { model: free.result.model, ...free.result.usage } });
-    return withIncorporate(free.result.batch);
+    return {
+      batch: withIncorporate(free.result.batch),
+      meta: { model: free.result.model, provider: free.provider, usage: free.result.usage },
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -183,6 +194,7 @@ async function resolveRun(
     model: modelLabel(def, key, providers.length, modelCtx.model),
     byok: byokKey.length > 0,
     blocked: injection.flagged,
+    demo, // lets runUsecase tell an explicit DEMO run from a STUB fallback for the USAGE mode
   };
   // Pace the pure-stub path so it "streams" like an agent working; a real model path (keyed or free
   // chain) is paced by its own latency. Overridable via PACE_MS (tests set "0").
@@ -241,6 +253,28 @@ async function runStageModel(exec: StageExec, ctx: ModelCtx, signal: AbortSignal
   );
 }
 
+// The terminal HUD event: emitted ONCE per run, immediately before RUN_FINISHED. Carries the honest 3-state
+// mode (live | demo | stub), the answering model/provider (live only), and the run's summed token usage.
+// useAgentSSE intercepts it in dispatch to drive the status chip — it is never rendered as an A2UI card.
+interface UsageEvent extends AgentEvent {
+  mode: "live" | "demo" | "stub";
+  model?: string;
+  provider?: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+type TokenTotals = { promptTokens: number; completionTokens: number; totalTokens: number };
+
+// Fold one stage/render usage into the running totals (each field is optional per provider → default 0).
+function addUsage(totals: TokenTotals, u?: { promptTokens?: number; completionTokens?: number; totalTokens?: number }): void {
+  if (!u) return;
+  totals.promptTokens += u.promptTokens ?? 0;
+  totals.completionTokens += u.completionTokens ?? 0;
+  totals.totalTokens += u.totalTokens ?? 0;
+}
+
 // The data-driven interpreter: play each stage (a model-backed stage runs its forced tool and streams the
 // reasoning + an LLM span; otherwise the canned events play), then render. One span per stage. Exported so
 // an arbitrary UsecaseDef can be driven directly in tests ("swap a JSON, swap the app").
@@ -255,6 +289,7 @@ export async function runUsecase(
   emitter.span({ name: "run", attrs: runAttrs });
   write({ type: "RUN_STARTED" });
   let matches: OpportunityMatch[] | undefined;
+  const usage: TokenTotals = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
   for (const stage of def.stages) {
     const t0 = Date.now();
     // Model-backed stage on the keyless free-chain path (ctx.providers is empty when keyed / stub-forced).
@@ -267,6 +302,7 @@ export async function runUsecase(
         write({ type: "TEXT_MESSAGE_CONTENT", text: outcome.reasoning });
         write({ type: "TOOL_CALL_END", text: stage.exec });
         if (outcome.matches) matches = outcome.matches;
+        addUsage(usage, outcome.usage);
         emitter.span({ name: `model:${stage.exec}`, attrs: { model: outcome.model, ...outcome.usage } });
         continue;
       }
@@ -280,9 +316,19 @@ export async function runUsecase(
   }
   await sleep(paceMs);
   const t0 = Date.now();
-  const batch = await renderBatch(def.render, emitter, ctx, matches);
+  const { batch, meta } = await renderBatch(def.render, emitter, ctx, matches);
   write({ type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: batch });
   emitter.span({ name: "render", attrs: { kind: "render", latencyMs: Date.now() - t0 } });
+  addUsage(usage, meta?.usage);
+  // Honest 3-state: a live model answered ⇒ "live"; else a deterministic path (explicit ?demo=1 or a
+  // canned route usecase) ⇒ "demo"; else the model path was asked for but degraded to the stub ⇒ "stub".
+  const mode: UsageEvent["mode"] = meta ? "live" : runAttrs.demo === true || def.render.mode === "route" ? "demo" : "stub";
+  const usageEvent: UsageEvent = { type: "USAGE", mode, ...usage };
+  if (meta) {
+    usageEvent.model = meta.model;
+    usageEvent.provider = meta.provider;
+  }
+  write(usageEvent);
   write({ type: "RUN_FINISHED" });
 }
 
