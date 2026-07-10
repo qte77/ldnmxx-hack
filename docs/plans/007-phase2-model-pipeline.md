@@ -103,7 +103,10 @@ Seams (from exploration — line numbers in the Source map):
   appears; `demo=1`/injection → all stages canned (existing span-order assertions hold).
   `usecases.test.ts` — `assertUsecaseDef` accepts/rejects `exec`.
 
-### PR-3 — cost chip in the HUD
+### PR-3 — HUD status bar (RESHAPED from "cost chip") → detailed plan: **`docs/plans/008-hud-status-bar.md`**
+> Reshaped: the cost chip grows into a **Demo⇄Live toggle + honest 3-state mode/model/cost chip** (also
+> wires the `?demo=1` switch, which was unreachable from the UI). Full design + source map in plan 008; the
+> cost-chip mechanics below still hold.
 - Worker: emit accumulated token usage to the UI — a new `AgentEvent` (`{ type: "USAGE", … }`) carrying
   summed prompt/completion tokens (+ derived cost if a rate is configured), reusing `ModelResult.usage`
   (`model.ts:16-20`) from each call. `AgentEvent` is `{ type: string; text?; a2uiMessages? }`

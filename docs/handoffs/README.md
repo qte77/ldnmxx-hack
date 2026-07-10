@@ -2,16 +2,18 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [007 — Phase 2 model-driven pipeline (#18)](007-phase2-model-pipeline.md)
+## ▶ Resume point: [007 — Phase 2 model-driven pipeline (#18)](007-phase2-model-pipeline.md) — living tracker
 
-Pairs with the plan [`docs/plans/007-phase2-model-pipeline.md`](../plans/007-phase2-model-pipeline.md)
-(full source/file/code map). #18 is approved and 0% built — build it as 5 phased, strict-TDD PRs.
+Phase 2 (#18) as 5 strict-TDD PRs. **PR-1 + PR-2 merged**; **PR-3 (HUD status bar) is next** — its detailed
+plan + source map is **[008](008-hud-status-bar.md)** ⇄ [`docs/plans/008`](../plans/008-hud-status-bar.md).
+Also OPEN + green: **PR #62** (Workers AI `ai.run` bind fix) — merge it, then `make deploy`.
 
 ## Index
 
 | # | Handoff | State |
 |---|---|---|
-| 007 | [Phase 2 model-driven pipeline (#18)](007-phase2-model-pipeline.md) | **resume here** — approved, not built |
+| 008 | [PR-3: HUD status bar (Demo⇄Live + cost)](008-hud-status-bar.md) | **build next** — approved, not built |
+| 007 | [Phase 2 model-driven pipeline (#18)](007-phase2-model-pipeline.md) | **living tracker** — PR-1/PR-2 merged |
 | 006 | [Two-path model access shipped (#37)](006-two-path-shipped.md) | superseded |
 | 005 | [Two-path model access (#37)](005-two-path-model-access.md) | superseded |
 | 004 | [Post-MVP priorities](004-post-mvp-priorities.md) | superseded |
