@@ -29,6 +29,19 @@ can't unify without multi-year inter-agency agreement (a **structural** gap, not
 **Joy:** speak an origin + destination → a step-free route with live disruption appears in a
 watch-it-work HUD; voice = accessible by default.
 
+## Both — an honest demo vs live
+
+**Who:** anyone watching the HUD — a judge, a teammate, or the founder themselves.
+
+**Pain:** the deterministic demo stub and the live agent now produce visibly different output, but the
+screen gives no way to tell which you're seeing — or to choose.
+
+**Job:** *"Tell me whether this is the canned demo or the real agent, and let me switch."*
+
+**Joy:** a **Demo⇄Live toggle** picks the next run's mode; an honest chip reports what the last run actually
+did — `LIVE · <model> · ~N tok`, `DEMO · deterministic`, or `STUB · fell back` — never claiming "live" when
+the model path degraded to canned.
+
 ## Why one engine
 
 Both are agents doing real work across fragmented systems. The same `runUsecase` core serves both by

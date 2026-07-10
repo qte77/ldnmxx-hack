@@ -82,9 +82,10 @@ Toggle the two example workflows in the UI; `cd worker && npm run tail` shows on
 **Demo:** <https://qte77.github.io/ldnmxx-hack/> (SPA) · <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>
 (Worker API). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
 
-**Switches:** `?usecase=founders-copilot|on-it` picks the workflow · `?demo=1` forces the keyless
-deterministic stub even with a model key set · `?theme=light|dark` overrides the theme · BYOK sends
-`Authorization: Bearer <key>` to the Worker instead of its server-side key.
+**Switches:** `?usecase=founders-copilot|on-it` picks the workflow · a **Demo⇄Live toggle** in the header
+(or `?demo=1`) forces the keyless deterministic stub even with a model key set — the events header then
+shows an honest chip (`LIVE · <model> · ~N tok` / `DEMO · deterministic` / `STUB · fell back`) · `?theme=light|dark`
+overrides the theme · BYOK sends `Authorization: Bearer <key>` to the Worker instead of its server-side key.
 
 ## Why
 

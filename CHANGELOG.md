@@ -15,6 +15,14 @@ Post-hackathon work on `main`, after the v1.0.0 tag.
   opportunities that don't fit). Regression test added (a `this`-dependent fake binding).
 
 ### Added
+- Phase 2 (#18) PR-3 — a **HUD status bar**. The Worker now emits ONE terminal `USAGE` event per run
+  (`{ mode, model?, provider?, promptTokens, completionTokens, totalTokens }`, between the render write and
+  `RUN_FINISHED`), summed across the live stages + render. The SPA renders an **honest 3-state chip** in the
+  events header — `LIVE · <model> · ~N tok` / `DEMO · deterministic` / `STUB · fell back` (never "LIVE" when
+  the model path fell back). A **Demo⇄Live toggle** (default Live) finally wires the documented `?demo=1`
+  switch from the browser — it was unreachable before (`App.tsx` never forwarded `demo`). Tokens, not `$`
+  (the free chain never spends). Pure `toStatus` mapper; `USAGE` intercepted in `useAgentSSE.dispatch` (like
+  `RUN_ERROR`).
 - Phase 2 (#18) — the founder workflow's early stages are now **model-driven**: `assess_stage` (classify
   the founder's stage + unlock steps) and `search_opportunities` (rank/filter the corpus) run as forced
   tools on the keyless free chain, each streaming its `reasoning` as a live event and emitting its own

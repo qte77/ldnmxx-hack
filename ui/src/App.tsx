@@ -4,7 +4,7 @@ import { A2UISurfaceProvider, A2UISurface } from "./A2UISurface";
 import { EventStream } from "./EventStream";
 import { CatalogViewer } from "./CatalogViewer";
 import { buildCatalogBatch } from "./catalog";
-import { useAgentSSE, type Byok } from "./agent/useAgentSSE";
+import { useAgentSSE, type Byok, type RunStatus } from "./agent/useAgentSSE";
 
 // The two workflows the one engine serves — swap the usecase id, swap the app (the modularity proof).
 const USECASES = [
@@ -56,14 +56,48 @@ function ThemeToggle() {
   );
 }
 
+// Short model label for the chip — drop the provider path: "@cf/openai/gpt-oss-120b" → "gpt-oss-120b".
+function shortModel(model: string): string {
+  const tail = model.split("/").pop();
+  return tail && tail.length > 0 ? tail : model;
+}
+
+// The honest 3-state HUD chip: what the LAST run actually did. Hidden until the first run reports USAGE.
+// LIVE (a model answered) · DEMO (deterministic, opt-in or a canned route) · STUB (model path fell back).
+function StatusChip({ status }: { status: RunStatus | null }) {
+  if (!status) return null;
+  const { mode, model, tokens } = status;
+  const label =
+    mode === "live"
+      ? `LIVE · ${model ? shortModel(model) : "model"} · ~${String(tokens)} tok`
+      : mode === "demo"
+        ? "DEMO · deterministic"
+        : "STUB · fell back";
+  const color =
+    mode === "live"
+      ? "bg-data-positive/15 text-data-positive"
+      : mode === "demo"
+        ? "bg-text-muted/15 text-text-muted"
+        : "bg-data-caution/15 text-data-caution";
+  return (
+    <span
+      title={mode === "live" && model ? model : label}
+      className={`px-2 py-0.5 rounded normal-case tracking-normal font-semibold truncate max-w-[70%] ${color}`}
+    >
+      {label}
+    </span>
+  );
+}
+
 function Dashboard() {
-  const { eventLog, isRunning, error, run, stop } = useAgentSSE();
+  const { eventLog, isRunning, error, run, stop, status } = useAgentSSE();
   const { processMessages, clearSurfaces } = useA2UIActions();
   const [usecase, setUsecase] = useState<string>(USECASES[0].id); // Track B (Founder's Copilot) leads
   const [prompt, setPrompt] = useState<string>(USECASES[0].example);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_BYOK_API_KEY ?? "");
   const [model, setModel] = useState(import.meta.env.VITE_BYOK_MODEL ?? "");
+  const [demo, setDemo] = useState(false); // Live (agents, default) vs the deterministic Demo path
 
   const active = USECASES.find((u) => u.id === usecase) ?? USECASES[0];
 
@@ -71,9 +105,9 @@ function Dashboard() {
     (e: SyntheticEvent) => {
       e.preventDefault();
       const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
-      void run(usecase, prompt, byok);
+      void run(usecase, prompt, byok, demo);
     },
-    [run, usecase, prompt, apiKey, model]
+    [run, usecase, prompt, apiKey, model, demo]
   );
 
   // Render one live example of each core A2UI component on the surface (the catalog).
@@ -111,6 +145,29 @@ function Dashboard() {
               }`}
             >
               {u.label}
+            </button>
+          ))}
+          <span className="w-px h-5 bg-border mx-1" aria-hidden />
+          {/* Live (agents) vs Demo (deterministic): sets the NEXT run's intent; the chip shows the last run's truth. */}
+          {(
+            [
+              { on: false, label: "Live", hint: "Agents answer, restricted to the corpus" },
+              { on: true, label: "Demo", hint: "Deterministic — no model call" },
+            ] as const
+          ).map((m) => (
+            <button
+              key={m.label}
+              type="button"
+              onClick={() => setDemo(m.on)}
+              title={m.hint}
+              aria-pressed={m.on === demo}
+              className={`px-3 py-1 rounded border text-sm transition-colors ${
+                m.on === demo
+                  ? "border-primary text-primary"
+                  : "border-border text-text-muted hover:border-primary"
+              }`}
+            >
+              {m.label}
             </button>
           ))}
           <CatalogViewer onRenderLive={renderCatalog} />
@@ -179,8 +236,9 @@ function Dashboard() {
           <A2UISurface />
         </main>
         <aside className="w-96 border-l border-border flex flex-col min-h-0">
-          <div className="h-10 flex items-center px-2 border-b border-border text-xs font-semibold text-data-positive uppercase tracking-wide">
-            AG-UI Events
+          <div className="h-10 flex items-center justify-between gap-2 px-2 border-b border-border text-xs font-semibold text-data-positive uppercase tracking-wide">
+            <span>AG-UI Events</span>
+            <StatusChip status={status} />
           </div>
           <div className="flex-1 min-h-0">
             <EventStream events={eventLog} />

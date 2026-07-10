@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { parseSSE } from "../src/agent/useAgentSSE";
+import { parseSSE, toStatus } from "../src/agent/useAgentSSE";
 import { applyA2UIEvent, type AgentEvent } from "../src/agent/applyA2UIEvent";
 import { A2UIMessageBatchSchema } from "../src/agent/contract";
 
@@ -33,6 +33,43 @@ describe("parseSSE", () => {
       `data: ${JSON.stringify({ type: "RUN_ERROR", text: "boom" })}\n\n`
     );
     expect(events[0]).toEqual({ type: "RUN_ERROR", text: "boom" });
+  });
+
+  it("round-trips a terminal USAGE frame, preserving its mode/model/token fields", () => {
+    const usage = {
+      type: "USAGE",
+      mode: "live",
+      model: "@cf/openai/gpt-oss-120b",
+      provider: "workers-ai",
+      promptTokens: 10,
+      completionTokens: 10,
+      totalTokens: 20,
+    };
+    const { events } = parseSSE(`data: ${JSON.stringify(usage)}\n\n`);
+    expect(events[0]).toEqual(usage);
+  });
+});
+
+describe("toStatus", () => {
+  it("maps a live USAGE frame to mode + model + summed tokens", () => {
+    const s = toStatus({
+      type: "USAGE",
+      mode: "live",
+      model: "@cf/openai/gpt-oss-120b",
+      totalTokens: 20,
+    } as AgentEvent);
+    expect(s).toEqual({ mode: "live", model: "@cf/openai/gpt-oss-120b", tokens: 20 });
+  });
+
+  it("maps a demo USAGE frame (no model, zero tokens)", () => {
+    const s = toStatus({ type: "USAGE", mode: "demo", totalTokens: 0 } as AgentEvent);
+    expect(s).toEqual({ mode: "demo", model: undefined, tokens: 0 });
+  });
+
+  it("defaults an unknown/missing mode to stub — never claims live", () => {
+    const s = toStatus({ type: "USAGE" });
+    expect(s.mode).toBe("stub");
+    expect(s.tokens).toBe(0);
   });
 });
 

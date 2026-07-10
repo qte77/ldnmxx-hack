@@ -13,6 +13,12 @@ interface Frame {
   type: string;
   text?: string;
   a2uiMessages?: Batch[];
+  mode?: string;
+  model?: string;
+  provider?: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
 }
 
 const env = { ALLOWED_ORIGINS: "https://qte77.github.io,http://localhost:5173", PACE_MS: "0" };
@@ -247,5 +253,50 @@ describe("worker /run", () => {
     const texts = frames.filter((f) => f.type === "TEXT_MESSAGE_CONTENT").map((f) => f.text);
     expect(texts).toContain("Assessing your stage and matching funding…"); // the canned plan line
     expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
+  });
+
+  // The HUD status bar reads ONE terminal USAGE frame (mode/model/summed tokens) to render its honest
+  // 3-state chip. USAGE is emitted exactly once, immediately before RUN_FINISHED.
+  it("emits one terminal USAGE frame (mode:live + model + summed tokens) on a keyless model run", async () => {
+    const aiEnv = { ...env, AI: stageAwareAi() };
+    const frames = parseFrames(await worker.fetch(post("founders-copilot"), aiEnv as never, ctx).then((r) => r.text()));
+    const usageFrames = frames.filter((f) => f.type === "USAGE");
+    expect(usageFrames).toHaveLength(1);
+    // terminal: the last two frames are USAGE then RUN_FINISHED
+    expect(frames.at(-2)?.type).toBe("USAGE");
+    expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
+    const usage = usageFrames[0];
+    expect(usage.mode).toBe("live");
+    expect(usage.model).toBeTruthy();
+    expect(usage.provider).toBe("workers-ai");
+    // two model stages × 10 tokens each; the faked render batch carries no usage
+    expect(usage.totalTokens).toBe(20);
+    expect(usage.promptTokens).toBe(10);
+    expect(usage.completionTokens).toBe(10);
+  });
+
+  it("emits a USAGE frame with mode:demo and zero tokens when ?demo=1 (even with a key set)", async () => {
+    const keyedEnv = { ...env, OPENROUTER_KEY: "sk-test" };
+    const req = new Request("https://w.example/run?usecase=founders-copilot&demo=1", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://qte77.github.io" },
+      body: JSON.stringify({ prompt: "x" }),
+    });
+    const frames = parseFrames(await worker.fetch(req, keyedEnv, ctx).then((r) => r.text()));
+    const usage = frames.find((f) => f.type === "USAGE");
+    expect(usage?.mode).toBe("demo");
+    expect(usage?.totalTokens).toBe(0);
+    expect(usage?.model).toBeUndefined();
+    expect(frames.at(-2)?.type).toBe("USAGE");
+    expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
+  });
+
+  it("emits a USAGE frame with mode:stub when the model path fails and degrades to the canned stub", async () => {
+    const aiEnv = { ...env, AI: { run: vi.fn().mockRejectedValue(new Error("boom")) } };
+    const frames = parseFrames(await worker.fetch(post("founders-copilot"), aiEnv as never, ctx).then((r) => r.text()));
+    const usage = frames.find((f) => f.type === "USAGE");
+    expect(usage?.mode).toBe("stub");
+    expect(usage?.totalTokens).toBe(0);
+    expect(usage?.model).toBeUndefined();
   });
 });

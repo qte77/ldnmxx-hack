@@ -18,7 +18,7 @@ in code. Only three seams change:
 ```
 user input → SPA useAgentSSE ──POST /run?usecase=<id>──▶ Worker  [TRUST BOUNDARY — secrets here]
                                                           runUsecase: plan → tool → render
-                                       ◀── SSE {type,text,a2uiMessages} + RUN_FINISHED ──
+                                 ◀── SSE {type,text,a2uiMessages} + terminal USAGE + RUN_FINISHED ──
    SPA: parse frames → AgentEvent → applyA2UIEvent (validate vs contract.ts) → render seam
         → A2UI surface (built-in Column/Card render)  +  EventStream (live log)
 
@@ -34,6 +34,13 @@ chain as the render (`runChain` + per-provider `tryCall`) — streaming the mode
 result / invalid / keyed / stub-forced) plays the stage's canned events instead — never worse than the
 deterministic path. So the render is no longer the only model call, and `search_opportunities`'s ranked
 matches ground it.
+
+**HUD status bar (#18, PR-3).** After the render, `runUsecase` emits ONE terminal `USAGE` event
+(`{ mode, model?, provider?, promptTokens, completionTokens, totalTokens }`) just before `RUN_FINISHED`,
+with tokens summed across the live stages + render. The SPA intercepts it in `useAgentSSE.dispatch` (a pure
+`toStatus` mapper — not through `applyA2UIEvent`, which drops non-`type/text` fields) and renders an honest
+3-state chip: `LIVE · <model> · ~N tok` / `DEMO · deterministic` / `STUB · fell back`. A **Demo⇄Live toggle**
+sets the next run's `?demo=1` intent; the chip reports what the last run actually did.
 
 ## Separation of concerns (module boundaries = single seams)
 

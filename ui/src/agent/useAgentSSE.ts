@@ -58,6 +58,30 @@ export function parseSSE(buffer: string): { events: AgentEvent[]; rest: string }
   return { events, rest };
 }
 
+// The HUD status the chip renders: the honest mode of the LAST run, plus the answering model and the run's
+// summed tokens (live only). `demo`/`stub` carry no model and 0 tokens.
+export interface RunStatus {
+  mode: "live" | "demo" | "stub";
+  model?: string | undefined;
+  tokens: number;
+}
+
+// The raw terminal USAGE frame — its extra fields survive parseSSE (which keeps the whole parsed object)
+// even though AgentEvent's type omits them, so we read them off here.
+interface UsageFrame extends AgentEvent {
+  mode?: string;
+  model?: string;
+  totalTokens?: number;
+}
+
+// Pure mapper: a USAGE frame → the chip status. An unknown/missing mode defaults to "stub" — if we can't
+// tell what happened, never claim "live".
+export function toStatus(event: AgentEvent): RunStatus {
+  const u = event as UsageFrame;
+  const mode: RunStatus["mode"] = u.mode === "live" ? "live" : u.mode === "demo" ? "demo" : "stub";
+  return { mode, model: u.model, tokens: u.totalTokens ?? 0 };
+}
+
 function buildHeaders(byok?: Byok): Record<string, string> {
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (byok?.apiKey) headers.authorization = `Bearer ${byok.apiKey}`;
@@ -148,6 +172,7 @@ export function useAgentSSE() {
   const [eventLog, setEventLog] = useState<EventLogEntry[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<RunStatus | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const render = useCallback(
@@ -163,6 +188,7 @@ export function useAgentSSE() {
       setIsRunning(true);
       setError(null);
       setEventLog([]);
+      setStatus(null); // clear the last run's chip; the next USAGE frame sets the new one
       clearSurfaces();
 
       const start = Date.now();
@@ -171,6 +197,7 @@ export function useAgentSSE() {
 
       const dispatch = (event: AgentEvent): void => {
         if (event.type === "RUN_ERROR") setError(event.text ?? "run error");
+        if (event.type === "USAGE") setStatus(toStatus(event)); // terminal HUD frame → drive the chip
         const entry = applyA2UIEvent(event, Date.now() - start, render);
         setEventLog((prev) => appendLogEntry(prev, entry));
       };
@@ -195,5 +222,5 @@ export function useAgentSSE() {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  return { eventLog, isRunning, error, run, stop };
+  return { eventLog, isRunning, error, run, stop, status };
 }

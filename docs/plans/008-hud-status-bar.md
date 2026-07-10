@@ -5,14 +5,14 @@ updated: 2026-07-10
 issue: 18
 part_of: docs/plans/007-phase2-model-pipeline.md  (this is plan 007's PR-3, reshaped)
 pairs_with: docs/handoffs/008-hud-status-bar.md
-status: approved, 0% built
+status: shipped — PR-3 built + merged
 ---
 
 # Plan 008 — PR-3: HUD status bar (Demo⇄Live + mode/model + cost)
 
-> **Approved, 0% built.** This is **plan 007's PR-3**, reshaped from "a cost chip" into a HUD status bar +
-> Demo/Live toggle. The **Source map** at the bottom is the current code state (`main`, post-PR-2) — trust
-> it instead of re-exploring. Strict TDD, module-level tests only.
+> **Shipped (PR-3 built + merged).** This is **plan 007's PR-3**, reshaped from "a cost chip" into a HUD
+> status bar + Demo/Live toggle. The **Source map** at the bottom is the current code state (`main`,
+> post-PR-2) — trust it instead of re-exploring. Strict TDD, module-level tests only.
 
 ## Context
 
@@ -91,10 +91,12 @@ topic → CI-gated PR → squash-on-green → prune. Identity: GitHub noreply, `
   model call; a forced model failure (bogus `WORKERS_AI_MODEL`) → chip `STUB · fell back`.
 
 ## Dependency / ordering
+- [x] **#62 merged** (`0d97810`) — the `ai.run` bind fix is in `main`; PR-3 branches straight off `main` (no rebase).
+
 PR-3 is UI + a worker `USAGE` event — does **not** depend on #62's code, but the **live re-verify** needs
-#62 (bind fix) merged + deployed so "Live" actually streams reasoning. Recommend: merge #62 → redeploy →
-then this PR. The invalid `OPENROUTER_KEY` (401) is a dead fallback tier now — harmless with Workers AI as
-tier 1 (rotate to a capped `:free` key when convenient).
+the #62 bind fix merged + deployed so "Live" actually streams reasoning: `make deploy`, then verify. The
+invalid `OPENROUTER_KEY` (401) is a dead fallback tier now — harmless with Workers AI as tier 1 (rotate to a
+capped `:free` key when convenient).
 
 ## Out of scope
 BYOK `$`-cost rate · per-stage cost breakdown · corpus enhancement + the 3 new usecases (plan 007 **PR-5**).

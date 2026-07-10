@@ -70,6 +70,7 @@ describe("runUsecase — swap-a-JSON proof", () => {
       "RUN_STARTED",
       "TOOL_CALL_START",
       "TOOL_CALL_END",
+      "USAGE", // terminal HUD frame — a canned route render reads as the deterministic "demo" mode
       "RUN_FINISHED",
     ]);
     expect(events[1].text).toBe("custom_x");
