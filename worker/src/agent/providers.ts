@@ -72,11 +72,13 @@ const asRender = (r: ModelToolResult<unknown[]> | null): ModelResult | null =>
 export function workersAiProvider(ai: Ai, model: string = DEFAULT_WORKERS_AI_MODEL): Provider {
   const tryCall = async <T>(spec: ToolSpec<T>, { system, user, signal }: CallArgs): Promise<ModelToolResult<T> | null> => {
     try {
-      const run = ai.run as unknown as (
+      // Bind to `ai` — the binding's run() uses private fields (this.#options), so a detached call throws
+      // "Cannot set properties of undefined (setting '#options')". (Unit tests use a plain fn, so they miss it.)
+      const run = (ai.run as unknown as (
         m: string,
         inputs: unknown,
         options?: { signal?: AbortSignal }
-      ) => Promise<unknown>;
+      ) => Promise<unknown>).bind(ai);
       const out = (await run(
         model,
         {

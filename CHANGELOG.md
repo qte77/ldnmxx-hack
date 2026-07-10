@@ -6,6 +6,14 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
+### Fixed
+- **Workers AI free provider now actually runs in the deployed Worker.** `workersAiProvider` invoked the
+  `ai.run` binding **detached** from `ai`, so the binding's private-field access (`this.#options`) threw
+  (`Cannot set properties of undefined`) and *every* keyless run silently fell back to the stub — since
+  #37 the deployed demo had never been model-driven. Bind `ai.run` to `ai`. The live site now streams real
+  `assess_stage` / `search_opportunities` reasoning + a model-grounded render (the model even drops
+  opportunities that don't fit). Regression test added (a `this`-dependent fake binding).
+
 ### Added
 - Phase 2 (#18) — the founder workflow's early stages are now **model-driven**: `assess_stage` (classify
   the founder's stage + unlock steps) and `search_opportunities` (rank/filter the corpus) run as forced
