@@ -1,0 +1,24 @@
+---
+# Dedicated Markdown lint (the "Lint" badge). Self-contained — only the github-owned checkout action
+# (SHA-pinned per repo policy: allowed_actions=selected + sha_pinning_required), no third-party actions, so
+# it runs without extra allowlist entries. markdownlint lives HERE (not in ci.yml) to mirror agenthud's
+# split: ci.yml gates code (security/ui/worker), this gates docs.
+name: Lint MD and Links
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - run: npx --yes markdownlint-cli2 "**/*.md"
+...

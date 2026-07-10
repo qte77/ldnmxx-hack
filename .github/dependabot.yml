@@ -1,0 +1,51 @@
+---
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/ui"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm:
+        patterns: ["*"]
+    labels: ["dependencies", "npm"]
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      # AI-SDK majors break the browser-BYOK live-agent path (streamText / tool-call shapes) — handled
+      # in a deliberate migration PR, not an auto-bump.
+      - dependency-name: "ai"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@ai-sdk/openai"
+        update-types: ["version-update:semver-major"]
+      # @a2ui/react is 0.x, so a breaking renderer/protocol change can ship as a 0.x MINOR. Ignore both
+      # so it's a deliberate migration PR, not an auto-bump (same rationale as the AI-SDK above). Patch
+      # bumps still flow — CI's real-renderer test guards them.
+      - dependency-name: "@a2ui/react"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  - package-ecosystem: "npm"
+    directory: "/worker"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm:
+        patterns: ["*"]
+    labels: ["dependencies", "npm"]
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      # wrangler@4 peer-pins @cloudflare/workers-types to ^4; the v5 major conflicts (ERESOLVE).
+      - dependency-name: "@cloudflare/workers-types"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "chore(ci)"
+...

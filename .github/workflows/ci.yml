@@ -8,15 +8,9 @@ on:
 permissions:
   contents: read
 
-# Docs lint + security + the Phase-1 ui/worker build+test gates. Actions are SHA-pinned (repo policy
-# requires it: allowed_actions=selected + sha_pinning_required); the trailing comment tracks the tag.
+# Security + the Phase-1 ui/worker build+test gates (Markdown lint lives in lint-md-links.yml). Actions are
+# SHA-pinned (repo policy: allowed_actions=selected + sha_pinning_required); the trailing comment tracks the tag.
 jobs:
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - run: npx --yes markdownlint-cli2 "**/*.md"
-
   security:
     runs-on: ubuntu-latest
     steps:

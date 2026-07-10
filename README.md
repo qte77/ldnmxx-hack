@@ -6,10 +6,13 @@
 **[▶ Live demo](https://qte77.github.io/ldnmxx-hack/)** · one engine, two London workflows — a
 founder-funding copilot and step-free routing · Londonmaxxing 003.
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-Apache%202.0-58f4c2.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-58f4c2.svg)](CHANGELOG.md)
 [![CI](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/qte77/ldnmxx-hack/actions/workflows/codeql.yaml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/codeql.yaml)
 [![CodeFactor](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack/badge)](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack)
+[![Lint](https://github.com/qte77/ldnmxx-hack/actions/workflows/lint-md-links.yml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/lint-md-links.yml)
+[![Dependabot](https://github.com/qte77/ldnmxx-hack/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/dependabot/dependabot-updates)
 
 ## What
 
