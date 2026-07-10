@@ -44,8 +44,8 @@ Write the failing `worker/test/run.test.ts` `USAGE`-frame assertions (reuse `par
 
 ## Recurring checklist (pre-answered in plan 008)
 CHANGELOG · README `Switches` (fix `?demo=1` — now a UI toggle) · `architecture.md` (USAGE event) ·
-`UserStory.md` (mode-transparency story) · no new env/url/cli · open a "Demo/Live toggle" issue (or note in
-#18) + a 1-liner for the invalid `OPENROUTER_KEY` (401). Lands under **#18**.
+`UserStory.md` (mode-transparency story) · no new env/url/cli · open a "Demo/Live toggle" issue (or note in #18)
++ a 1-liner for the invalid `OPENROUTER_KEY` (401). Lands under **#18**.
 
 ## Blocking / ordering (do these first for the LIVE re-verify)
 - [x] **#62 merged** (`0d97810`, bind fix in `main`) — run **`make deploy`** so "Live" actually streams

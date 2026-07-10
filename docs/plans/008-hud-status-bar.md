@@ -94,7 +94,7 @@ topic → CI-gated PR → squash-on-green → prune. Identity: GitHub noreply, `
 - [x] **#62 merged** (`0d97810`) — the `ai.run` bind fix is in `main`; PR-3 branches straight off `main` (no rebase).
 
 PR-3 is UI + a worker `USAGE` event — does **not** depend on #62's code, but the **live re-verify** needs
-#62 (bind fix) merged + deployed so "Live" actually streams reasoning: `make deploy`, then verify. The
+the #62 bind fix merged + deployed so "Live" actually streams reasoning: `make deploy`, then verify. The
 invalid `OPENROUTER_KEY` (401) is a dead fallback tier now — harmless with Workers AI as tier 1 (rotate to a
 capped `:free` key when convenient).
 
