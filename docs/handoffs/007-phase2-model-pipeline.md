@@ -19,23 +19,24 @@ when all five are done.
 
 | PR | What | State |
 |----|------|-------|
-| PR-1 | generic `callModelTool`/`extractToolArgs` + `shared/{assess,search}Tool.ts` (schemas + validators) | ✅ merged |
-| PR-2 | free-chain generalization (`runChain`/`tryCall`) + per-stage dispatch (`StageDef.exec`, reasoning + LLM span, thread matches → render) | ✅ merged |
-| PR-3 | **HUD status bar** — Demo⇄Live toggle + mode/model + cost chip (`USAGE` event). *Reshaped from "cost chip"; detailed plan+handoff: **008*** | ▶ **next** |
-| PR-4 | Arize live + notes (#50 / `AGENT_LEARNINGS.md`) — **closes #18** | ⏳ |
-| PR-5 | capstone: corpus-agnostic `match` render + 3 new usecases | ⏳ |
+| PR-1 | generic `callModelTool`/`extractToolArgs` + `shared/{assess,search}Tool.ts` (schemas + validators) | [x] merged |
+| PR-2 | free-chain generalization (`runChain`/`tryCall`) + per-stage dispatch (`StageDef.exec`, reasoning + LLM span, thread matches → render) | [x] merged |
+| PR-3 | **HUD status bar** — Demo⇄Live toggle + mode/model + cost chip (`USAGE` event). *Reshaped from "cost chip"; detailed plan+handoff: **008*** | [x] merged |
+| PR-4 | Arize live + notes (#50 / `AGENT_LEARNINGS.md`) — **closes #18** | [ ] **next** |
+| PR-5 | capstone: corpus-agnostic `match` render + 3 new usecases | [ ] |
 
-**Current position:** PR-1 + PR-2 merged — the free chain is generic (`runChain`/`tryCall`) and the founder
-workflow's plan + search stages now run live model tools (`assess_stage` / `search_opportunities`),
-streaming reasoning + a `model:<exec>` LLM span each, matches threaded into the render; any miss falls back
-to canned. → start **PR-3** = the HUD status bar (see plan/handoff **008** for the detailed plan + source map).
+**Current position:** PR-1 + PR-2 + PR-3 merged — the free chain is generic (`runChain`/`tryCall`), the
+founder workflow's plan + search stages run live model tools (`assess_stage` / `search_opportunities`)
+streaming reasoning + a `model:<exec>` LLM span each (matches threaded into the render; any miss → canned),
+and the HUD now emits a terminal `USAGE` event → an honest Demo⇄Live chip (plan/handoff **008**). → start
+**PR-4** = Arize live resolution + notes (#50 / `AGENT_LEARNINGS.md`), which **closes #18**.
 
 > **PR-2 verified live (2026-07-10) + a bug fixed.** Driving the *deployed* worker (`wrangler tail` +
 > polyfetch) proved the streamed reasoning works — but only after fixing a `this`-binding bug: `ai.run` was
 > called detached, so Workers AI had **silently stubbed since #37**. Fix is **PR #62** (bind `ai.run` to
-> `ai`, + a `this`-dependent regression test) — green, **OPEN**, merge it. Also surfaced: the deployed
-> `OPENROUTER_KEY` returns 401 (dead fallback tier; rotate to a capped `:free` key — harmless with Workers
-> AI as tier 1). After #62 merges, `make deploy` to make Live real on the site.
+> `ai`, + a `this`-dependent regression test) — [x] **merged** (`0d97810`, in `main`). Still open: the
+> deployed `OPENROUTER_KEY` returns 401 (dead fallback tier; rotate to a capped `:free` key — harmless with
+> Workers AI as tier 1). Run `make deploy` to make Live real on the site.
 
 ## The one-paragraph why
 

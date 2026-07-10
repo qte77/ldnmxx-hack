@@ -6,8 +6,8 @@ updated: 2026-07-10
 
 # Handoff 008 — build PR-3: the HUD status bar (make demo vs live honest)
 
-**Status:** Plan **[`docs/plans/008-hud-status-bar.md`](../plans/008-hud-status-bar.md)** is **approved,
-0% built**. This is **plan 007's PR-3**, reshaped from "a cost chip" into a HUD status bar + Demo/Live
+**Status:** Plan **[`docs/plans/008-hud-status-bar.md`](../plans/008-hud-status-bar.md)** is **built +
+merged (PR-3)**. This is **plan 007's PR-3**, reshaped from "a cost chip" into a HUD status bar + Demo/Live
 toggle. The living phase-2 resume doc is still
 [`007-phase2-model-pipeline.md`](007-phase2-model-pipeline.md) (tick its Progress when this merges); **008
 is the detailed PR-3 plan** with a full source map — trust it, don't re-explore.
@@ -48,11 +48,11 @@ CHANGELOG · README `Switches` (fix `?demo=1` — now a UI toggle) · `architect
 #18) + a 1-liner for the invalid `OPENROUTER_KEY` (401). Lands under **#18**.
 
 ## Blocking / ordering (do these first for the LIVE re-verify)
-- **Merge #62** (bind fix — green, OPEN) then **`make deploy`** so "Live" actually streams reasoning. PR-3's
-  *code* doesn't depend on #62, but the live verification does.
-- **Rotate `OPENROUTER_KEY`** (currently 401 — a capped `:free` key; the `!`-piped `wrangler secret put`
+- [x] **#62 merged** (`0d97810`, bind fix in `main`) — run **`make deploy`** so "Live" actually streams
+  reasoning. PR-3's *code* doesn't depend on #62, but the live verification does.
+- [ ] **Rotate `OPENROUTER_KEY`** (currently 401 — a capped `:free` key; the `!`-piped `wrangler secret put`
   one-liner is in the session log). Harmless meanwhile (Workers AI is tier 1).
-- Branch PR-3 off `main` after #62 lands (else off `main` + rebase).
+- [x] Branch PR-3 off `main` — #62 already merged, so no rebase needed.
 
 ## Conventions (unchanged)
 Plan mode before implementing · strict TDD (module tests only — not glue; ui tests are node-env pure fns) ·
