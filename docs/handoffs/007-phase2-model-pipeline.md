@@ -21,20 +21,21 @@ when all five are done.
 |----|------|-------|
 | PR-1 | generic `callModelTool`/`extractToolArgs` + `shared/{assess,search}Tool.ts` (schemas + validators) | ✅ merged |
 | PR-2 | free-chain generalization (`runChain`/`tryCall`) + per-stage dispatch (`StageDef.exec`, reasoning + LLM span, thread matches → render) | ✅ merged |
-| PR-3 | cost chip (`USAGE` event + HUD chip) | ▶ **next** |
+| PR-3 | **HUD status bar** — Demo⇄Live toggle + mode/model + cost chip (`USAGE` event). *Reshaped from "cost chip"; detailed plan+handoff: **008*** | ▶ **next** |
 | PR-4 | Arize live + notes (#50 / `AGENT_LEARNINGS.md`) — **closes #18** | ⏳ |
 | PR-5 | capstone: corpus-agnostic `match` render + 3 new usecases | ⏳ |
 
 **Current position:** PR-1 + PR-2 merged — the free chain is generic (`runChain`/`tryCall`) and the founder
 workflow's plan + search stages now run live model tools (`assess_stage` / `search_opportunities`),
 streaming reasoning + a `model:<exec>` LLM span each, matches threaded into the render; any miss falls back
-to canned. → start **PR-3** (cost chip).
+to canned. → start **PR-3** = the HUD status bar (see plan/handoff **008** for the detailed plan + source map).
 
-> **Live-verification debt (PR-2):** the streamed-reasoning path is unit-tested (83 worker tests) but not
-> yet seen live — the local `[ai]` binding needs Cloudflare auth. Verify against the deployed worker (after
-> a `make deploy`) or with a local `OPENROUTER_KEY`: a keyless founders Run should stream two reasoning
-> lines before the cards, and `wrangler tail` should show `model:assess_stage` + `model:search_opportunities`
-> LLM spans.
+> **PR-2 verified live (2026-07-10) + a bug fixed.** Driving the *deployed* worker (`wrangler tail` +
+> polyfetch) proved the streamed reasoning works — but only after fixing a `this`-binding bug: `ai.run` was
+> called detached, so Workers AI had **silently stubbed since #37**. Fix is **PR #62** (bind `ai.run` to
+> `ai`, + a `this`-dependent regression test) — green, **OPEN**, merge it. Also surfaced: the deployed
+> `OPENROUTER_KEY` returns 401 (dead fallback tier; rotate to a capped `:free` key — harmless with Workers
+> AI as tier 1). After #62 merges, `make deploy` to make Live real on the site.
 
 ## The one-paragraph why
 
