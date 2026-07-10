@@ -22,3 +22,19 @@ ${A2UI_RULES}`;
 export function foundersUser(idea: string, opps: unknown): string {
   return `Idea: ${idea || "(not provided)"}\n\nCandidate opportunities (JSON):\n${JSON.stringify(opps)}\n\nRender the matched opportunity cards.`;
 }
+
+// Phase-2 stage prompts. Each drives a forced tool (assess_stage / search_opportunities); the model's
+// `reasoning` streams to the HUD and its structured output feeds the next stage / the render.
+
+export const ASSESS_STAGE_SYSTEM = `You are Groundwork's Founder's Copilot. Given a founder's idea, classify their CURRENT stage and the 1-2 concrete things that unlock the next stage. Call the \`assess_stage\` tool with: a one-sentence \`reasoning\`, a \`stage\` (one of "idea", "prototype", "pre-incorporation", "incorporated"), and an \`unlock\` array of the next concrete steps. Base the stage on evidence in the idea; when unsure, pick the earlier stage.`;
+
+export function assessUser(idea: string): string {
+  return `Idea: ${idea || "(not provided)"}\n\nAssess the founder's current stage.`;
+}
+
+export const SEARCH_SYSTEM = `You are Groundwork's Founder's Copilot. Given a founder's idea and a JSON list of candidate funding opportunities, pick and RANK the best-matched ones. Call the \`search_opportunities\` tool with a one-sentence \`reasoning\` and a \`matches\` array. For each match: the opportunity's \`id\` copied VERBATIM from a candidate (never invent an id), a \`score\` 0-100 for how well it fits THIS idea, a one-line \`whyItFits\`, and a short \`stageFit\` (how it suits the founder's stage). Omit opportunities that don't genuinely fit; return the strongest first.`;
+
+// `opps` is the candidate corpus (passed in to stay dependency-free, same as foundersUser).
+export function searchUser(idea: string, opps: unknown): string {
+  return `Idea: ${idea || "(not provided)"}\n\nCandidate opportunities (JSON):\n${JSON.stringify(opps)}\n\nRank the matches, using only these ids.`;
+}

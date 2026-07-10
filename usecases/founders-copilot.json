@@ -6,6 +6,7 @@
     {
       "span": "plan",
       "kind": "plan",
+      "exec": "assess_stage",
       "events": [
         { "type": "STEP_STARTED", "text": "understand the idea" },
         { "type": "TEXT_MESSAGE_CONTENT", "text": "Assessing your stage and matching funding…" }
@@ -14,6 +15,7 @@
     {
       "span": "tool:search_opportunities",
       "kind": "tool",
+      "exec": "search_opportunities",
       "events": [
         { "type": "TOOL_CALL_START", "text": "search_opportunities" },
         { "type": "TOOL_CALL_END", "text": "search_opportunities" }

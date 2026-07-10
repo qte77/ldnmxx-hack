@@ -57,17 +57,19 @@ export function extractBatch(data: ORResponse): unknown[] | null {
 // and worker/test/model.test.ts keep importing `isValidBatch` from here.
 export const isValidBatch = isSelfContainedBatch;
 
+// A forced tool + how to pull and validate its structured output. Reused by callModelTool and every
+// provider (render_ui, assess_stage, search_opportunities, …) so one plumbing runs any tool.
+export interface ToolSpec<T> {
+  tool: unknown; // JSON tool schema, e.g. RENDER_UI_TOOL
+  toolName: string; // forced tool_choice name + the arguments key to extract
+  extract: (data: ORResponse) => T | null;
+  validate: (value: T) => boolean;
+}
+
 // Generic forced-tool call: POST a single forced tool_choice, then extract + validate its arguments.
 // Returns the validated value + usage, or null on ANY failure (HTTP, no/empty tool call, invalid, throw) so
 // the caller falls back to its deterministic default. `callRenderModel` and the provider chain build on it.
-export async function callModelTool<T>(
-  opts: ModelCall & {
-    tool: unknown; // JSON tool schema, e.g. RENDER_UI_TOOL
-    toolName: string; // forced tool_choice name + the arguments key to extract
-    extract: (data: ORResponse) => T | null;
-    validate: (value: T) => boolean;
-  }
-): Promise<ModelToolResult<T> | null> {
+export async function callModelTool<T>(opts: ModelCall & ToolSpec<T>): Promise<ModelToolResult<T> | null> {
   try {
     const res = await fetch(`${opts.baseURL}/chat/completions`, {
       method: "POST",

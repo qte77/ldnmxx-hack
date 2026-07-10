@@ -83,6 +83,28 @@ function toolOutput(batch: unknown): unknown {
   };
 }
 
+// An OpenAI-compatible tool-call output for an arbitrary tool (assess_stage / search_opportunities).
+function toolCall(name: string, args: unknown): unknown {
+  return {
+    choices: [{ message: { tool_calls: [{ function: { name, arguments: JSON.stringify(args) } }] } }],
+    usage: { prompt_tokens: 5, completion_tokens: 5, total_tokens: 10 },
+  };
+}
+
+// A fake Workers AI binding that answers each call with the RIGHT tool for the forced tool_choice — assess
+// + search return their structured output, everything else returns the render_ui batch.
+function stageAwareAi(): { run: ReturnType<typeof vi.fn> } {
+  return {
+    run: vi.fn(async (_model: string, inputs: { tool_choice: { function: { name: string } } }) => {
+      const tool = inputs.tool_choice.function.name;
+      if (tool === "assess_stage") return toolCall("assess_stage", { reasoning: "early idea", stage: "idea", unlock: ["register"] });
+      if (tool === "search_opportunities")
+        return toolCall("search_opportunities", { reasoning: "ranked by fit", matches: [{ id: "demo-001", score: 90, whyItFits: "fits" }] });
+      return toolOutput(goodBatch);
+    }),
+  };
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -192,5 +214,38 @@ describe("worker /run", () => {
     const batch = parseFrames(text).find((f) => f.a2uiMessages)?.a2uiMessages;
     expect(batch).toBeTruthy();
     if (batch) assertSelfContained(batch);
+  });
+
+  it("runs the model-backed stages: streams each reasoning + emits model:<exec> LLM spans", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const aiEnv = { ...env, AI: stageAwareAi() };
+    const frames = parseFrames(await worker.fetch(post("founders-copilot"), aiEnv as never, ctx).then((r) => r.text()));
+    const spans = spy.mock.calls.filter((c) => c[0] === "⌁ span").map((c) => c[1]);
+
+    expect(spans).toContain("model:assess_stage");
+    expect(spans).toContain("model:search_opportunities");
+    // Each stage's reasoning streamed as a single TEXT_MESSAGE_CONTENT.
+    const texts = frames.filter((f) => f.type === "TEXT_MESSAGE_CONTENT").map((f) => f.text);
+    expect(texts).toContain("early idea");
+    expect(texts).toContain("ranked by fit");
+    expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
+    const batch = frames.find((f) => f.a2uiMessages)?.a2uiMessages;
+    if (batch) assertSelfContained(batch);
+  });
+
+  it("falls back to the canned stage text when a model stage errors (never worse than today)", async () => {
+    const aiEnv = {
+      ...env,
+      AI: {
+        run: vi.fn(async (_m: string, inputs: { tool_choice: { function: { name: string } } }) => {
+          if (inputs.tool_choice.function.name === "render_ui") return toolOutput(goodBatch);
+          throw new Error("boom"); // assess + search fail → canned fallback
+        }),
+      },
+    };
+    const frames = parseFrames(await worker.fetch(post("founders-copilot"), aiEnv as never, ctx).then((r) => r.text()));
+    const texts = frames.filter((f) => f.type === "TEXT_MESSAGE_CONTENT").map((f) => f.text);
+    expect(texts).toContain("Assessing your stage and matching funding…"); // the canned plan line
+    expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
   });
 });
