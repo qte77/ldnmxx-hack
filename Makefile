@@ -24,7 +24,7 @@ bump:  ## Stamp VERSION across ui + worker packages (+ lockfiles) and the README
 	@test -n "$(VERSION)" || { echo "usage: make bump VERSION=x.y.z"; exit 1; }
 	npm version $(VERSION) --no-git-tag-version --prefix ui
 	npm version $(VERSION) --no-git-tag-version --prefix worker
-	sed -i 's|version-[0-9][0-9.]*-blue|version-$(VERSION)-blue|' README.md
+	sed -i 's|version-[0-9][0-9.]*-58f4c2|version-$(VERSION)-58f4c2|' README.md
 	@echo "Bumped to $(VERSION). Review the diff, then commit + tag: git tag -a v$(VERSION)"
 
 seed:  ## One-shot scrape -> opportunities.json -> KV (Phase 2)
