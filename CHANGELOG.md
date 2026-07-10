@@ -7,6 +7,11 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- CI + repo-hygiene parity with `agenthud-agui-a2ui`: **CodeQL** security scanning (`codeql.yaml`), a
+  self-contained **Lint MD and Links** workflow (markdownlint, moved out of `ci.yml`'s `docs` job), and
+  **Dependabot** (npm for `ui/` + `worker/`, plus github-actions), and the README badge row restyled to
+  match (license · version · CI · CodeQL · CodeFactor · Lint · Dependabot). All workflow actions are
+  SHA-pinned to satisfy the repo Actions policy (`allowed_actions=selected` + `sha_pinning_required`).
 - Phase 2 groundwork (#18): generalized the forced-tool model call into `callModelTool` / `extractToolArgs`
   (runs any tool), with `callRenderModel` now a thin `render_ui` wrapper — no behavior change; added
   dependency-free `shared/assessTool.ts` + `shared/searchTool.ts` (tool schemas + structural validators; the

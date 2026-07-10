@@ -1,0 +1,39 @@
+---
+# CodeQL security analysis for the ui/ + worker/ TypeScript. Actions are SHA-pinned (repo policy:
+# allowed_actions=selected + sha_pinning_required); github/* + actions/* are github-owned (allowed).
+# https://github.blog/changelog/2025-10-28-upcoming-deprecation-of-codeql-action-v3/
+name: "CodeQL"
+
+on:
+  push:
+  schedule:
+    - cron: '27 11 * * 0'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
+        with:
+          languages: javascript-typescript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
+...
