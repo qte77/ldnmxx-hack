@@ -53,6 +53,18 @@ describe("workersAiProvider", () => {
     const bad = [{ beginRendering: { surfaceId: "main", root: "nope" } }];
     expect(await workersAiProvider(fakeAi(toolOutput(bad)), "m").tryRender({ system: "s", user: "u" })).toBeNull();
   });
+  it("invokes ai.run BOUND to the binding (regression: real Workers AI run() reads this.#options)", async () => {
+    // A binding whose run() reads `this`. An unbound call sees this=undefined and throws — exactly the
+    // real binding's "Cannot set properties of undefined (setting '#options')". Only .bind(ai) fixes it.
+    const ai = {
+      _out: toolOutput(goodBatch),
+      run(this: { _out: unknown }) {
+        return Promise.resolve(this._out);
+      },
+    } as unknown as Ai;
+    const r = await workersAiProvider(ai, "m").tryRender({ system: "s", user: "u" });
+    expect(r?.batch).toEqual(goodBatch);
+  });
 });
 
 describe("renderFree (first-valid-wins)", () => {
