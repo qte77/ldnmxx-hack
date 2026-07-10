@@ -9,7 +9,7 @@ in code. Only three seams change:
 
 | Seam | Track B (Founder's Copilot) | Track A (On It) |
 |---|---|---|
-| `tools[]` | `search_opportunities` (shipped, real model call); `assess_stage` (#18) · `find_contacts` (#9) · `incorporate` (#12) planned | lookup_postcode · get_tfl_journey — **PLANNED**; Track A is a canned stub today |
+| `tools[]` | `assess_stage` + `search_opportunities` — **live model tools** (each streams reasoning + its own Arize LLM span, #18); `find_contacts` (#9) · `incorporate` (#12) planned | lookup_postcode · get_tfl_journey — **PLANNED**; Track A is a canned stub today |
 | `render` | built-in A2UI cards (Column/Card/Text) | static `buildRouteCards()` text today; RouteCard + lazy OSM `RouteMap` panel is **PLANNED** |
 | `input()` | text | text today (canned stub); voice (Web Speech STT + text fallback) is **PLANNED** |
 
@@ -26,6 +26,14 @@ user input → SPA useAgentSSE ──POST /run?usecase=<id>──▶ Worker  [TR
   opportunities.json → KV OPPORTUNITIES. Today the live data source is the committed
   `data/demo/*.json`.
 ```
+
+**Per-stage model dispatch (#18).** On the keyless free-chain path, a stage tagged `exec` in its
+`usecases/*.json` runs a forced tool (`assess_stage` / `search_opportunities`) through the SAME provider
+chain as the render (`runChain` + per-provider `tryCall`) — streaming the model's `reasoning` as one
+`TEXT_MESSAGE_CONTENT` and emitting a `model:<exec>` **LLM** span (token usage attached). Any miss (no
+result / invalid / keyed / stub-forced) plays the stage's canned events instead — never worse than the
+deterministic path. So the render is no longer the only model call, and `search_opportunities`'s ranked
+matches ground it.
 
 ## Separation of concerns (module boundaries = single seams)
 

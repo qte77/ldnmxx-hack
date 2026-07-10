@@ -9,10 +9,16 @@ export interface AgentEvent {
   text?: string;
   a2uiMessages?: unknown[];
 }
+// A model-backed stage names the forced tool it runs (absent ⇒ the stage's events play canned). The
+// runUsecase loop dispatches these on the keyless free-chain path; any miss falls back to the canned events.
+export type StageExec = "assess_stage" | "search_opportunities";
+export const STAGE_EXECS: StageExec[] = ["assess_stage", "search_opportunities"];
+
 export interface StageDef {
   span: string;
   kind: string;
   events: AgentEvent[];
+  exec?: StageExec;
 }
 export type RenderMode = "founders" | "route";
 export interface RenderDef {
@@ -43,6 +49,9 @@ export function assertUsecaseDef(x: unknown): asserts x is UsecaseDef {
   for (const s of d.stages) {
     if (typeof s?.span !== "string" || typeof s.kind !== "string" || !Array.isArray(s.events)) {
       throw new Error(`usecase ${d.id}: every stage needs span, kind and an events array`);
+    }
+    if (s.exec !== undefined && !STAGE_EXECS.includes(s.exec)) {
+      throw new Error(`usecase ${d.id}: stage.exec must be one of ${STAGE_EXECS.join(", ")}`);
     }
   }
 }

@@ -20,17 +20,21 @@ when all five are done.
 | PR | What | State |
 |----|------|-------|
 | PR-1 | generic `callModelTool`/`extractToolArgs` + `shared/{assess,search}Tool.ts` (schemas + validators) | ✅ merged |
-| PR-2 | free-chain generalization (`runChain`/`tryCall`) + per-stage dispatch (`StageDef.exec`, reasoning + LLM span, thread matches → render) | ▶ **next** |
-| PR-3 | cost chip (`USAGE` event + HUD chip) | ⏳ |
+| PR-2 | free-chain generalization (`runChain`/`tryCall`) + per-stage dispatch (`StageDef.exec`, reasoning + LLM span, thread matches → render) | ✅ merged |
+| PR-3 | cost chip (`USAGE` event + HUD chip) | ▶ **next** |
 | PR-4 | Arize live + notes (#50 / `AGENT_LEARNINGS.md`) — **closes #18** | ⏳ |
 | PR-5 | capstone: corpus-agnostic `match` render + 3 new usecases | ⏳ |
 
-**Current position:** PR-1 merged — generic tool plumbing (`callModelTool`/`extractToolArgs`) + the
-`assess_stage` / `search_opportunities` tool contracts + validators. → start **PR-2**.
+**Current position:** PR-1 + PR-2 merged — the free chain is generic (`runChain`/`tryCall`) and the founder
+workflow's plan + search stages now run live model tools (`assess_stage` / `search_opportunities`),
+streaming reasoning + a `model:<exec>` LLM span each, matches threaded into the render; any miss falls back
+to canned. → start **PR-3** (cost chip).
 
-> **Scope note (PR-1 refinement):** the provider-chain generalization (`runChain` + per-provider `tryCall`)
-> was **moved from PR-1 to PR-2**, where its consumer (per-stage dispatch) lands — so PR-1 added no unused
-> abstraction and left `providers.ts` + its tests untouched (zero render-behavior change).
+> **Live-verification debt (PR-2):** the streamed-reasoning path is unit-tested (83 worker tests) but not
+> yet seen live — the local `[ai]` binding needs Cloudflare auth. Verify against the deployed worker (after
+> a `make deploy`) or with a local `OPENROUTER_KEY`: a keyless founders Run should stream two reasoning
+> lines before the cards, and `wrangler tail` should show `model:assess_stage` + `model:search_opportunities`
+> LLM spans.
 
 ## The one-paragraph why
 
@@ -74,12 +78,12 @@ silently degrades to today's behavior.
 
 ## First action
 
-Start **PR-2** (free-chain generalization + per-stage dispatch). PR-1 landed the generic core
-(`callModelTool`/`extractToolArgs`) + `shared/{assess,search}Tool.ts` (schemas + validators, TDD-covered in
-`worker/test/tools.test.ts` + `model.test.ts`). Next: add `runChain`/`tryCall` to `providers.ts`, then
-`StageDef.exec` dispatch in `runUsecase`. TDD-first in `worker/test/run.test.ts` (model-backed stage streams
-reasoning + LLM span; a model miss falls back to canned; `demo`/injection → all canned). `make test` +
-`tsc --noEmit` green → PR.
+Start **PR-3** (cost chip). PR-1 + PR-2 shipped the generic plumbing + live per-stage dispatch. Next:
+worker emits a `USAGE` `AgentEvent` with summed prompt/completion tokens (reuse `ModelResult.usage` from
+each `runChain` win + the render), emitted once; the UI shows a small cost chip in the HUD
+(`ui/src/EventStream.tsx` / `App.tsx` — the event vocab already tolerates arbitrary types). TDD-first: a
+UI mapping test (USAGE → chip value) + a worker test (usage summed across stages + render, emitted once).
+`make test` + `tsc --noEmit` green → PR. See `docs/plans/007` PR-3 for the source map.
 
 ## Recurring checklist (pre-answered in the plan — don't re-derive)
 

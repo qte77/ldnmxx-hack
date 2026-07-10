@@ -1,9 +1,18 @@
 import { makeEmitter, exportSpans, MAX_TRACE_SPANS, type Emitter, type Span } from "./trace/arize";
 import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/cards";
-import { callRenderModel } from "./agent/model";
-import { buildProviders, renderFree, type Provider } from "./agent/providers";
-import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent } from "./usecases";
-import { FOUNDERS_SYSTEM, foundersUser } from "../../shared/prompt";
+import { callRenderModel, extractToolArgs, type ToolSpec } from "./agent/model";
+import { buildProviders, renderFree, runChain, type Provider } from "./agent/providers";
+import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent, type StageExec } from "./usecases";
+import {
+  FOUNDERS_SYSTEM,
+  foundersUser,
+  ASSESS_STAGE_SYSTEM,
+  assessUser,
+  SEARCH_SYSTEM,
+  searchUser,
+} from "../../shared/prompt";
+import { ASSESS_STAGE_TOOL, isValidAssessResult, type AssessResult } from "../../shared/assessTool";
+import { SEARCH_OPPORTUNITIES_TOOL, isValidSearchResult, type SearchResult, type OpportunityMatch } from "../../shared/searchTool";
 import { detectInjection } from "../../shared/guard";
 import opportunitiesData from "../../data/demo/opportunities.sample.json";
 
@@ -44,16 +53,24 @@ const sleep = (ms: number): Promise<void> =>
 // step-free route would hallucinate; real routing is Phase 3). `founders` generates the cards grounded in
 // the demo data: a BYOK key calls the chosen model directly (keyed path), otherwise the keyless free
 // chain runs; either falls back to the deterministic stub when there's nothing to call or it errors.
-async function renderBatch(render: RenderDef, emitter: Emitter, ctx: ModelCtx): Promise<unknown[]> {
+async function renderBatch(
+  render: RenderDef,
+  emitter: Emitter,
+  ctx: ModelCtx,
+  matches?: OpportunityMatch[]
+): Promise<unknown[]> {
   if (render.mode === "route") return buildRouteCards();
   const stub = withIncorporate(buildOpportunityCards());
   if (!ctx.key && ctx.providers.length === 0) return stub;
   const ac = new AbortController();
   const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
   try {
+    // Ground the render in the model's own ranked matches when search_opportunities produced them;
+    // otherwise fall back to the raw pre-scored corpus.
+    const grounded = matches && matches.length > 0 ? groundOpps(matches) : opportunitiesData;
     const args = {
       system: FOUNDERS_SYSTEM,
-      user: foundersUser(ctx.prompt, opportunitiesData),
+      user: foundersUser(ctx.prompt, grounded),
       signal: ac.signal,
     };
     if (ctx.key) {
@@ -174,8 +191,59 @@ async function resolveRun(
   return { modelCtx, runAttrs, paceMs };
 }
 
-// The data-driven interpreter: play each stage's events (paced) with one span per stage, then render.
-// Exported so an arbitrary UsecaseDef can be driven directly in tests ("swap a JSON, swap the app").
+// Merge the model's ranked matches with the deterministic opportunity facts (title/org/deadline/
+// eligibility), ordered by the ranking, so the render draws the model's picks — not the raw corpus. An
+// invented id (already rejected by the validator) that somehow slips through is dropped here too.
+function groundOpps(matches: OpportunityMatch[]): unknown[] {
+  const corpus = opportunitiesData as { id: string }[];
+  return matches
+    .map((m) => {
+      const o = corpus.find((x) => x.id === m.id);
+      return o ? { ...o, score: m.score, whyItFits: m.whyItFits, stageFit: m.stageFit } : null;
+    })
+    .filter((o) => o !== null);
+}
+
+interface StageOutcome {
+  reasoning: string;
+  model: string;
+  usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  matches?: OpportunityMatch[];
+}
+
+// Run a model-backed stage over the free chain (first valid wins). Returns the structured outcome, or null
+// on any miss so the caller plays the canned events instead (never worse than today).
+async function runStageModel(exec: StageExec, ctx: ModelCtx, signal: AbortSignal): Promise<StageOutcome | null> {
+  if (exec === "assess_stage") {
+    const spec: ToolSpec<AssessResult> = {
+      tool: ASSESS_STAGE_TOOL,
+      toolName: "assess_stage",
+      extract: (d) => extractToolArgs(d, "assess_stage") as AssessResult | null,
+      validate: isValidAssessResult,
+    };
+    const r = await runChain(ctx.providers, (p) =>
+      p.tryCall(spec, { system: ASSESS_STAGE_SYSTEM, user: assessUser(ctx.prompt), signal })
+    );
+    return r && { reasoning: r.result.value.reasoning, model: r.result.model, usage: r.result.usage };
+  }
+  const ids = (opportunitiesData as { id: string }[]).map((o) => o.id);
+  const spec: ToolSpec<SearchResult> = {
+    tool: SEARCH_OPPORTUNITIES_TOOL,
+    toolName: "search_opportunities",
+    extract: (d) => extractToolArgs(d, "search_opportunities") as SearchResult | null,
+    validate: (v) => isValidSearchResult(v, ids),
+  };
+  const r = await runChain(ctx.providers, (p) =>
+    p.tryCall(spec, { system: SEARCH_SYSTEM, user: searchUser(ctx.prompt, opportunitiesData), signal })
+  );
+  return (
+    r && { reasoning: r.result.value.reasoning, model: r.result.model, usage: r.result.usage, matches: r.result.value.matches }
+  );
+}
+
+// The data-driven interpreter: play each stage (a model-backed stage runs its forced tool and streams the
+// reasoning + an LLM span; otherwise the canned events play), then render. One span per stage. Exported so
+// an arbitrary UsecaseDef can be driven directly in tests ("swap a JSON, swap the app").
 export async function runUsecase(
   def: UsecaseDef,
   emitter: Emitter,
@@ -186,8 +254,24 @@ export async function runUsecase(
 ): Promise<void> {
   emitter.span({ name: "run", attrs: runAttrs });
   write({ type: "RUN_STARTED" });
+  let matches: OpportunityMatch[] | undefined;
   for (const stage of def.stages) {
     const t0 = Date.now();
+    // Model-backed stage on the keyless free-chain path (ctx.providers is empty when keyed / stub-forced).
+    if (stage.exec && ctx.providers.length > 0) {
+      const ac = new AbortController();
+      const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
+      const outcome = await runStageModel(stage.exec, ctx, ac.signal).finally(() => { clearTimeout(timer); });
+      if (outcome) {
+        write({ type: "TOOL_CALL_START", text: stage.exec });
+        write({ type: "TEXT_MESSAGE_CONTENT", text: outcome.reasoning });
+        write({ type: "TOOL_CALL_END", text: stage.exec });
+        if (outcome.matches) matches = outcome.matches;
+        emitter.span({ name: `model:${stage.exec}`, attrs: { model: outcome.model, ...outcome.usage } });
+        continue;
+      }
+    }
+    // Canned stage (default, or model fallback) — never worse than today.
     for (const e of stage.events) {
       await sleep(paceMs);
       write(e);
@@ -196,7 +280,7 @@ export async function runUsecase(
   }
   await sleep(paceMs);
   const t0 = Date.now();
-  const batch = await renderBatch(def.render, emitter, ctx);
+  const batch = await renderBatch(def.render, emitter, ctx, matches);
   write({ type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: batch });
   emitter.span({ name: "render", attrs: { kind: "render", latencyMs: Date.now() - t0 } });
   write({ type: "RUN_FINISHED" });

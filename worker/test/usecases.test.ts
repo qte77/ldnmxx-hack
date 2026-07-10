@@ -23,6 +23,28 @@ describe("usecases guard", () => {
   it("rejects an unknown render.mode", () => {
     expect(() => assertUsecaseDef({ ...validDef, render: { mode: "nope" } })).toThrow();
   });
+
+  it("accepts a known stage.exec", () => {
+    expect(() =>
+      assertUsecaseDef({
+        id: "x",
+        title: "X",
+        render: { mode: "founders" },
+        stages: [{ span: "plan", kind: "plan", exec: "assess_stage", events: [] }],
+      })
+    ).not.toThrow();
+  });
+
+  it("rejects an unknown stage.exec", () => {
+    expect(() =>
+      assertUsecaseDef({
+        id: "x",
+        title: "X",
+        render: { mode: "founders" },
+        stages: [{ span: "plan", kind: "plan", exec: "nope", events: [] }],
+      })
+    ).toThrow();
+  });
 });
 
 // The one new-capability test: an arbitrary usecase def drives the engine end-to-end with zero code

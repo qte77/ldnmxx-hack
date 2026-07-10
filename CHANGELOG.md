@@ -7,6 +7,12 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Added
+- Phase 2 (#18) — the founder workflow's early stages are now **model-driven**: `assess_stage` (classify
+  the founder's stage + unlock steps) and `search_opportunities` (rank/filter the corpus) run as forced
+  tools on the keyless free chain, each streaming its `reasoning` as a live event and emitting its own
+  Arize **LLM** span (`model:<exec>`, token usage attached); the ranked matches ground the render. Any
+  model miss falls back to the canned stage text (never worse than before). Generalized the provider chain
+  (`runChain` + per-provider `tryCall`) so it runs any tool, and stages opt in via `exec` in `usecases/*.json`.
 - CI + repo-hygiene parity with `agenthud-agui-a2ui`: **CodeQL** security scanning (`codeql.yaml`), a
   self-contained **Lint MD and Links** workflow (markdownlint, moved out of `ci.yml`'s `docs` job), and
   **Dependabot** (npm for `ui/` + `worker/`, plus github-actions), and the README badge row restyled to

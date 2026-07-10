@@ -4,9 +4,12 @@ import {
   openRouterFreeProvider,
   githubModelsProvider,
   renderFree,
+  runChain,
   buildProviders,
+  RENDER_SPEC,
   type Provider,
 } from "../src/agent/providers";
+import { extractToolArgs, type ToolSpec } from "../src/agent/model";
 
 const goodBatch = [
   { beginRendering: { surfaceId: "main", root: "root" } },
@@ -53,8 +56,12 @@ describe("workersAiProvider", () => {
 });
 
 describe("renderFree (first-valid-wins)", () => {
-  const ok = (name: string): Provider => ({ name, tryRender: async () => ({ batch: goodBatch, model: name, usage: {} }) });
-  const fail = (name: string): Provider => ({ name, tryRender: async () => null });
+  const ok = (name: string): Provider => ({
+    name,
+    tryRender: async () => ({ batch: goodBatch, model: name, usage: {} }),
+    tryCall: async () => null, // unused by renderFree (which goes via tryRender)
+  });
+  const fail = (name: string): Provider => ({ name, tryRender: async () => null, tryCall: async () => null });
 
   it("returns the first provider that yields a batch", async () => {
     const r = await renderFree([fail("a"), ok("b"), ok("c")], { system: "s", user: "u" });
@@ -112,5 +119,56 @@ describe("fetch-based providers reuse callRenderModel", () => {
   it("github-models returns null on a non-2xx response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) }));
     expect(await githubModelsProvider("t", "m").tryRender({ system: "s", user: "u" })).toBeNull();
+  });
+});
+
+// A trivial non-render tool proves the chain is generic (not render_ui-specific).
+const echoSpec: ToolSpec<{ ok?: boolean }> = {
+  tool: { type: "function", function: { name: "echo" } },
+  toolName: "echo",
+  extract: (d) => extractToolArgs(d, "echo") as { ok?: boolean } | null,
+  validate: (v) => v.ok === true,
+};
+function echoOut(args: unknown): unknown {
+  return {
+    choices: [{ message: { tool_calls: [{ function: { name: "echo", arguments: JSON.stringify(args) } }] } }],
+    usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 },
+  };
+}
+
+describe("tryCall (generic tool through any provider)", () => {
+  it("openrouter-free runs a non-render tool and returns its validated value", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(echoOut({ ok: true })) }));
+    const r = await openRouterFreeProvider("k", ["m:free"]).tryCall(echoSpec, { system: "s", user: "u" });
+    expect(r?.value).toEqual({ ok: true });
+    expect(r?.usage.totalTokens).toBe(3);
+  });
+  it("workers-ai runs a non-render tool via the binding", async () => {
+    const r = await workersAiProvider(fakeAi(echoOut({ ok: true })), "m").tryCall(echoSpec, { system: "s", user: "u" });
+    expect(r?.value).toEqual({ ok: true });
+  });
+  it("returns null when the tool result fails validation", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(echoOut({ ok: false })) }));
+    expect(await openRouterFreeProvider("k", ["m:free"]).tryCall(echoSpec, { system: "s", user: "u" })).toBeNull();
+  });
+});
+
+describe("runChain (generic first-valid-wins)", () => {
+  const p = (name: string, val: unknown): Provider => ({
+    name,
+    tryRender: async () => null,
+    tryCall: async () => val as never,
+  });
+  it("returns the first provider that yields a non-null result", async () => {
+    const r = await runChain(
+      [p("a", null), p("b", { v: 1 }), p("c", { v: 2 })],
+      (x) => x.tryCall(RENDER_SPEC, { system: "s", user: "u" })
+    );
+    expect(r?.provider).toBe("b");
+    expect(r?.result).toEqual({ v: 1 });
+  });
+  it("returns null when every provider yields null", async () => {
+    const r = await runChain([p("a", null), p("b", null)], (x) => x.tryCall(RENDER_SPEC, { system: "s", user: "u" }));
+    expect(r).toBeNull();
   });
 });
