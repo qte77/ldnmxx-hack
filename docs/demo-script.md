@@ -15,9 +15,9 @@ Build only what this script needs (the YAGNI filter). This doc splits what's **p
 
 **Track B (Founder's Copilot) — the joy moment.**
 Type one line: *"AI tool that helps London councils cut pothole repair time."* → the model streams back
-**matched grant cards** (real, with a qualify ✓/⚠️ eligibility gate), backed by
-`data/demo/opportunities.sample.json`.
-> "It surfaces real, qualify-gated grants for your idea — not a hallucinated list."
+**matched grant cards** (each with a qualify ✓/⚠️ eligibility gate), grounded in the committed
+**synthetic** sample corpus `data/demo/opportunities.sample.json` (the live scrape is post-hackathon).
+> "It surfaces qualify-gated matches for your idea, grounded in the corpus — not a hallucinated list."
 
 **The usecase toggle.**
 Hit the **toggle** → it swaps the example input query and switches to `on-it` (Track A), a canned
