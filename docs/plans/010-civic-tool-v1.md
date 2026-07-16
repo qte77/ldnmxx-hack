@@ -55,9 +55,9 @@ Turn a clonable free tool into a defensible civic service with four moves:
    copier can't re-scrape), *and* a maintenance budget for yearly rule changes.
 4. **Build the real corpus** (the ingest pipeline) before claiming "grounded."
 
-**Delivery (locked, sound):** CF Pages (SPA) + Worker (API) under one custom domain (`claimldn.uk`,
-#66), same-origin `/api`; Workers AI free tier primary (10k Neurons/day, no secret needed); degrade to
-DEMO honestly at the ceiling — which needs the spend guardrail (#29) first.
+**Delivery (locked, sound):** CF Pages (SPA) + Worker (API) under one custom domain (`claimldn.uk`, #66),
+same-origin `/api`; Workers AI free tier primary (10k Neurons/day, no secret needed); degrade to DEMO
+honestly at the ceiling — which needs the spend guardrail (#29) first.
 
 ## Actionable next steps
 
