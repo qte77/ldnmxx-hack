@@ -15,6 +15,19 @@ its card shape is new) — the same minimal-code pattern as `incorporate`/`signp
 benefits) the tool is a **wayfinder, not an adjudicator** — routes to official sources with a disclaimer,
 never a determination (plan 011). Surface staleness ("as of…", "confirm by phone"); silence ≠ safety.
 
+## Committed next set (fold)
+
+After v1 `benefits-copilot`, the pursued roadmap is:
+
+- **High-need trio:** Sort My Care · Sort My Air · Sort My Bin Day.
+- **Runner-ups:** Sort My Move · Sort My Say · Sort My Circle.
+- **Cross-source joins (the moat):** Dentist Desert Alert · Hidden Community Finder · Cursed Unit Detector.
+- **Work & learning:** Sort My Work (now sourced — see [`data-sources.md`](data-sources.md)).
+
+Sequence: ship the cheap keyless/live-API ones first (Care, Say, Air); gate curated-corpus + advice-shaped
+ones (bins, benefits, work) behind a partner + real corpus (plan 010). Each is a `usecases/*.json` stage-def
+(+ one `render.mode` if new).
+
 ## Obvious — high-need
 
 | Usecase | JTBD | Sources | Shape | Feasibility |
@@ -26,6 +39,7 @@ never a determination (plan 011). Surface staleness ("as of…", "confirm by pho
 | **Sort My Say** | who's my MP, what bills/petitions affect my area? | Parliament Members & Bills · Gov Petitions · postcodes.io | direct | **High** — two keyless APIs; lower daily urgency |
 | **Sort My Circle** | show me community spots / green space beyond my usual streets | OSM Overpass · Historic England · FHRS · Wikidata · (Eventbrite/Meetup) | direct (discovery) | **Med-High** — keyless core is easy; events are key+ToU gated |
 | **Sort My Street** | what's reported near me + how to report | FixMyStreet/Open311 · postcodes.io · OSM | direct + wayfinder-out | **Med** — Open311 borough coverage patchy; FixMyStreet owns the filing destination |
+| **Sort My Work** | jobs/apprenticeships + local labour-market context near me | Adzuna/Reed · DfE apprenticeships · Nomis · GOV.UK Content | direct + wayfinder (careers) | **Med** — keyed job APIs + curated course corpus; DWP Find-a-job has no API |
 
 ★ **Top 3: Care, Air, Bin Day** — highest need × lowest build cost (Care is nearly free plumbing-wise).
 **Sort My Move** is the stronger *differentiation* pick if you want a more ambitious #3.
@@ -53,6 +67,25 @@ surprise × real value × feasibility, and each joins silos nobody else joins.
 After benefits-copilot ships, the cheapest credible follow-ups are **Sort My Care** (reuses the same
 wayfinder plumbing) plus one unexpected differentiator — **Dentist Desert Alert** or **Hidden Community
 Finder** — to prove the cross-source-join moat that a generic chatbot can't replicate.
+
+## Round 2 candidates (under evaluation)
+
+A second ideation pass — promising, not yet committed; some depend on sources still being verified.
+
+**Obvious:** Sort My Flood Risk (EA Flood — keyless, wayfinder) · Sort My Food Hygiene (FHRS — direct) ·
+Sort My Rep (Parliament × postcodes — who's my MP / am I registered / next election) · Sort My Commute
+(National Rail Darwin × TfL × Met Office — *Darwin needs a token*) · Sort My Crisis Support
+(foodbank finder via **Give Food API** — keyless, confirmed; aggregates Trussell + independents) · Sort My Council Tax Band
+(VOA — *no open API confirmed → corpus*).
+
+**Unexpected:** **Sort My Scam Check** (FCA Register × Companies House — clone-firm fraud check; top pick) ·
+Sort My School Run (Breathe London × OSM school locations — gate-time air exposure) · Sort My Next Step
+(Nomis × DfE apprenticeships × Adzuna — local jobs ↔ apprenticeship-capacity *mismatch*, not a job board) ·
+Sort My Contract (Contracts Finder × 360Giving × Companies House — *coverage-limited*).
+
+**Cut (not padded):** cycle-safety routing (too close to On It) · sport finder (dupes Sort My Circle) ·
+landlord-ownership trace (dupes Rental Red Flags) · heritage trails (delight, not need) · charity
+governance (serves trustees, not residents).
 
 ## Honest gaps (not padded)
 
