@@ -28,7 +28,7 @@ user input → SPA useAgentSSE ──POST /run?usecase=<id>──▶ Worker  [TR
 ```
 
 Open data sources available for future workflows are cataloged (machine-readable) in
-[`data/sources.json`](../data/sources.json); candidate workflows in [`data/usecases.json`](../data/usecases.json).
+[`data/sources.json`](../data/sources.json); candidate workflows in [`data/usecase-catalog.json`](../data/usecase-catalog.json).
 
 **Per-stage model dispatch (#18).** On the keyless free-chain path, a stage tagged `exec` in its
 `usecases/*.json` runs a forced tool (`assess_stage` / `search_opportunities`) through the SAME provider
