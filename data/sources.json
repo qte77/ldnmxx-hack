@@ -1,7 +1,17 @@
 {
   "updated": "2026-07-17",
   "catalog_source": "https://resources.londonmaxxing.com/",
-  "note": "Machine-readable source catalog for sortmy.london workflows. Single source of truth; docs/data-sources.md is the human view. Verified via research passes; spot-check URLs before hardcoding. Prefer access=keyless; keyed sources -> Worker secret; tou-gated/website-only -> curated corpus.",
+  "note": "Machine-readable source catalog for sortmy.london workflows — the single source of truth. Verified via research passes; spot-check URLs before hardcoding. Prefer access=keyless; keyed sources -> Worker secret; tou-gated/website-only -> curated corpus. Bump last_checked on re-verify to track staleness.",
+  "gaps": [
+    "Council-tax band: no official VOA API (website-only) -> curated corpus.",
+    "Public library catalogues/events: no open London-wide API found.",
+    "DWP 'Find a job': no public API (LMI For All shut Oct 2025) -> jobs via Adzuna/Reed.",
+    "Trussell Trust: no own API -> use Give Food. Met Office DataPoint retired Dec 2025 -> DataHub/NSWWS.",
+    "British Museum API / GiGL 'Spaces to Visit': discontinued/withdrawn.",
+    "Borough fragmentation (bins, planning deadlines, Open311): partial coverage -> curated per-borough corpora.",
+    "Staleness: NHS 'accepting patients', EPC/enforcement coverage, FHRS inspection dates -> surface 'as of / confirm', never assert.",
+    "Not yet researched: deeper realtime transport (live bus SIRI, live rail beyond Darwin) and some culture feeds."
+  ],
   "record_shape": {
     "id": "kebab-case unique id",
     "name": "display name",
