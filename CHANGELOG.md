@@ -7,6 +7,10 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Fixed
+- **`npm ci` unbroken.** Two Dependabot combined-bumps left conflicting peers on `main` (each PR was green
+  alone): `typescript` bumped to `~7.0.2` while `typescript-eslint@8.63.0` requires `<6.1.0`, and
+  `wrangler@4.110` needed `@cloudflare/workers-types@^5` (pinned `^4`). Pinned `typescript` back to `~6.0.3`
+  and aligned `workers-types` to `^5`; lockfiles regenerated.
 - **Workers AI free provider now actually runs in the deployed Worker.** `workersAiProvider` invoked the
   `ai.run` binding **detached** from `ai`, so the binding's private-field access (`this.#options`) threw
   (`Cannot set properties of undefined`) and *every* keyless run silently fell back to the stub — since
