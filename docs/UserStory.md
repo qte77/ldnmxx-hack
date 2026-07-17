@@ -1,6 +1,7 @@
 # User stories
 
-Two users, one engine. (Distilled from the track briefs in the sibling `ldnmxx` repo.)
+Two demo users, one engine (distilled from the sibling `ldnmxx` track briefs) — plus **Track C**, the v1
+productization target (plans 010/011, proposed).
 
 ## Track B — the early-stage London founder *(Build London)*
 
@@ -41,6 +42,26 @@ screen gives no way to tell which you're seeing — or to choose.
 **Joy:** a **Demo⇄Live toggle** picks the next run's mode; an honest chip reports what the last run actually
 did — `LIVE · <model> · ~N tok`, `DEMO · deterministic`, or `STUB · fell back` — never claiming "live" when
 the model path degraded to canned.
+
+## Track C — the Londoner who might be entitled *(Claim London)*
+
+*(Post-hackathon productization target — see plans [010](plans/010-civic-tool-v1.md) /
+[011](plans/011-benefits-copilot-wayfinder.md); proposed, not yet accepted.)*
+
+**Who:** a Londoner who may qualify for support (Universal Credit, Council Tax Reduction, PIP, Healthy
+Start, free school meals, Blue Badge…) — stressed, time-poor, unsure what they're entitled to or where to
+start, and with real stakes if the answer is wrong.
+
+**Pain:** entitlements are scattered across gov.uk, the borough, and charities; the language is
+bureaucratic; "am I even eligible?" is guesswork; a confident-but-wrong answer costs real money or wasted
+effort; Citizens Advice lines are overloaded.
+
+**Job:** *"Tell me plainly what I might be entitled to and exactly where to claim it — without pretending
+to be the official decision."*
+
+**Joy:** describe the situation once → the copilot signposts the **official** eligibility checkers and the
+**local** Citizens Advice / council contact, in plain English with a "why this might apply to you" line and
+an honest *"this is guidance, not a determination"* frame — a trustworthy signpost, never a fake adjudicator.
 
 ## Why one engine
 
