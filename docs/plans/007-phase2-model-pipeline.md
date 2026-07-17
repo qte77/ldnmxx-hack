@@ -3,13 +3,14 @@ title: "Plan 007 — Phase 2: model-driven pipeline (#18) + usecase expansion"
 type: plan
 updated: 2026-07-09
 issue: 18
-status: approved, 0% built
+status: "PR-1/2/3 shipped; PR-4 (Arize live) next — blocked account-side #50; PR-5 superseded by the civic pivot (plans 010–012)"
 pairs_with: docs/handoffs/007-phase2-model-pipeline.md
 ---
 
 # Plan 007 — Phase 2: model-driven pipeline (#18) + usecase expansion
 
-> **Approved, 0% built.** Build as **5 phased, strict-TDD PRs** (branch per PR → CI-gated → squash-on-green
+> **PR-1/2/3 shipped; PR-4 (Arize live, blocked account-side #50) is the one remaining Phase-2 item; PR-5
+> superseded by the civic pivot (plans 010–012).** Originally scoped as **5 phased, strict-TDD PRs** (branch per PR → CI-gated → squash-on-green
 > → prune). The **Source map** at the bottom is the current code state — trust it instead of re-exploring.
 
 ## Context

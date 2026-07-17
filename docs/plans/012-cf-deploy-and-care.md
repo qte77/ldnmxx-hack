@@ -56,6 +56,9 @@ mandatory**, `additionalProperties:true` allows our `title`/`render.mode`/`kind`
   `exec:"fetch_care_services"` — deterministic query, no model).
 - **Care is model-free + fetch-free.** HUD: corpus workflows report deterministic + `lastUpdated` → chip
   `DATA · as of <date>` (extend USAGE mode at `worker/src/worker.ts` USAGE block).
+- **Arize observability (kept):** each stage still emits a `⌁ span` via the injectable emitter (`makeEmitter`),
+  like model workflows — so the query stage + render get spans (run/plan/query/render). Arize live export is
+  Phase-2 PR-4 (blocked account-side #50); console spans work meanwhile.
 
 ### Engine edits (worker/src/worker.ts, usecases.ts)
 - `usecases.ts`: `RenderMode` += `"care"`; guard validates mode/exec against **registry keys**; register `sort-my-care`.

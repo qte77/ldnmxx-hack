@@ -3,6 +3,7 @@ title: "Plan 010 — Civic tool v1: findings + outlook (narrow to a benefits way
 type: plan
 updated: 2026-07-16
 status: proposed — strategy + findings, not yet accepted
+resume: docs/handoffs/012-cf-deploy-and-care.md  (the pivot's living handoff)
 refs: ["#66 (domain)", "#67 (NPM token)", "#18 (Phase 2)", "#29 (AI Gateway)"]
 ---
 
