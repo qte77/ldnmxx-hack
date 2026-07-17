@@ -3,7 +3,7 @@
 > **A config-driven agent that streams its own UI.** On a single **Cloudflare Worker**, the model paints
 > a live **A2UI** interface — not just text — and *swap a JSON, swap the app*.
 
-**[▶ Live demo](https://qte77.github.io/ldnmxx-hack/)** · one engine, two London workflows — a
+**[▶ Live demo](https://sortmy.london)** · one engine, two London workflows — a
 founder-funding copilot and step-free routing · Londonmaxxing 003.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-58f4c2.svg)](LICENSE)
@@ -79,8 +79,8 @@ make test    # ui + worker tests
 ```
 
 Toggle the two example workflows in the UI; `cd worker && npm run tail` shows one Arize span per stage.
-**Demo:** <https://qte77.github.io/ldnmxx-hack/> (SPA) · <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>
-(Worker API). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
+**Demo:** <https://sortmy.london> — SPA on **Cloudflare Pages**, Worker API same-origin at `/api/*`
+([deploy](docs/deploy-cloudflare.md)). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
 
 **Switches:** `?usecase=founders-copilot|on-it` picks the workflow · a **Demo⇄Live toggle** in the header
 (or `?demo=1`) forces the keyless deterministic stub even with a model key set — the events header then

@@ -338,8 +338,8 @@ export default {
     const cors = corsHeaders(request, env);
 
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-    const isRun = url.pathname === "/run";
-    const isTrace = url.pathname === "/trace";
+    const isRun = url.pathname === "/api/run";
+    const isTrace = url.pathname === "/api/trace";
     if (!isRun && !isTrace) return new Response("Not found", { status: 404, headers: cors });
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405, headers: cors });

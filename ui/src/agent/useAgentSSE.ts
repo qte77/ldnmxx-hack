@@ -90,7 +90,7 @@ function buildHeaders(byok?: Byok): Record<string, string> {
 
 // Fire-and-forget browser spans to the Worker's /trace forwarder (best-effort; never blocks the UI).
 function postTraceSpans(spans: { name: string; attrs?: Record<string, unknown> }[]): void {
-  void fetch(`${WORKER_BASE}/trace`, {
+  void fetch(`${WORKER_BASE}/api/trace`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ spans }),
@@ -150,7 +150,7 @@ async function runWorkerPath(
   signal: AbortSignal
 ): Promise<void> {
   const res = await fetch(
-    `${WORKER_BASE}/run?usecase=${encodeURIComponent(usecase)}${demo ? "&demo=1" : ""}`,
+    `${WORKER_BASE}/api/run?usecase=${encodeURIComponent(usecase)}${demo ? "&demo=1" : ""}`,
     {
       method: "POST",
       headers: buildHeaders(byok),
