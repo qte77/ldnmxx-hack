@@ -87,9 +87,35 @@ Sort My Contract (Contracts Finder × 360Giving × Companies House — *coverage
 landlord-ownership trace (dupes Rental Red Flags) · heritage trails (delight, not need) · charity
 governance (serves trustees, not residents).
 
+## Round 3 candidates (leveraging the newer sources)
+
+Third pass, mining the round-2/3 source additions (TfL BikePoint/CID/StopPoint, OpenActive, Skiddle,
+Octopus, Historic England, Wikidata, V&A/Science Museum, CQC, Contracts Finder/FTS, 360Giving, Give Food,
+EA Bathing Water, MapIt, Nomis, Land Registry SPARQL). Promising, not committed.
+
+**Obvious:** Sort My Cycle Now (BikePoint × CID × Road Disruptions — go/no-go for a spontaneous ride) ·
+Sort My Sweat (OpenActive × Cultural Infra — free drop-in sport in the next hour) · Sort My Ride Home
+(Skiddle × TfL last-service — will I get home tonight?) · Sort My Warm Hours (Octopus Agile × Met Office
+cold-alert × library warm-space — *wayfinder, money-adjacent*).
+
+**Unexpected:** **Sort My Wander** ★ (Historic England NHLE × Wikidata × museum collections — free/obscure
+heritage near you; zero advice risk, ready now) · **Sort My Care Group** ★ (CQC × Companies House — a "Good"
+location inside a troubled *chain*; strict wayfinder, fuzzy entity-match is the moat *and* the risk) ·
+**Sort My True Cost** ★ (EPC × Octopus Agile × Land Registry — true occupancy cost of a flat, not headline
+rent; wayfinder, show a range) · Sort My Ward's Fair Share (360Giving × Nomis × MapIt — wards funders
+overlook) · Sort My Surplus (Give Food per-foodbank need × FHRS × Companies House — route a business's
+surplus to the foodbank that needs *that item today*) · Sort My Swim (EA Bathing Water × rainfall/CSO risk
+— today's safety vs a weeks-old grade; strict caution flag) · Sort My Watchdog Lead (Contracts Finder ×
+Companies House × WhatDoTheyKnow — "worth an FOI" leads; *highest defamation risk — read-only facts only*).
+
+★ **Top 3: Sort My Wander, Sort My Care Group, Sort My True Cost.**
+
+**Cut:** Octopus appliance-timer (Octopus's app already does it — no moat) · heritage-flood (audience too
+narrow) · CKAN meta-tool (a means, not an answer) · Sort My Empty Shop (VOA vacancy data too stale).
+
 ## Honest gaps (not padded)
 
-- **"Work & learning"** theme is **unsourced** — see [`data-sources.md`](data-sources.md#honest-source-gaps).
+- **"Work & learning"** theme is now partly sourced — see [`data-sources.md`](data-sources.md).
 - **Carbon Intensity** ("greenest hour to run the washing machine") is the single cleanest build (one
   keyless call, no corpus) but is an optimisation nicety, not high-need civic pain — parked, not ranked.
 - Dropped: an incorporation-velocity "hiring demand" proxy — company counts are a noisy, likely-spurious
