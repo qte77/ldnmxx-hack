@@ -55,16 +55,17 @@ Turn a clonable free tool into a defensible civic service with four moves:
    copier can't re-scrape), *and* a maintenance budget for yearly rule changes.
 4. **Build the real corpus** (the ingest pipeline) before claiming "grounded."
 
-**Delivery (locked, sound):** CF Pages (SPA) + Worker (API) under one custom domain (`claimldn.uk`, #66),
-same-origin `/api`; Workers AI free tier primary (10k Neurons/day, no secret needed); degrade to DEMO
-honestly at the ceiling — which needs the spend guardrail (#29) first.
+**Delivery (locked, sound):** CF Pages (SPA) + Worker (API) under one workflow-agnostic umbrella domain
+(`sortmy.london`, #66 — path-templated `/benefits`, `/tenders`, … so v1 can be benefits-only without
+boxing in later workflows), same-origin `/api`; Workers AI free tier primary (10k Neurons/day, no secret
+needed); degrade to DEMO honestly at the ceiling — which needs the spend guardrail (#29) first.
 
 ## Actionable next steps
 
 | # | Step | Owner | Ref |
 |---|------|-------|-----|
 | 1 | Fix synthetic-vs-"real" claim in `demo-script.md` | ✅ this PR | — |
-| 2 | Register `claimldn.uk` (+ optional claim/check/find trio) | user | #66 |
+| 2 | Register `sortmy.london` (workflow-agnostic umbrella, path-templated per workflow) | user | #66 |
 | 3 | Shortlist + approach one institutional partner | user | this plan |
 | 4 | Write `benefits-copilot` UserStory (Who/Pain/Job/Joy) + define the wayfinder MVP: disclaimer, link-out targets, one measurable win (e.g. time-to-official-answer) | — | this plan |
 | 5 | Build ingest for one authoritative benefits corpus | — | `ingest/` |
@@ -75,7 +76,7 @@ honestly at the ceiling — which needs the spend guardrail (#29) first.
 
 1. Accept the **narrow-to-benefits, wayfinder-first** framing for v1 (vs. keeping the 3-workflow scope)?
 2. Which partner to approach first?
-3. Confirm `claimldn.uk` as the domain?
+3. Confirm `sortmy.london` as the umbrella domain? (`claimldn.uk` demoted to an optional benefits-track vanity redirect.)
 
 ## References
 
