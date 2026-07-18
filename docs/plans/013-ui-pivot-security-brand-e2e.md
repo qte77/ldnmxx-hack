@@ -2,7 +2,7 @@
 title: "Plan 013 — sortmy.london: AG-UI/A2UI showcase → civic product (security · console-gate · brand · e2e · security-review)"
 type: plan
 updated: 2026-07-18
-status: "not started — approved, ready to execute"
+status: "complete — 8/8 shipped, live on sortmy.london (security review signed off)"
 refs: ["#75 deploy (merge first)", "#72 Care (shipped #81)", "qte77/brand @qte77/ui-theme", "polyfetch-scrape"]
 ---
 
@@ -40,9 +40,11 @@ not found"`. Item A removes the whole class.
 | D | e2e UI harness (polyfetch/Patchright: viewport×device×orientation, DevTools console, screenshots+video) | ✅ shipped (#84) |
 | E | Docs + issues (CHANGELOG/README/architecture/roadmap/UserStory/design; url/env/cli; open+close issues) | ▶ in progress |
 | G | Civic essentials — a11y (WCAG AA) · privacy analytics + note · SEO/social meta · failure/empty states | ✅ shipped (#87) |
-| F | Full-project strict security review (end) | ☐ to ship |
+| F | Full-project strict security review (end) | ✅ shipped (audit: secure to ship, 0 must-fix; hardening #90/#91) |
 
-**Current: 6/8 = 75%** — E in progress; F + the batched final redeploy from main remain.
+**Current: 8/8 = 100%.** All merged; production `sortmy.london` redeployed (Pages + Worker) and
+final-e2e-verified clean (5 device configs · 0 console/network/model-host). Visible rebrand + task-first
+landing deferred to **013b (#88)**.
 
 ---
 
