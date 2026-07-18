@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
+    "size": "node scripts/check-bundle-size.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
