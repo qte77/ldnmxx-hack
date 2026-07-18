@@ -74,87 +74,115 @@ def sweep(page, out, tag):
 
 
 def model_host_hits(net):
-    """network entries that touched a model host, or any 401 to one (the item-A regression)."""
-    hits = []
-    for url, status in net:
-        if any(h in url for h in MODEL_HOSTS):
-            hits.append((url, status))
-    return hits
+    """network entries that touched a model host (the item-A regression)."""
+    return [(url, status) for url, status in net if any(h in url for h in MODEL_HOSTS)]
 
 
 def user_not_found(cons):
     return [c for c in cons if "user not found" in c[1].lower() or "openrouter" in c[1].lower()]
 
 
-def main():
-    print(f"TARGET={TARGET}  LABEL={LABEL}  OUT={OUT}")
-    total_model_hits, total_unf = [], []
-    with sync_playwright() as pw:
-        for name, kw, video in CONFIGS:
-            print(f"\n=== {LABEL} · {name} ===")
-            ck = {}
-            if "device" in kw:
-                d = pw.devices.get(kw["device"])
-                ck.update(d) if d else ck.update({"viewport": {"width": 390, "height": 844}})
-            if "viewport" in kw:
-                ck["viewport"] = kw["viewport"]
-            if video:
-                ck["record_video_dir"] = f"{OUT}/video-{name}"
-            browser = pw.chromium.launch(headless=True)
-            context = browser.new_context(**ck)
-            page = context.new_page()
-            cons, net = [], []
-            hook(page, cons, net)
-            try:
-                page.goto(TARGET, wait_until="domcontentloaded", timeout=30000)
-                page.wait_for_selector("text=Run", timeout=15000)
-            except Exception as e:
-                print(f"    load: {e}")
-            print(f"    title={page.title()!r} viewport={page.viewport_size}")
-            sweep(page, OUT, name)
-            if name == "desktop":
-                try:
-                    aria = page.locator("body").aria_snapshot()
-                    print(f"    a11y: button={'- button' in aria} heading={'- heading' in aria}")
-                    with open(f"{OUT}/a11y-desktop.txt", "w") as f:
-                        f.write(aria)
-                except Exception as e:
-                    print(f"    a11y: {e}")
-            errs = [c for c in cons if c[0] in ("error", "pageerror")]
-            bad = [n for n in net if (isinstance(n[1], int) and n[1] >= 400) or "FAIL" in str(n[1])]
-            mh = model_host_hits(net)
-            unf = user_not_found(cons)
-            total_model_hits += mh
-            total_unf += unf
-            print(f"    console_errors={len(errs)} network>=400/failed={len(bad)} model_host_hits={len(mh)}")
-            for c in errs[:4]:
-                print("      C", c)
-            for n in bad[:6]:
-                print("      N", n)
-            for h in mh:
-                print("      !! MODEL-HOST", h)
-            vpath = None
-            try:
-                context.close()
-                vpath = page.video.path() if video else None
-            except Exception as e:
-                print(f"    close/video: {e}")
-            browser.close()
-            if vpath:
-                print(f"    video={vpath}")
+def context_kwargs(pw, name, kw, video):
+    """Resolve Patchright new_context kwargs for a config (device preset, viewport, video dir)."""
+    ck = {}
+    if "device" in kw:
+        d = pw.devices.get(kw["device"])
+        ck.update(d) if d else ck.update({"viewport": {"width": 390, "height": 844}})
+    if "viewport" in kw:
+        ck["viewport"] = kw["viewport"]
+    if video:
+        ck["record_video_dir"] = f"{OUT}/video-{name}"
+    return ck
 
-    print(f"\nARTIFACTS: {OUT}")
-    print("=" * 60)
-    if total_model_hits or total_unf:
-        print(f"FAIL: browser contacted a model host ({len(total_model_hits)}) / "
-              f"openrouter|'user not found' console lines ({len(total_unf)}) — item-A regression.")
-        for h in total_model_hits:
+
+def load(page):
+    try:
+        page.goto(TARGET, wait_until="domcontentloaded", timeout=30000)
+        page.wait_for_selector("text=Run", timeout=15000)
+    except Exception as e:
+        print(f"    load: {e}")
+
+
+def snapshot_a11y(page):
+    try:
+        aria = page.locator("body").aria_snapshot()
+        print(f"    a11y: button={'- button' in aria} heading={'- heading' in aria}")
+        with open(f"{OUT}/a11y-desktop.txt", "w") as f:
+            f.write(aria)
+    except Exception as e:
+        print(f"    a11y: {e}")
+
+
+def summarize(cons, net):
+    """Print the per-config console/network summary; return (model_host_hits, openrouter/401 lines)."""
+    errs = [c for c in cons if c[0] in ("error", "pageerror")]
+    bad = [n for n in net if (isinstance(n[1], int) and n[1] >= 400) or "FAIL" in str(n[1])]
+    mh = model_host_hits(net)
+    unf = user_not_found(cons)
+    print(f"    console_errors={len(errs)} network>=400/failed={len(bad)} model_host_hits={len(mh)}")
+    for c in errs[:4]:
+        print("      C", c)
+    for n in bad[:6]:
+        print("      N", n)
+    for h in mh:
+        print("      !! MODEL-HOST", h)
+    return mh, unf
+
+
+def close_context(context, browser, page, video):
+    vpath = None
+    try:
+        context.close()  # read video path only AFTER context.close(), BEFORE browser.close()
+        vpath = page.video.path() if video else None
+    except Exception as e:
+        print(f"    close/video: {e}")
+    browser.close()
+    if vpath:
+        print(f"    video={vpath}")
+
+
+def run_config(pw, name, kw, video):
+    """Drive one viewport/device config end to end; return its (model_host_hits, openrouter lines)."""
+    print(f"\n=== {LABEL} · {name} ===")
+    browser = pw.chromium.launch(headless=True)
+    context = browser.new_context(**context_kwargs(pw, name, kw, video))
+    page = context.new_page()
+    cons, net = [], []
+    hook(page, cons, net)
+    load(page)
+    print(f"    title={page.title()!r} viewport={page.viewport_size}")
+    sweep(page, OUT, name)
+    if name == "desktop":
+        snapshot_a11y(page)
+    mh, unf = summarize(cons, net)
+    close_context(context, browser, page, video)
+    return mh, unf
+
+
+def report(model_hits, unf):
+    if model_hits or unf:
+        print(f"FAIL: browser contacted a model host ({len(model_hits)}) / "
+              f"openrouter|'user not found' console lines ({len(unf)}) — item-A regression.")
+        for h in model_hits:
             print("   MODEL-HOST", h)
-        for u in total_unf:
+        for u in unf:
             print("   CONSOLE", u)
         return 1
     print("PASS: no browser→model-host request and no openrouter/401 console line across all configs.")
     return 0
+
+
+def main():
+    print(f"TARGET={TARGET}  LABEL={LABEL}  OUT={OUT}")
+    model_hits, unf = [], []
+    with sync_playwright() as pw:
+        for name, kw, video in CONFIGS:
+            mh, u = run_config(pw, name, kw, video)
+            model_hits += mh
+            unf += u
+    print(f"\nARTIFACTS: {OUT}")
+    print("=" * 60)
+    return report(model_hits, unf)
 
 
 if __name__ == "__main__":
