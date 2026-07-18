@@ -97,7 +97,7 @@ One screen, no routing. Files: `ui/src/App.tsx` (`Dashboard`), a small new compo
   civic tagline ("find the official public service you need"). Keep the light/dark toggle.
 - **U2 · Task-first hero + progressive disclosure.** Calm above-the-fold: one question ("What do you need
   sorted?"), **Sort My Care as the default/flagship**, a **single primary input** (London postcode / query)
-  + one CTA. Secondary civic flow: **On It** (step-free routes — genuinely a public service), revealed on
+  and one CTA. Secondary civic flow: **On It** (step-free routes — genuinely a public service), revealed on
   demand. **Drop `founders-copilot` (Grants) from the civic default** — off-message for a public-service
   tool (it's a business tool / showcase remnant); keep it reachable via `?usecase=founders-copilot` (engine
   demo, dev-mode). Results/cards render below; freshness ("data as of") + "signpost, not advice" stay. Dev
@@ -117,7 +117,7 @@ One screen, no routing. Files: `ui/src/App.tsx` (`Dashboard`), a small new compo
   **docs/UserStory.md + docs/design.md** — refine ICP/USP for the task-first landing.
   **Roadmap** `data/usecase-catalog.json` reflects the folded issues.
 - **SEO static files** (civic tool → be crawlable): add `ui/public/robots.txt` (allow, point at the sitemap)
-  + `ui/public/sitemap.xml` (the one civic URL) — tiny; pairs with the U3 OG/meta. The accessibility
+  and `ui/public/sitemap.xml` (the one civic URL) — tiny; pairs with the U3 OG/meta. The accessibility
   statement (U3) also gets a short `docs/` note if it links out.
 - **CLI (Makefile) — STALE, must fix:** `deploy` says "UI deploys via gh-pages CI" (retired #75 → CF Pages/
   `provision_cf.sh`); `demo` → `qte77.github.io/ldnmxx-hack/` (now `sortmy.london`); dev targets say
@@ -147,7 +147,7 @@ One screen, no routing. Files: `ui/src/App.tsx` (`Dashboard`), a small new compo
 - `App.tsx` — `Dashboard()` (~L92). USECASES `:10-25` (founders-copilot · on-it; add care flagship for
   **U2**). `ThemeToggle` `:34-57`. `StatusChip` `:67-90` (dev-only). **Header** `:126` (visible "Groundwork"
   wordmark + tagline — **U1 rebrand**). sr-only `<h1>` civic already. usecase buttons `:134-161`. `devMode`
-  + `?dev=1` keydown/persist `:97-129`. ⚙Key + `dev ✕` gated `:163-182`. Key panel gated `:187-204`.
+  and `?dev=1` keydown/persist `:97-129`. ⚙Key + `dev ✕` gated `:163-182`. Key panel gated `:187-204`.
   **prompt form** `:206-226` (single input + Run — **U2 hero input**). error `role=alert` `:228-231`.
   **results** `<main>`+`aria-live` `:232-238`; console `<aside>` gated `:239-249`. **footer** `:250+`.
 - `devmode.ts` (`matchesToggle`/`readDevMode`/`writeDevMode`, localStorage `qte77-dev`, `?dev=1/0`; tested
