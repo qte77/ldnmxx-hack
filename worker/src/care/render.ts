@@ -21,13 +21,13 @@ export function buildCareCards(q: CareQuery): unknown[] {
   const asOf = q.services.map((s) => s.lastUpdated).sort()[0];
   const summary: CardSpec = {
     key: "summary",
-    title: `${q.services.length} service${q.services.length > 1 ? "s" : ""} near ${q.postcode}`,
+    title: `${String(q.services.length)} service${q.services.length > 1 ? "s" : ""} near ${q.postcode ?? ""}`,
     lines: [`Nearest public-service signposts · data as of ${asOf}`],
   };
   const cards: CardSpec[] = q.services.map((s) => ({
     key: s.id,
     title: s.name,
-    lines: [`${s.authority} · ${s.distanceKm} km`, s.why, `[Official service page](${s.officialUrl})`],
+    lines: [`${s.authority} · ${String(s.distanceKm)} km`, s.why, `[Official service page](${s.officialUrl})`],
   }));
   return appendDisclaimer(cardsBatch([summary, ...cards]));
 }

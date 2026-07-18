@@ -38,7 +38,8 @@ export interface ORResponse {
 // first tool call is absent, is a different tool, or has non-JSON arguments.
 export function extractToolArgs(data: ORResponse, toolName: string): Record<string, unknown> | null {
   const call = data.choices?.[0]?.message?.tool_calls?.[0]?.function;
-  if (!call || call.name !== toolName || typeof call.arguments !== "string") return null;
+  if (!call) return null;
+  if (call.name !== toolName || typeof call.arguments !== "string") return null;
   try {
     return JSON.parse(call.arguments) as Record<string, unknown>;
   } catch {
@@ -95,7 +96,7 @@ export async function callModelTool<T>(opts: ModelCall & ToolSpec<T>): Promise<M
       console.warn("model fallback: HTTP", res.status);
       return null;
     }
-    const data = (await res.json()) as ORResponse;
+    const data = await res.json<ORResponse>();
     const value = opts.extract(data);
     if (value == null) {
       console.warn(`model fallback: no/empty ${opts.toolName} tool call (raise max_tokens if truncated)`);

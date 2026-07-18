@@ -38,7 +38,7 @@ describe("extractBatch", () => {
     expect(extractBatch(toolResponse(goodBatch) as never)).toEqual(goodBatch);
   });
   it("returns null when there is no tool call", () => {
-    expect(extractBatch({ choices: [{ message: {} }] } as never)).toBeNull();
+    expect(extractBatch({ choices: [{ message: {} }] })).toBeNull();
   });
   it("returns null on non-JSON arguments", () => {
     const r = { choices: [{ message: { tool_calls: [{ function: { name: "render_ui", arguments: "{bad" } }] } }] };

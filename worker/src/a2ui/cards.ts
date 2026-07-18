@@ -28,7 +28,7 @@ interface Route {
 }
 
 const opportunities = opportunitiesJson as Opportunity[];
-const route = routeJson as Route;
+const route = routeJson;
 
 export interface CardSpec {
   key: string;
@@ -53,7 +53,7 @@ function cardComponents(card: CardSpec): { cardId: string; components: unknown[]
     { id: titleId, component: { Text: { text: { literalString: card.title }, usageHint: "h3" } } },
   ];
   card.lines.forEach((line, i) => {
-    const id = `l-${card.key}-${i}`;
+    const id = `l-${card.key}-${String(i)}`;
     lineIds.push(id);
     components.push({
       id,
@@ -131,7 +131,7 @@ export function buildOpportunityCards(opps: Opportunity[] = opportunities): unkn
       lines: [
         `${o.org} · ${o.category}`,
         o.whyItFits,
-        `Score ${o.score} · deadline ${o.deadline} · ${
+        `Score ${String(o.score)} · deadline ${o.deadline} · ${
           o.eligibility.qualified
             ? "✓ qualified"
             : `✗ ${o.eligibility.missed[0] ?? "not yet eligible"}`
@@ -147,14 +147,14 @@ export function buildRouteCards(r: Route = route): unknown[] {
     key: "summary",
     title: `${r.origin} → ${r.destination}`,
     lines: [
-      `Step-free ${r.stepFree ? "✓" : "✗"} · ${r.durationMin} min`,
+      `Step-free ${r.stepFree ? "✓" : "✗"} · ${String(r.durationMin)} min`,
       ...(r.disruptions.length > 0 ? [`Disruptions: ${r.disruptions.join("; ")}`] : []),
     ],
   };
   const legs: CardSpec[] = r.legs.map((leg, i) => ({
-    key: `leg-${i}`,
+    key: `leg-${String(i)}`,
     title: leg.instruction,
-    lines: [`${leg.mode} · step-free ${leg.stepFree ? "✓" : "✗"} · ${leg.durationMin} min`],
+    lines: [`${leg.mode} · step-free ${leg.stepFree ? "✓" : "✗"} · ${String(leg.durationMin)} min`],
   }));
   return cardsBatch([summary, ...legs]);
 }
