@@ -26,8 +26,8 @@ jobs:
           python-version: "3.12"
       - name: semgrep (SAST)
         run: |
-          pip install --quiet semgrep
-          semgrep scan --config p/typescript --error
+          pip install --quiet semgrep==1.170.0
+          semgrep scan --config p/typescript --config p/security-audit --config p/owasp-top-ten --config p/secrets --error
 
   ui:
     runs-on: ubuntu-latest
@@ -42,6 +42,7 @@ jobs:
           cache: npm
           cache-dependency-path: ui/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
@@ -61,5 +62,16 @@ jobs:
           cache: npm
           cache-dependency-path: worker/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run typecheck
       - run: npm test
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: dependency review
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
+        with:
+          fail-on-severity: high

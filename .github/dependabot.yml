@@ -6,6 +6,8 @@ updates:
     directory: "/ui"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     groups:
       npm:
         patterns: ["*"]
@@ -28,6 +30,8 @@ updates:
     directory: "/worker"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     groups:
       npm:
         patterns: ["*"]
@@ -42,6 +46,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns: ["*"]
