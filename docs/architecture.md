@@ -25,7 +25,7 @@ honestly reported as `USAGE mode:demo`. See [`usecase-workflows.md`](usecase-wor
 ## Data flow — one direction, one trust crossing
 
 ```
-user input → SPA useAgentSSE ──POST /run?usecase=<id>──▶ Worker  [TRUST BOUNDARY — secrets here]
+user input → SPA useAgentSSE ──POST /api/run?usecase=<id>──▶ Worker  [TRUST BOUNDARY — secrets here]
                                                           runUsecase: plan → tool → render
                                  ◀── SSE {type,text,a2uiMessages} + terminal USAGE + RUN_FINISHED ──
    SPA: parse frames → AgentEvent → applyA2UIEvent (validate vs contract.ts) → render seam
@@ -75,6 +75,8 @@ sets the next run's `?demo=1` intent; the chip reports what the last run actuall
 
 ## Platform notes
 
+**Hosting = full Cloudflare:** SPA on **CF Pages** at `sortmy.london`, the Worker on a same-origin route
+`sortmy.london/api/*` (no CORS); GitHub Pages retired. See [`deploy-cloudflare.md`](deploy-cloudflare.md).
 Cloudflare **Workers (NOT Workflows)** + Pages. AI Gateway is supported in code but not configured in
 prod (#29); no KV binding exists today. Arize tracing via an injectable emitter (keyless console
 default; real OTLP export is planned, #21). **AG Grid deferred** → built-in A2UI cards (removed the top

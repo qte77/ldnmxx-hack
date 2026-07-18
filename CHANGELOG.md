@@ -7,6 +7,11 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
 ### Changed
+- **Hosting → full Cloudflare.** The SPA now deploys to **Cloudflare Pages** at `sortmy.london`, and the
+  Worker serves **same-origin `/api/*`** via a Worker route (was: GitHub Pages + a cross-origin
+  `*.workers.dev` Worker over CORS). Endpoints are now `POST /api/run` / `POST /api/trace`; GitHub Pages
+  (`gh-pages.yml`) retired; deploy via `scripts/provision_cf.sh` + `scripts/finish_cf.sh`
+  ([`docs/deploy-cloudflare.md`](docs/deploy-cloudflare.md)).
 - **Adopted the shared `workflow-definition/v1` contract.** Renamed `StageDef.span` → `name` across
   `usecases/*.json` and the Worker (`usecases.ts`, `worker.ts`) so a shipped usecase def is a valid
   `workflow-definition/v1` envelope — the cross-engine core is a non-empty `id` + ordered, non-empty

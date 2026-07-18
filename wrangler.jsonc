@@ -1,0 +1,8 @@
+{
+  // Cloudflare Pages project for the SPA (built to ui/dist). The Worker (worker/) deploys separately
+  // and serves sortmy.london/api/* via a Worker route (worker/wrangler.toml).
+  // Deploy: bash scripts/provision_cf.sh · custom domain: bash scripts/finish_cf.sh · docs/deploy-cloudflare.md
+  "name": "sortmy-london",
+  "compatibility_date": "2026-07-01",
+  "pages_build_output_dir": "ui/dist"
+}

@@ -6,12 +6,12 @@ import tailwindcss from "@tailwindcss/vite";
 const nodeEnv = (process as unknown as { env: Record<string, string | undefined> }).env;
 
 export default defineConfig({
-  // GH Pages serves at /<repo>/; the gh-pages workflow sets CI=true. Local dev/build stay at /.
-  base: nodeEnv.CI ? "/ldnmxx-hack/" : "/",
+  // CF Pages serves at the domain root (sortmy.london). Override with VITE_BASE if ever needed.
+  base: nodeEnv.VITE_BASE ?? "/",
   plugins: [react(), tailwindcss()],
   server: {
-    // Same-origin dev: the SPA fetches /run, Vite proxies it to the local `wrangler dev` worker.
-    proxy: { "/run": { target: "http://localhost:8787", changeOrigin: true } },
+    // Same-origin dev: the SPA fetches /api/*, Vite proxies it to the local `wrangler dev` worker.
+    proxy: { "/api": { target: "http://localhost:8787", changeOrigin: true } },
   },
   build: { target: "es2022" },
   test: {
