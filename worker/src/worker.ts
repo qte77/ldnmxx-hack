@@ -60,7 +60,7 @@ const sleep = (ms: number): Promise<void> =>
 interface RenderMeta {
   model: string;
   provider: string;
-  usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  usage: { promptTokens?: number | undefined; completionTokens?: number | undefined; totalTokens?: number | undefined };
 }
 
 async function renderBatch(
@@ -245,7 +245,7 @@ function groundOpps(matches: OpportunityMatch[]): unknown[] {
 interface StageOutcome {
   reasoning: string;
   model: string;
-  usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  usage: { promptTokens?: number | undefined; completionTokens?: number | undefined; totalTokens?: number | undefined };
   matches?: OpportunityMatch[];
 }
 
@@ -294,7 +294,7 @@ interface UsageEvent extends AgentEvent {
 interface TokenTotals { promptTokens: number; completionTokens: number; totalTokens: number }
 
 // Fold one stage/render usage into the running totals (each field is optional per provider → default 0).
-function addUsage(totals: TokenTotals, u?: { promptTokens?: number; completionTokens?: number; totalTokens?: number }): void {
+function addUsage(totals: TokenTotals, u?: { promptTokens?: number | undefined; completionTokens?: number | undefined; totalTokens?: number | undefined }): void {
   if (!u) return;
   totals.promptTokens += u.promptTokens ?? 0;
   totals.completionTokens += u.completionTokens ?? 0;

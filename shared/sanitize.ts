@@ -13,6 +13,8 @@ const UK_POSTCODE = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/i;
 export function normalisePostcode(raw: string): string | null {
   if (typeof raw !== "string") return null;
   const m = raw.match(UK_POSTCODE);
-  if (!m) return null;
-  return `${m[1].toUpperCase()} ${m[2].toUpperCase()}`;
+  const outward = m?.[1];
+  const inward = m?.[2];
+  if (outward === undefined || inward === undefined) return null;
+  return `${outward.toUpperCase()} ${inward.toUpperCase()}`;
 }
