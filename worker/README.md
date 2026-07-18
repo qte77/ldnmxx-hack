@@ -19,15 +19,12 @@ OTLP export when `ARIZE_API_KEY`+`ARIZE_SPACE_ID` are set).
 
 ## Setup
 
-Two credential files, both gitignored — copy the `.example` templates:
+Credentials are gitignored — copy the `.example` templates:
 
-- **`worker/.env`** — deploy-time Cloudflare auth for `wrangler deploy` (NOT runtime):
-  `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`. Required **API-token permission groups**:
-  - **Workers Scripts** (Edit) — deploy the Worker.
-  - **Workers AI** (Read) — the `[ai]` binding's `/ai/run` inference. **Distinct from "Workers Scripts"** —
-    a deploy-only token returns `401` on Workers AI.
-  - **Account Settings** (Read) + any binding perms you use (KV, R2, …).
-  - Simplest: the **"Edit Cloudflare Workers"** template **plus add Workers AI (Read)**.
+- **Deploy auth** — the full-CF deploy reads `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` from a
+  gitignored **repo-root `.env`** (copy `.env.example`; auto-sourced by `scripts/provision_cf.sh` /
+  `finish_cf.sh`). Token scopes + one-time setup: [`docs/deploy-cloudflare.md`](../docs/deploy-cloudflare.md).
+  *(For a worker-only `wrangler deploy` you can instead `wrangler login`, or just export the two vars.)*
 - **`worker/.dev.vars`** — runtime secrets/vars (`OPENROUTER_KEY`, `WORKERS_AI_MODEL` + model overrides,
   `ARIZE_*`, `ALLOWED_ORIGINS`, …). In prod, set each with `wrangler secret put <NAME>`.
 
