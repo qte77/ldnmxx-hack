@@ -39,6 +39,16 @@ user input → SPA useAgentSSE ──POST /api/run?usecase=<id>──▶ Worker 
 Open data sources available for future workflows are cataloged (machine-readable) in
 [`data/sources.json`](../data/sources.json); candidate workflows in [`data/usecase-catalog.json`](../data/usecase-catalog.json).
 
+**Browser never calls a model API (013 · A).** The SPA's only network egress is `POST /api/run` (and
+`/api/trace`) to the **same-origin Worker** — there is no direct-to-model path. An optional BYOK key is
+forwarded to the Worker as an `Authorization` header and resolved **server-side** (`resolveRun`); the
+leaked browser-BYOK path (`liveAgent` → OpenRouter) was deleted and no `VITE_*` var can inline a key into
+the bundle. `tests/e2e/ui_sweep.py` fails if any request reaches a model host.
+
+**Civic-clean UI + gated dev mode (013 · B).** The default UI is task-first — prompt + Run + the A2UI
+surface. The AG-UI event console and the ⚙ Key panel are dev-only, revealed by `?dev=1` / `Ctrl+K`
+(persisted in `localStorage["qte77-dev"]`), so the civic default exposes nothing model- or key-related.
+
 **Per-stage model dispatch (#18).** On the keyless free-chain path, a stage tagged `exec` in its
 `usecases/*.json` runs a forced tool (`assess_stage` / `search_opportunities`) through the SAME provider
 chain as the render (`runChain` + per-provider `tryCall`) — streaming the model's `reasoning` as one
