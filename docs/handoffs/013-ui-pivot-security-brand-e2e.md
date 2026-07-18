@@ -1,5 +1,5 @@
 ---
-title: "Handoff 013 — resume: UI pivot (security · console-gate · brand · e2e · security-review), 0/7 not started"
+title: "Handoff 013 — UI pivot (security · console-gate · brand · e2e · civic · security-review): 8/8 DONE, live on sortmy.london"
 type: handoff
 updated: 2026-07-18
 pairs_with: docs/plans/013-ui-pivot-security-brand-e2e.md
@@ -51,3 +51,24 @@ states) · `F` strict security review. **8 items.** **Do 0 then A first** (A is 
 ## Open / context
 PR **#75** (merge first). Shipped this session: #77 v1-align · #81 Care engine · full-CF deploy live · DMARC+no-mail ·
 401 diagnosed+live-confirmed. Follow-on **013b** = issue **#88** (task-first civic landing + wire `sort-my-care` as flagship + visible rebrand).
+
+## DONE — plan 013 complete (8/8)
+All items merged (#83 A · #84 D · #85 B · #86 C · #87 G · #89 E · #90/#91 F) and **live on `sortmy.london`**
+(Pages + Worker redeployed). Final e2e sweep across 5 device configs: **0 console errors · 0 network≥400 ·
+0 model-host hits**; civic title, `heading=True` a11y.
+
+**Security review (F) — sign-off: SECURE TO SHIP, 0 must-fix.** All 8 audited invariants PASS with
+bundle/config evidence: (1) no secret in the SPA bundle; (2) browser never calls a model host — only
+`/api/run`; (3) Worker-secrets-only (`OPENROUTER_KEY`/`ARIZE_*` via `env.*`, BYOK forwarded-not-logged,
+forced-empty on demo/injection); (4) CORS allowlist — now **fails closed** (never `*`, #90); (5) injection
+guard (`shared/guard.ts`) applied Worker-side; (6) postcode SSRF boundary — `sort-my-care` is provably
+fetch-free; (7) per-IP rate-limit (429); (8) least-privilege deploy token (Zone-scoped). Hardening landed:
+**CSP** (`ui/public/_headers`; anti-FOUC script externalized to `theme-init.js`; `font-src` allows `data:`)
+plus **fail-closed CORS** (never `*`, with 3 new preflight tests). Follow-ups (non-blocking): a 1200×630
+`og:image`; optional adoption of `@qte77/ui-theme` once #67 provisions the token.
+
+**Deploy wrinkle (non-fatal):** `wrangler deploy` (Worker) re-asserts the `sortmy.london/api/*` route each
+run and the CF token lacks Zone **Workers-Routes·Edit**, so that step errors (`code 10000`) — but the Worker
+**script uploads fine** and the route already exists, so `/api/*` serves the new code. Fix later: add the
+scope, or drop `route` from `worker/wrangler.toml` post-setup. **Open loose end:** PR **#76** (historical
+012/010/011 docs) — user decision (merge or close; outside 013 scope).
