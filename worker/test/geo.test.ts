@@ -30,8 +30,8 @@ describe("nearestN", () => {
   it("returns the n closest, sorted nearest-first, each tagged with distanceKm", () => {
     const out = nearestN(origin, items, 2);
     expect(out.map((o) => o.id)).toEqual(["near", "mid"]);
-    expect(out[0].distanceKm).toBeLessThan(out[1].distanceKm);
-    expect(typeof out[0].distanceKm).toBe("number");
+    expect(out[0]!.distanceKm).toBeLessThan(out[1]!.distanceKm);
+    expect(typeof out[0]!.distanceKm).toBe("number");
   });
 
   it("caps at the array length and returns [] for n <= 0", () => {

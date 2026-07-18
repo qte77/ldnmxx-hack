@@ -14,7 +14,7 @@ const spans: Span[] = [
 // Reach into the OTLP JSON without pulling in a schema.
 function otlpSpans(payload: unknown): Record<string, unknown>[] {
   const rs = (payload as { resourceSpans: { scopeSpans: { spans: Record<string, unknown>[] }[] }[] }).resourceSpans;
-  return rs[0].scopeSpans[0].spans;
+  return rs[0]!.scopeSpans[0]!.spans;
 }
 function kindOf(span: Record<string, unknown>): string | undefined {
   const attrs = span.attributes as { key: string; value: { stringValue?: string } }[];
@@ -29,7 +29,7 @@ describe("spansToOtlp", () => {
     expect(out).toHaveLength(3);
     const traceIds = new Set(out.map((s) => s.traceId));
     expect(traceIds.size).toBe(1);
-    expect(String(out[0].traceId)).toMatch(/^[0-9a-f]{32}$/);
+    expect(String(out[0]!.traceId)).toMatch(/^[0-9a-f]{32}$/);
     for (const s of out) expect(String(s.spanId)).toMatch(/^[0-9a-f]{16}$/);
   });
 
@@ -65,7 +65,7 @@ describe("exportSpans", () => {
     vi.stubGlobal("fetch", fetchMock);
     await exportSpans(arizeEnv, spans);
     expect(fetchMock).toHaveBeenCalledOnce();
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe("https://otlp.arize.com/v1/traces");
     expect(init.method).toBe("POST");
     expect(init.headers.space_id).toBe("s");
@@ -97,7 +97,7 @@ describe("makeEmitter", () => {
     emitter.span({ name: "render", attrs: { kind: "render" } });
     await emitter.flush();
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(otlpSpans(JSON.parse(fetchMock.mock.calls[0][1].body))).toHaveLength(2);
+    expect(otlpSpans(JSON.parse(fetchMock.mock.calls[0]![1].body))).toHaveLength(2);
   });
 });
 
@@ -130,7 +130,7 @@ describe("POST /trace forwarder", () => {
     vi.stubGlobal("fetch", fetchMock);
     const many = Array.from({ length: MAX_TRACE_SPANS + 50 }, (_, i) => ({ name: `s${String(i)}` }));
     await worker.fetch(post({ spans: many }), arizeEnv, ctx);
-    expect(otlpSpans(JSON.parse(fetchMock.mock.calls[0][1].body)).length).toBe(MAX_TRACE_SPANS);
+    expect(otlpSpans(JSON.parse(fetchMock.mock.calls[0]![1].body)).length).toBe(MAX_TRACE_SPANS);
   });
 
   it("rejects a non-POST /trace with 405", async () => {

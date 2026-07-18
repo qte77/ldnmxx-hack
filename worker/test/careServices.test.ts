@@ -14,9 +14,9 @@ describe("queryCareServices", () => {
     const q = queryCareServices("SW1A 1AA", services, postcodes, 2);
     expect(q.postcode).toBe("SW1A 1AA");
     expect(q.services.map((s) => s.id)).toEqual(["near", "mid"]);
-    expect(q.services[0].distanceKm).toBeLessThanOrEqual(q.services[1].distanceKm);
+    expect(q.services[0]!.distanceKm).toBeLessThanOrEqual(q.services[1]!.distanceKm);
     // contract shape only — internal corpus fields (lat/lng/category) must not leak
-    expect(Object.keys(q.services[0]).sort()).toEqual(
+    expect(Object.keys(q.services[0]!).sort()).toEqual(
       ["authority", "distanceKm", "id", "lastUpdated", "name", "officialUrl", "why"].sort()
     );
   });
@@ -40,6 +40,6 @@ describe("queryCareServices", () => {
     expect(q.postcode).toBe("SW9 9SL");
     expect(q.services.length).toBeGreaterThan(0);
     expect(q.services.length).toBeLessThanOrEqual(3);
-    expect(typeof q.services[0].distanceKm).toBe("number");
+    expect(typeof q.services[0]!.distanceKm).toBe("number");
   });
 });

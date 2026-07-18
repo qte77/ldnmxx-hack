@@ -73,8 +73,8 @@ describe("runUsecase — swap-a-JSON proof", () => {
       "USAGE", // terminal HUD frame — a canned route render reads as the deterministic "demo" mode
       "RUN_FINISHED",
     ]);
-    expect(events[1].text).toBe("custom_x");
-    const render = events[2];
+    expect(events[1]!.text).toBe("custom_x");
+    const render = events[2]!;
     expect(render.text).toBe("render_ui");
     expect(render.a2uiMessages).toBeTruthy();
     expect(spans).toEqual(["run", "tool:custom_x", "render"]);

@@ -38,7 +38,7 @@ export const DEFAULT_OPENROUTER_FREE_MODELS = [
 export interface CallArgs {
   system: string;
   user: string;
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
 }
 
 // The render_ui spec: force render_ui, pull the batch, structurally validate self-containment.
@@ -77,7 +77,7 @@ export function workersAiProvider(ai: Ai, model: string = DEFAULT_WORKERS_AI_MOD
       const run = (ai.run as unknown as (
         m: string,
         inputs: unknown,
-        options?: { signal?: AbortSignal }
+        options?: { signal?: AbortSignal | undefined }
       ) => Promise<unknown>).bind(ai);
       const out = (await run(
         model,
@@ -152,12 +152,12 @@ export function renderFree(
 
 // Build the chain from whatever bindings/secrets are present, cheapest-first.
 export function buildProviders(opts: {
-  ai?: Ai;
-  openRouterKey?: string;
-  githubToken?: string;
-  workersAiModel?: string;
-  openRouterFreeModels?: string[];
-  githubModel?: string;
+  ai?: Ai | undefined;
+  openRouterKey?: string | undefined;
+  githubToken?: string | undefined;
+  workersAiModel?: string | undefined;
+  openRouterFreeModels?: string[] | undefined;
+  githubModel?: string | undefined;
 }): Provider[] {
   const list: Provider[] = [];
   if (opts.ai) list.push(workersAiProvider(opts.ai, opts.workersAiModel ?? DEFAULT_WORKERS_AI_MODEL));

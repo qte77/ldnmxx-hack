@@ -336,7 +336,7 @@ describe("worker /run", () => {
     // terminal: the last two frames are USAGE then RUN_FINISHED
     expect(frames.at(-2)?.type).toBe("USAGE");
     expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
-    const usage = usageFrames[0];
+    const usage = usageFrames[0]!;
     expect(usage.mode).toBe("live");
     expect(usage.model).toBeTruthy();
     expect(usage.provider).toBe("workers-ai");

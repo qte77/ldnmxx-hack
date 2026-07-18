@@ -12,19 +12,19 @@ export interface ModelCall {
   baseURL: string; // OpenAI-compatible base, e.g. https://openrouter.ai/api/v1
   system: string;
   user: string;
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
 }
 export interface ModelResult {
   batch: unknown[];
   model: string;
-  usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  usage: { promptTokens?: number | undefined; completionTokens?: number | undefined; totalTokens?: number | undefined };
 }
 // Generic forced-tool result: the parsed + validated tool arguments as `value`, plus the model id and
 // usage. ModelResult (render) is the `value = batch` specialisation, kept for the existing render callers.
 export interface ModelToolResult<T> {
   value: T;
   model: string;
-  usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  usage: { promptTokens?: number | undefined; completionTokens?: number | undefined; totalTokens?: number | undefined };
 }
 
 // The OpenAI-compatible chat-completions response shape we consume (OpenRouter, GitHub Models, and —
@@ -90,7 +90,7 @@ export async function callModelTool<T>(opts: ModelCall & ToolSpec<T>): Promise<M
         temperature: 0.2,
         max_tokens: 8000, // tool JSON can be large (esp. the A2UI batch); too low truncates it → fallback
       }),
-      signal: opts.signal,
+      signal: opts.signal ?? null,
     });
     if (!res.ok) {
       console.warn("model fallback: HTTP", res.status);

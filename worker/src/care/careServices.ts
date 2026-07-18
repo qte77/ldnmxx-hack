@@ -33,9 +33,8 @@ export function queryCareServices(
 ): CareQuery {
   const postcode = normalisePostcode(prompt);
   if (!postcode) return { postcode: null, services: [] };
-  // Record index access is Coords per the type, but an unknown postcode is undefined at runtime (until
-  // S4's noUncheckedIndexedAccess makes this implicit) — so the guard is real, not dead.
-  const origin = postcodes[postcode] as Coords | undefined;
+  // noUncheckedIndexedAccess: an unknown postcode is undefined at runtime, so the guard is real.
+  const origin = postcodes[postcode];
   if (!origin) return { postcode, services: [] };
   const nearest = nearestN(origin, services, n).map(
     (s): CareService => ({

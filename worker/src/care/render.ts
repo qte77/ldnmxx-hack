@@ -22,7 +22,7 @@ export function buildCareCards(q: CareQuery): unknown[] {
   const summary: CardSpec = {
     key: "summary",
     title: `${String(q.services.length)} service${q.services.length > 1 ? "s" : ""} near ${q.postcode ?? ""}`,
-    lines: [`Nearest public-service signposts · data as of ${asOf}`],
+    lines: [`Nearest public-service signposts · data as of ${asOf ?? ""}`],
   };
   const cards: CardSpec[] = q.services.map((s) => ({
     key: s.id,
