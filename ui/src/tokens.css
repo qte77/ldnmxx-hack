@@ -1,0 +1,80 @@
+/*
+ * tokens.css — qte77 EyeRest brand design tokens, VENDORED (Tailwind v4 @theme).
+ *
+ * Source: qte77/brand · ui-kit/tailwind/tokens.css (@qte77/ui-theme@0.2.0, commit b36e045),
+ * generated from brand/DESIGN.md. Vendored here (NOT the npm package) so the sortmy.london build
+ * stays independent of the @qte77 private registry — no ui/.npmrc, no NODE_AUTH_TOKEN (see #82).
+ *
+ * Colors / fonts / --shadow-card below are byte-identical to upstream (light + dark). Deltas from
+ * upstream, intentional: the app uses --radius-card (== brand --radius-lg); the brand's data-variant
+ * palettes (green / blublock / dusk / saas) and its --radius-sm/md scale are omitted (unused here).
+ * DO NOT hand-tune values — edit brand/DESIGN.md upstream and re-vendor when the brand tokens change.
+ *
+ * Consumed by index.css:  @import "tailwindcss"; @import "./tokens.css";
+ * @theme registers the utilities (bg-bg, bg-surface, text-primary, border-border, font-sans, …); the
+ * dark overrides swap the variables at runtime via html[data-theme="dark"] or system preference.
+ */
+@theme {
+  --color-bg: #ece8d8;
+  --color-surface: #e2dec8;
+  --color-border: #c8c4b0;
+  --color-text: #2c2818;
+  --color-text-muted: #686040;
+  --color-primary: #7a6010; /* deepened from #8a7018 for WCAG AA on primary-on */
+  --color-primary-on: #ece8d8;
+
+  /* zero-blue categorical data arc (event/status accents) */
+  --color-data-positive: #4a6818;
+  --color-data-caution: #787010;
+  --color-data-negative: #983828;
+  --color-data-alt: #587818;
+
+  /* Inter (UI/prose) + JetBrains Mono (code/numeric), loaded via @fontsource in main.tsx */
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Card elevation/radius — functional-elevation primitives used by the A2UI surface theming in
+   * index.css. --radius-card == the brand's --radius-lg (12px). --shadow-card is DESIGN.md's single
+   * permitted functional shadow (not decoration); the dark value swaps via the runtime scheme below. */
+  --radius-card: 12px;
+  --shadow-card: 0 1px 2px rgba(28, 26, 20, 0.06), 0 4px 12px rgba(28, 26, 20, 0.08);
+}
+
+/*
+ * Dark scheme, twice: once for system-dark when no explicit light is forced, once for the explicit
+ * html[data-theme="dark"] attribute (set by the toggle / anti-FOUC guard). Mirrors qte77 eyerest.css.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #1c1a14;
+    --color-surface: #242018;
+    --color-border: #383428;
+    --color-text: #d8d0b8;
+    --color-text-muted: #a89878;
+    --color-primary: #c8a858;
+    --color-primary-on: #1c1a14;
+    --color-data-positive: #8aa860;
+    --color-data-caution: #c8b868;
+    --color-data-negative: #c08060;
+    --color-data-alt: #a8b870;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.55);
+  }
+}
+:root[data-theme="dark"] {
+  --color-bg: #1c1a14;
+  --color-surface: #242018;
+  --color-border: #383428;
+  --color-text: #d8d0b8;
+  --color-text-muted: #a89878;
+  --color-primary: #c8a858;
+  --color-primary-on: #1c1a14;
+  --color-data-positive: #8aa860;
+  --color-data-caution: #c8b868;
+  --color-data-negative: #c08060;
+  --color-data-alt: #a8b870;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.55);
+}
+
+:root {
+  color-scheme: light dark;
+}
