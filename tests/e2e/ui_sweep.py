@@ -64,13 +64,12 @@ def sweep(page, out, tag):
 
     shot("01-load")
     (click(page, "☾", exact=True) or click(page, "☀", exact=True)) and shot("02-theme")
-    click(page, "On It") and shot("03-onit")
-    click(page, "Catalog") and shot("04-catalog")  # deleted after item B — will then no-op
-    click(page, "Key") and shot("05-key")
-    click(page, "Founder")
-    if click(page, "Run", exact=True, t=3000):
+    # Progressive-disclosure civic flows (014·U): switch to On It, then back to the Care flagship.
+    click(page, "Step-free journeys") and shot("03-onit")
+    click(page, "Care services near you") and shot("04-care")
+    if click(page, "Find care services", t=3000):  # the flagship CTA (was "Run")
         page.wait_for_timeout(6000)
-        shot("06-after-run")
+        shot("05-after-run")
 
 
 def model_host_hits(net):
@@ -98,7 +97,7 @@ def context_kwargs(pw, name, kw, video):
 def load(page):
     try:
         page.goto(TARGET, wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_selector("text=Run", timeout=15000)
+        page.wait_for_selector("#civic-query", timeout=15000)  # the flow-agnostic hero input
     except Exception as e:
         print(f"    load: {e}")
 
