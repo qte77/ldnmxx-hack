@@ -139,7 +139,7 @@ describe("worker /run", () => {
   // (fetch_care_services) runs regardless of any model provider, threading nearest-NHS data to the care
   // render; nothing is model-generated, so the run is honestly reported as deterministic ("demo").
   function postCare(prompt: string): Request {
-    return new Request("https://w.example/run?usecase=sort-my-care", {
+    return new Request("https://w.example/api/run?usecase=sort-my-care", {
       method: "POST",
       headers: { "content-type": "application/json", origin: "https://qte77.github.io" },
       body: JSON.stringify({ prompt }),
