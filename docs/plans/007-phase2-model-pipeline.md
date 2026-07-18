@@ -17,7 +17,7 @@ pairs_with: docs/handoffs/007-phase2-model-pipeline.md
 > **(c)** so the failure is the **keys** — regenerate the Arize AX API key + space id post-unblock, update
 > `worker/.dev.vars` + the Worker secrets, re-run the smoke test (expect 200), *then* close #50 + tick PR-4.
 > **Our export code needs no change.**
-
+>
 > **PR-1/2/3 shipped; PR-4 (Arize live, blocked account-side #50) is the one remaining Phase-2 item; PR-5
 > superseded by the civic pivot (plans 010–012).** Originally scoped as **5 phased, strict-TDD PRs** (branch per PR → CI-gated → squash-on-green
 > → prune). The **Source map** at the bottom is the current code state — trust it instead of re-exploring.

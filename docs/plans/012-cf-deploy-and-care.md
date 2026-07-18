@@ -18,7 +18,7 @@ refs: ["#75 (deploy PR)", "#72 Care", "#73 Wander", "#74 Scam", "#69 roadmap", "
 
 All coded, tested, documented on branch `feat/cf-pages-deploy`. Changes: worker `/run`,`/trace`→`/api/run`,
 `/api/trace` (`worker/src/worker.ts` routing) + `routes = [{pattern="sortmy.london/api/*", zone_name=...}]`
-+ CORS→`sortmy.london` (`worker/wrangler.toml`); SPA `WORKER_BASE=""` (`ui/src/config.ts`), `/api/*`
+- CORS→`sortmy.london` (`worker/wrangler.toml`); SPA `WORKER_BASE=""` (`ui/src/config.ts`), `/api/*`
 (`ui/src/agent/useAgentSSE.ts`), `base:"/"` + dev proxy `/api` (`ui/vite.config.ts`); new `wrangler.jsonc`
 (Pages, `pages_build_output_dir: ui/dist`), `ui/public/_redirects`+`_headers`, `scripts/provision_cf.sh`+
 `finish_cf.sh` (adapted from `/workspaces/sfsanity/sfclarity/scripts/*`), `docs/deploy-cloudflare.md`;
@@ -99,7 +99,7 @@ allowedIds)` `:49-65` — reject-invented-ids validator pattern; `renderTool.ts`
 **Tests — `worker/test/`** (node, no jsdom; no `vitest.config`): `run.test.ts` — `post()` `:30-36`,
 `parseFrames` `:38-43`, `assertSelfContained` `:47-67`, `stageAwareAi()` `:102-112` (fake `env.AI` branching on
 `tool_choice.function.name`), span assertion `~:142-148`, USAGE-frame assertions. `cards.test.ts` — card-builder
-+ `VERIFIED_URLS` invariant. `model.test.ts` — unit via `vi.stubGlobal("fetch",…)`. Runner `worker/src/worker.ts`
+- `VERIFIED_URLS` invariant. `model.test.ts` — unit via `vi.stubGlobal("fetch",…)`. Runner `worker/src/worker.ts`
 `runUsecase` `~:281-333`.
 
 **Deploy (Effort 1, on `feat/cf-pages-deploy`)**: `worker/src/worker.ts` routing `~:341`; `worker/wrangler.toml`
