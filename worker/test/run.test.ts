@@ -135,6 +135,56 @@ describe("worker /run", () => {
     if (batch) assertSelfContained(batch);
   });
 
+  // Sort My Care — the deterministic corpus workflow on the general engine. Its query stage
+  // (fetch_care_services) runs regardless of any model provider, threading nearest-NHS data to the care
+  // render; nothing is model-generated, so the run is honestly reported as deterministic ("demo").
+  function postCare(prompt: string): Request {
+    return new Request("https://w.example/run?usecase=sort-my-care", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://qte77.github.io" },
+      body: JSON.stringify({ prompt }),
+    });
+  }
+
+  it("streams a self-contained care batch (nearest services + freshness + disclaimer) for a valid postcode", async () => {
+    const res = await worker.fetch(postCare("services near SW9 9SL"), env, ctx);
+    expect(res.status).toBe(200);
+    const frames = parseFrames(await res.text());
+    expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
+    const batch = frames.find((f) => f.a2uiMessages)?.a2uiMessages;
+    expect(batch).toBeTruthy();
+    if (batch) assertSelfContained(batch);
+    const json = JSON.stringify(batch);
+    expect(json).toContain("near SW9 9SL");
+    expect(json).toContain("data as of");
+    expect(json).toContain("https://www.nhs.uk/service-search"); // curated disclaimer link
+  });
+
+  it("emits run/plan/query/render spans for the care workflow", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    await worker.fetch(postCare("SW9 9SL"), env, ctx).then((r) => r.text());
+    const spans = spy.mock.calls.filter((c) => c[0] === "⌁ span").map((c) => c[1]);
+    expect(spans).toEqual(["run", "plan", "query", "render"]);
+  });
+
+  it("reports the care run as deterministic (USAGE mode:demo, zero tokens) — not a degraded stub", async () => {
+    const frames = parseFrames(await worker.fetch(postCare("SW9 9SL"), env, ctx).then((r) => r.text()));
+    const usage = frames.find((f) => f.type === "USAGE");
+    expect(usage?.mode).toBe("demo");
+    expect(usage?.totalTokens).toBe(0);
+    expect(frames.at(-2)?.type).toBe("USAGE");
+    expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
+  });
+
+  it("degrades gracefully for an invalid postcode (self-contained 'enter a postcode' card, still 200)", async () => {
+    const res = await worker.fetch(postCare("no postcode here"), env, ctx);
+    expect(res.status).toBe(200);
+    const batch = parseFrames(await res.text()).find((f) => f.a2uiMessages)?.a2uiMessages;
+    expect(batch).toBeTruthy();
+    if (batch) assertSelfContained(batch);
+    expect(JSON.stringify(batch)).toContain("Enter a valid UK postcode");
+  });
+
   it("emits one Arize span per stage (run/plan/tool×2/render)", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     await worker.fetch(post("founders-copilot"), env, ctx).then((r) => r.text());
