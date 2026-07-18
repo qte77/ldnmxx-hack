@@ -95,8 +95,10 @@ function Dashboard() {
   const [usecase, setUsecase] = useState<string>(USECASES[0].id); // Founder's Copilot leads
   const [prompt, setPrompt] = useState<string>(USECASES[0].example);
   const [showKey, setShowKey] = useState(false);
-  const [apiKey, setApiKey] = useState(import.meta.env.VITE_BYOK_API_KEY ?? "");
-  const [model, setModel] = useState(import.meta.env.VITE_BYOK_MODEL ?? "");
+  // No env prefill — VITE_* is inlined into the build, so a key here would ship in the bundle. The ⚙ Key
+  // panel starts empty; a user-entered key is forwarded to the Worker per request and resolved server-side.
+  const [apiKey, setApiKey] = useState("");
+  const [model, setModel] = useState("");
   const [demo, setDemo] = useState(false); // Live (agents, default) vs the deterministic Demo path
 
   const active = USECASES.find((u) => u.id === usecase) ?? USECASES[0];

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { parseSSE, toStatus } from "../src/agent/useAgentSSE";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { parseSSE, toStatus, runWorkerPath } from "../src/agent/useAgentSSE";
 import { applyA2UIEvent, type AgentEvent } from "../src/agent/applyA2UIEvent";
 import { A2UIMessageBatchSchema } from "../src/agent/contract";
 
@@ -117,5 +117,67 @@ describe("applyA2UIEvent with a Column/Card/Text batch", () => {
     const entry = applyA2UIEvent(bad, 1, render);
     expect(render).not.toHaveBeenCalled();
     expect(entry.text).toContain("contract violation");
+  });
+});
+
+// Security invariant (item A): the browser has exactly ONE transport — the Worker `/api/run` SSE stream.
+// There is no direct-to-model path. A BYOK key is forwarded to the Worker as an Authorization header and
+// resolved server-side (resolveRun); it must NEVER be sent to a model host from the browser.
+describe("runWorkerPath — the only browser transport", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function fetchMock(record: { url: string; init: RequestInit | undefined }[]) {
+    return vi.fn((url: string | URL, init?: RequestInit) => {
+      record.push({ url: String(url), init });
+      const body = new ReadableStream<Uint8Array>({
+        start(c) {
+          c.enqueue(
+            new TextEncoder().encode(`data: ${JSON.stringify({ type: "RUN_FINISHED" })}\n\n`)
+          );
+          c.close();
+        },
+      });
+      return Promise.resolve({ ok: true, body } as unknown as Response);
+    });
+  }
+
+  it("POSTs to the Worker /api/run and never a model host, forwarding a BYOK key as a Worker header", async () => {
+    const seen: { url: string; init: RequestInit | undefined }[] = [];
+    const mock = fetchMock(seen);
+    vi.stubGlobal("fetch", mock);
+
+    const events: AgentEvent[] = [];
+    await runWorkerPath(
+      "founders-copilot",
+      "an idea",
+      { apiKey: "sk-secret-key", model: "gpt-x" },
+      false,
+      (e) => events.push(e),
+      new AbortController().signal
+    );
+
+    expect(mock).toHaveBeenCalledTimes(1);
+    expect(seen[0]?.url).toContain("/api/run?usecase=founders-copilot");
+    expect(seen[0]?.url).not.toMatch(/openrouter|api\.openai|googleapis|anthropic/i);
+    const headers = seen[0]?.init?.headers as Record<string, string>;
+    expect(headers.authorization).toBe("Bearer sk-secret-key"); // key → Worker, resolved server-side
+    expect(events.at(-1)?.type).toBe("RUN_FINISHED");
+  });
+
+  it("omits the Authorization header on a keyless run", async () => {
+    const seen: { url: string; init: RequestInit | undefined }[] = [];
+    vi.stubGlobal("fetch", fetchMock(seen));
+    await runWorkerPath(
+      "sort-my-care",
+      "SW9 9SL",
+      undefined,
+      false,
+      () => undefined,
+      new AbortController().signal
+    );
+    const headers = seen[0]?.init?.headers as Record<string, string>;
+    expect(headers.authorization).toBeUndefined();
   });
 });
