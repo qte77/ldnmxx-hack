@@ -1,5 +1,6 @@
 import foundersJson from "../../usecases/founders-copilot.json";
 import onitJson from "../../usecases/on-it.json";
+import sortMyCareJson from "../../usecases/sort-my-care.json";
 
 // A usecase is pure data: the plan/tool stage choreography (played verbatim over SSE) plus a render
 // `mode` naming which code path builds the final A2UI card batch. Prompts, card builders and the model
@@ -9,10 +10,12 @@ export interface AgentEvent {
   text?: string;
   a2uiMessages?: unknown[];
 }
-// A model-backed stage names the forced tool it runs (absent ⇒ the stage's events play canned). The
-// runUsecase loop dispatches these on the keyless free-chain path; any miss falls back to the canned events.
-export type StageExec = "assess_stage" | "search_opportunities";
-export const STAGE_EXECS: StageExec[] = ["assess_stage", "search_opportunities"];
+// A stage's `exec` names the operation it runs (absent ⇒ the stage's events play canned). Two kinds,
+// dispatched by the workflows.ts registry in runUsecase: MODEL execs (assess_stage/search_opportunities)
+// run a forced tool on the keyless free-chain — any miss falls back to the canned events; QUERY execs
+// (fetch_care_services) run a deterministic corpus query regardless of whether a model provider exists.
+export type StageExec = "assess_stage" | "search_opportunities" | "fetch_care_services";
+export const STAGE_EXECS: StageExec[] = ["assess_stage", "search_opportunities", "fetch_care_services"];
 
 export interface StageDef {
   name: string;
@@ -20,7 +23,7 @@ export interface StageDef {
   events: AgentEvent[];
   exec?: StageExec;
 }
-export type RenderMode = "founders" | "route";
+export type RenderMode = "founders" | "route" | "care";
 export interface RenderDef {
   mode: RenderMode;
 }
@@ -31,7 +34,7 @@ export interface UsecaseDef {
   stages: StageDef[];
 }
 
-const RENDER_MODES: RenderMode[] = ["founders", "route"];
+const RENDER_MODES: RenderMode[] = ["founders", "route", "care"];
 
 // Tiny load-time guard. Usecases are trusted, build-time JSON (bundled like data/demo/*.json), so this
 // is not external-input validation — it just turns an authoring slip into a clear startup error.
@@ -74,6 +77,7 @@ function load(json: unknown): UsecaseDef {
 const registry: Record<string, UsecaseDef> = {
   "founders-copilot": load(foundersJson),
   "on-it": load(onitJson),
+  "sort-my-care": load(sortMyCareJson),
 };
 
 export const usecaseIds: string[] = Object.keys(registry);

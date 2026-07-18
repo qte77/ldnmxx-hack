@@ -36,7 +36,8 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
 
 - **The engine:** one `POST /run?usecase=<id>` + a small `runUsecase` interpreter (plan → tool → render) —
   each workflow's plan→tool→render choreography is a declarative `usecases/*.json`, selected by the
-  `usecase` query param; render modes (`founders`/`route`) stay in code.
+  `usecase` query param; render + deterministic query dispatch by name via the `worker/src/workflows.ts`
+  registry (`founders`/`route`/`care`), so adding a corpus workflow is register + a JSON (open/closed).
 - **Generative UI:** the agent streams **AG-UI** events that render as built-in **A2UI cards** — it
   paints the interface, not just text (AG Grid deferred).
 - **Example workflow — Founder's Copilot (flagship):** describe your idea → the model **assesses your
@@ -44,10 +45,13 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
   qualify-first, plus a verified incorporate how-to pack. The live Companies House filing (#12) is planned.
 - **Example workflow — On It (interchange proof):** a step-free London route — same engine, one
   `usecase` away (a canned stub today; live tools are planned).
+- **Civic pilot — Sort My Care:** a **deterministic** postcode → nearest-NHS-services signpost — model-free
+  and fetch-free, with honest "data as of …" freshness and a "confirm with the official source" disclaimer.
+  Proof that a new corpus workflow is register + a JSON, not an engine edit. `?usecase=sort-my-care`.
 - Keyless demo path; secrets stay Worker-only *(stack rationale below)*.
 
 <details>
-<summary>Screenshot — Founder's Copilot (Track B)</summary>
+<summary>Screenshot — Founder's Copilot</summary>
 
 Grants matched to the idea, qualify-first gate, live AG-UI event stream.
 
@@ -59,7 +63,7 @@ Grants matched to the idea, qualify-first gate, live AG-UI event stream.
 </details>
 
 <details>
-<summary>Screenshot — On It (Track A)</summary>
+<summary>Screenshot — On It</summary>
 
 A step-free London route — same engine, one `usecase` away.
 
@@ -82,7 +86,8 @@ Toggle the two example workflows in the UI; `cd worker && npm run tail` shows on
 **Demo:** <https://qte77.github.io/ldnmxx-hack/> (SPA) · <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>
 (Worker API). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
 
-**Switches:** `?usecase=founders-copilot|on-it` picks the workflow · a **Demo⇄Live toggle** in the header
+**Switches:** `?usecase=founders-copilot|on-it|sort-my-care` picks the workflow (`sort-my-care` is
+deterministic — model-free + fetch-free) · a **Demo⇄Live toggle** in the header
 (or `?demo=1`) forces the keyless deterministic stub even with a model key set — the events header then
 shows an honest chip (`LIVE · <model> · ~N tok` / `DEMO · deterministic` / `STUB · fell back`) · `?theme=light|dark`
 overrides the theme · BYOK sends `Authorization: Bearer <key>` to the Worker instead of its server-side key.

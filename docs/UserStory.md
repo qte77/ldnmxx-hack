@@ -1,9 +1,10 @@
 # User stories
 
-Two demo users, one engine (distilled from the sibling `ldnmxx` track briefs) — plus **Track C**, the v1
+The users the one engine serves (distilled from the sibling `ldnmxx` briefs): the two hackathon demos
+(Founder's Copilot, On It), the shipped civic pilot **Sort My Care**, and **Benefits Copilot**, the v1
 productization target (plans 010/011, proposed).
 
-## Track B — the early-stage London founder *(Build London)*
+## Founder's Copilot — the early-stage London founder *(Build London)*
 
 **Who:** an early-stage London founder — an idea or working prototype, pre- or just-incorporated, no
 grant-writing expertise, no budget for a consultant.
@@ -16,7 +17,7 @@ grant-writing expertise, no budget for a consultant.
 **Joy:** describe the idea once → the copilot assesses the stage, surfaces matched grants with a
 qualify-first gate, suggests who to talk to, and produces a one-click **incorporation-ready** pack.
 
-## Track A — the mobility-constrained Londoner *(Live London)*
+## On It — the mobility-constrained Londoner *(Live London)*
 
 **Who:** a Londoner with a mobility constraint (wheelchair, buggy, temporary injury) navigating the city
 daily.
@@ -43,7 +44,7 @@ screen gives no way to tell which you're seeing — or to choose.
 did — `LIVE · <model> · ~N tok`, `DEMO · deterministic`, or `STUB · fell back` — never claiming "live" when
 the model path degraded to canned.
 
-## Track C — the Londoner who might be entitled *(Claim London)*
+## Benefits Copilot — the Londoner who might be entitled *(Claim London)*
 
 *(Post-hackathon productization target — see plans [010](plans/010-civic-tool-v1.md) /
 [011](plans/011-benefits-copilot-wayfinder.md); proposed, not yet accepted.)*
@@ -63,7 +64,25 @@ to be the official decision."*
 **local** Citizens Advice / council contact, in plain English with a "why this might apply to you" line and
 an honest *"this is guidance, not a determination"* frame — a trustworthy signpost, never a fake adjudicator.
 
+## Sort My Care — the Londoner who needs a nearby service *(shipped)*
+
+**Who:** any Londoner (or someone helping a relative) needing a nearby GP, pharmacy, urgent-care, dentist or
+mental-health service — new to the area, or with a service that closed.
+
+**Pain:** "which services near me, and are these the official ones?" is scattered across the NHS site, the
+borough, and search results; it's easy to land on a wrong or stale listing, and health queries carry real
+stakes.
+
+**Job:** *"Show me the nearest official services for my postcode, and be honest about how current this is —
+don't pretend to be a diagnosis or a booking."*
+
+**Joy:** enter a postcode → the nearest public services appear as cards with distance, a plain-language
+"why", the **official** page to confirm, a "data as of …" freshness line, and a clear "signpost, not advice"
+disclaimer. Deterministic (no model, no live fetch) so it's fast and can't hallucinate a service.
+
 ## Why one engine
 
-Both are agents doing real work across fragmented systems. The same `runUsecase` core serves both by
-swapping a JSON — the modularity is the moat against one-off builds. See [`architecture.md`](architecture.md).
+These are agents doing real work across fragmented systems. The same `runUsecase` core serves them all by
+swapping a JSON — the modularity is the moat against one-off builds, and the general registry
+(`worker/src/workflows.ts`) means a new corpus workflow is register + a JSON. See
+[`architecture.md`](architecture.md) and ADR [`0001`](adr/0001-general-workflow-engine.md).
