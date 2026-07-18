@@ -13,6 +13,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noUncheckedSideEffectImports": true,
     "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
