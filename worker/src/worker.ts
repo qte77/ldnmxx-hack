@@ -312,7 +312,7 @@ export async function runUsecase(
       await sleep(paceMs);
       write(e);
     }
-    emitter.span({ name: stage.span, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
+    emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
   }
   await sleep(paceMs);
   const t0 = Date.now();

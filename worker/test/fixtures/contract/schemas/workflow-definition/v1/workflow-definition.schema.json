@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/qte77/protocols/main/schemas/workflow-definition/v1/workflow-definition.schema.json",
+  "title": "Workflow Definition v1",
+  "description": "Language-neutral contract for a workflow/usecase definition, shared by the Python doc-workflows engine (qte77/azure-doc-workflows, pydantic Workflow/Stage) and the TypeScript Cloudflare Worker engine (qte77/ldnmxx-hack, UsecaseDef/StageDef). `id` and `stages[].name` are the only fields both engines must agree on; every other field is documented per-engine below and type-checked when present, but unrecognized keys are allowed so each engine can carry its own extras.",
+  "type": "object",
+  "required": ["id", "stages"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique workflow/usecase identifier. Registry key for both engines (Python Workflow.id, TS UsecaseDef.id)."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable display name. TS engine field (UsecaseDef.title, required there). Python engine's equivalent is `label`."
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable display name / docx-title override. Python engine field (Workflow.label, defaults to \"\"). TS engine's equivalent is `title`."
+    },
+    "kind": {
+      "type": "string",
+      "description": "Workflow-level pipeline family. Python engine only (Workflow.kind, e.g. \"text\" | \"image\"; default \"text\"). TS usecases do not set this at the top level — TS's `kind` lives per-stage (see $defs/stage)."
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered execution plan. Array order is significant: both engines execute stages in the order given here.",
+      "items": { "$ref": "#/$defs/stage" }
+    },
+    "output": { "$ref": "#/$defs/output" }
+  },
+  "additionalProperties": true,
+  "$comment": "additionalProperties is deliberately true at the envelope level: the Python model carries further fields this contract doesn't standardize yet (order, triage_hint, template, standards). Only fields listed in `properties` are type-checked; anything else passes through unchecked.",
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "description": "One step in stages[]. `name` is the only field required by this contract; everything else is engine-specific and optional here even where one engine's own (stricter) runtime guard requires it locally.",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stage identifier, unique within stages[]. This is the reconciled field name: the TS engine's source field was `span`, renamed to `name` to align with the Python engine's Stage.name for this contract."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Stage category. TS engine field (StageDef.kind, required there, e.g. \"plan\" | \"tool\"). Python engine does not use a per-stage kind (its `kind` is workflow-level, see top-level `kind`)."
+        },
+        "backend": {
+          "type": "string",
+          "description": "Python engine only (Stage.backend). Extraction backend for this stage, e.g. document_intelligence | gpt_vision | openpyxl | docx | phash."
+        },
+        "model": {
+          "type": "string",
+          "description": "Python engine only (Stage.model). LLM/VLM model id for a generate/classify stage, e.g. gpt-5, gpt-4o-mini."
+        },
+        "cache_prefix": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Python engine only (Stage.cache_prefix). Ordered list of inputs forming the cached prompt prefix (azure-doc-workflows ADR-0006)."
+        },
+        "rubric": {
+          "type": "string",
+          "description": "Python engine only (Stage.rubric). Path to the evaluation standard/rubric document for an evaluate stage."
+        },
+        "judge": {
+          "type": "string",
+          "description": "Python engine only (Stage.judge). Judge model/identifier for an evaluate stage."
+        },
+        "system": { "$ref": "#/$defs/systemInstruction" },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/agentEvent" },
+          "description": "TS engine only (StageDef.events). Canned AG-UI/A2UI events replayed verbatim; used as-is when the stage has no `exec`, or as the fallback when a keyed `exec` dispatch misses."
+        },
+        "exec": {
+          "type": "string",
+          "minLength": 1,
+          "description": "TS engine only (StageDef.exec). Name of the forced tool/model call this stage dispatches to on the free-chain path (e.g. assess_stage, search_opportunities). Absent means the stage's canned `events` always play as-is."
+        }
+      },
+      "additionalProperties": true,
+      "$comment": "additionalProperties is deliberately true here too, for the same forward-compatibility reason as the envelope: documented keys above are type-checked when present, undocumented keys pass through unchecked."
+    },
+    "systemInstruction": {
+      "description": "Per-archetype task instruction for a generate stage. Python engine only (Stage.system, azure-doc-workflows ADR-0004). Either a single language-agnostic string, or an object keyed by language code (e.g. {\"en\": \"...\", \"de\": \"...\"}) for per-language system prompts (azure-doc-workflows#167).",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[a-z]{2}(-[A-Z]{2})?$" },
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      ]
+    },
+    "agentEvent": {
+      "type": "object",
+      "description": "TS engine only (AgentEvent). One AG-UI/A2UI protocol event replayed verbatim by a canned stage.",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "AG-UI/A2UI event type, e.g. STEP_STARTED, TEXT_MESSAGE_CONTENT, TOOL_CALL_START, TOOL_CALL_END."
+        },
+        "text": { "type": "string" },
+        "a2uiMessages": {
+          "type": "array",
+          "description": "Opaque A2UI card-batch payload; not further constrained by this contract."
+        }
+      },
+      "additionalProperties": true
+    },
+    "output": {
+      "description": "Where/how the workflow's result surfaces. oneOf the Python doc-workflows shape or the TS worker shape - an engine only ever emits its own shape, so the two are mutually exclusive here.",
+      "oneOf": [
+        { "$ref": "#/$defs/pythonOutput" },
+        { "$ref": "#/$defs/tsOutput" }
+      ]
+    },
+    "pythonOutput": {
+      "type": "object",
+      "description": "Python engine shape (Workflow.outputs / Workflow.required_sections).",
+      "required": ["outputs"],
+      "properties": {
+        "outputs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Requested rendered file formats, e.g. [\"md\", \"docx\", \"xlsx\"]."
+        },
+        "required_sections": {
+          "description": "Layer-1 structural gate (azure-doc-workflows ADR-0005). Either a flat language-agnostic list, or a {lang: [...]} map of per-output-language required section names.",
+          "oneOf": [
+            { "type": "array", "items": { "type": "string" } },
+            {
+              "type": "object",
+              "additionalProperties": { "type": "array", "items": { "type": "string" } }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "tsOutput": {
+      "type": "object",
+      "description": "TS engine shape (UsecaseDef.render).",
+      "required": ["render"],
+      "properties": {
+        "render": {
+          "type": "object",
+          "required": ["mode"],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Names the code path (RenderMode) that builds the final A2UI card batch, e.g. founders | route."
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

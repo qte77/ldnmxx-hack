@@ -6,6 +6,15 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
+### Changed
+- **Adopted the shared `workflow-definition/v1` contract.** Renamed `StageDef.span` → `name` across
+  `usecases/*.json` and the Worker (`usecases.ts`, `worker.ts`) so a shipped usecase def is a valid
+  `workflow-definition/v1` envelope — the cross-engine core is a non-empty `id` + ordered, non-empty
+  `stages[].name`; our `title` / `render` / `kind` / `events` / `exec` stay permitted extras
+  (`additionalProperties:true`). Added an ajv contract test validating every `usecases/*.json` against the
+  schema vendored from `qte77/protocols@workflow-definition/v1.0.0` (`worker/test/fixtures/contract/`), and
+  asserting the TS guard `assertUsecaseDef` rejects each vendored `invalid/*` fixture.
+
 ### Fixed
 - **`npm ci` unbroken.** Two Dependabot combined-bumps left conflicting peers on `main` (each PR was green
   alone): `typescript` bumped to `~7.0.2` while `typescript-eslint@8.63.0` requires `<6.1.0`, and

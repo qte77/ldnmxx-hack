@@ -1,0 +1,25 @@
+{
+  "id": "standard-review",
+  "label": "Standard Review",
+  "kind": "text",
+  "stages": [
+    { "name": "extract", "backend": "document_intelligence" },
+    {
+      "name": "generate",
+      "model": "gpt-5",
+      "cache_prefix": ["extract"],
+      "system": {
+        "en": "You write a structured review in English.",
+        "de": "Du verfasst eine strukturierte Bewertung auf Deutsch."
+      }
+    },
+    { "name": "evaluate", "rubric": "standards/review-rubric.md", "judge": "gpt-5" }
+  ],
+  "output": {
+    "outputs": ["md", "docx"],
+    "required_sections": {
+      "en": ["Summary", "Findings"],
+      "de": ["Zusammenfassung", "Ergebnisse"]
+    }
+  }
+}

@@ -15,19 +15,26 @@ One endpoint: `POST /run?usecase=<id>`. Render = **built-in A2UI cards** (AG Gri
   "title": "Founder's Copilot",
   "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned)
   "stages": [
-    { "span": "plan", "kind": "plan", "events": [
+    { "name": "plan", "kind": "plan", "events": [
       { "type": "STEP_STARTED", "text": "understand the idea" },
       { "type": "TEXT_MESSAGE_CONTENT", "text": "Assessing your stage and matching funding…" } ] },
-    { "span": "tool:search_opportunities", "kind": "tool", "events": [
+    { "name": "tool:search_opportunities", "kind": "tool", "events": [
       { "type": "TOOL_CALL_START", "text": "search_opportunities" },
       { "type": "TOOL_CALL_END", "text": "search_opportunities" } ] }
   ]
 }
 ```
-Each pre-render `stage` plays its `events` (paced) over SSE and emits one Arize span named `span`. The
+Each pre-render `stage` plays its `events` (paced) over SSE and emits one Arize span named `name`. The
 final render stage is dispatched by `render.mode` to a code path — prompts, card builders and the model
 call stay in `worker/src/worker.ts`, not embedded in JSON — emitting the `render_ui` batch + a `render`
 span. Adding a JSON (plus its render mode, if new) adds a workflow.
+
+**Shared contract:** `id` + `stages[].name` (this schema's `span` field, renamed) is also the
+`workflow-definition/v1` envelope published by `qte77/protocols` and consumed by the sibling Python
+doc-workflows engine (`qte77/azure-doc-workflows`) — see `usecases/README.md`. The per-run `USAGE` event
+(mode/model/tokens; see `docs/architecture.md`'s HUD status bar section) is a **B-local SSE extension**: it
+rides the same stream as the stage/render events but is not part of the shared workflow-definition
+contract, which only describes the static stage choreography, not the runtime event stream.
 
 ## Track B — Founder's Copilot (one-click founder journey)
 
