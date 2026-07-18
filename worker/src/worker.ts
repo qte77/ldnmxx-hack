@@ -110,7 +110,10 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
-  const allow = allowed.includes(origin) ? origin : (allowed[0] ?? "*");
+  // Fail closed: reflect the request origin only when it's in the allowlist; otherwise fall back to the
+  // first configured origin, or the "null" deny sentinel if ALLOWED_ORIGINS is empty/misconfigured —
+  // NEVER "*" (which would grant any origin credentialed-ish read access on a misconfigured deploy).
+  const allow = allowed.includes(origin) ? origin : (allowed[0] ?? "null");
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
