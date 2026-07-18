@@ -9,6 +9,13 @@ Render implementations (prompts, card builders, the model call) stay in code, re
 `render.mode` (`founders` = model-generated grant cards with stub fallback · `route` = the canned
 step-free route). A wholly new render behaviour still needs a new mode in code.
 
+**Contract:** each file is also a `workflow-definition/v1` (`qte77/protocols`) — the language-neutral
+envelope shared with the Python doc-workflows engine (`qte77/azure-doc-workflows`). The two engines only
+have to agree on a non-empty `id` + ordered, non-empty `stages[].name`; everything else here (`title`,
+`render`, `stage.kind`, `stage.events`, `stage.exec`) is TS-engine-specific and layered on top by
+`assertUsecaseDef`. `worker/test/usecases.contract.test.ts` validates every file here against the
+vendored schema (`worker/test/fixtures/contract/`, synced via `protocols/scripts/sync.sh`).
+
 Schema (guarded at load):
 
 ```jsonc
@@ -17,10 +24,10 @@ Schema (guarded at load):
   "title": "On It",
   "render": { "mode": "founders" | "route" },
   "stages": [
-    { "span": "plan", "kind": "plan", "events": [ { "type": "STEP_STARTED", "text": "…" } ] }
+    { "name": "plan", "kind": "plan", "events": [ { "type": "STEP_STARTED", "text": "…" } ] }
   ]
 }
 ```
 
-Each stage plays its `events` (paced) over SSE and emits one Arize span named `span`. Both workflows +
+Each stage plays its `events` (paced) over SSE and emits one Arize span named `name`. Both workflows +
 judging alignment: `docs/usecase-workflows.md`.

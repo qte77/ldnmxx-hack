@@ -1,0 +1,9 @@
+{
+  "id": "image-triage",
+  "kind": "image",
+  "stages": [
+    { "name": "dedup", "backend": "phash" },
+    { "name": "classify", "model": "gpt-4o-mini" }
+  ],
+  "output": { "outputs": ["xlsx", "md"] }
+}

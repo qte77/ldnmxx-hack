@@ -1,7 +1,6 @@
 {
   "id": "founders-copilot",
   "title": "Founder's Copilot",
-  "render": { "mode": "founders" },
   "stages": [
     {
       "name": "plan",
@@ -9,7 +8,7 @@
       "exec": "assess_stage",
       "events": [
         { "type": "STEP_STARTED", "text": "understand the idea" },
-        { "type": "TEXT_MESSAGE_CONTENT", "text": "Assessing your stage and matching funding…" }
+        { "type": "TEXT_MESSAGE_CONTENT", "text": "Assessing your stage and matching funding..." }
       ]
     },
     {
@@ -29,5 +28,6 @@
         { "type": "TOOL_CALL_END", "text": "incorporate" }
       ]
     }
-  ]
+  ],
+  "output": { "render": { "mode": "founders" } }
 }

@@ -11,14 +11,14 @@ const USECASES = [
   {
     id: "founders-copilot",
     label: "Founder's Copilot",
-    hint: "Track B — grants matched to your idea",
+    hint: "Grants matched to your idea",
     placeholder: "Describe your idea, e.g. an AI copilot for London founders",
     example: "an AI copilot for London founders",
   },
   {
     id: "on-it",
     label: "On It",
-    hint: "Track A — step-free London route",
+    hint: "Step-free London route",
     placeholder: "e.g. step-free from E8 3GT to Westminster",
     example: "step-free from E8 3GT to Westminster",
   },
@@ -92,7 +92,7 @@ function StatusChip({ status }: { status: RunStatus | null }) {
 function Dashboard() {
   const { eventLog, isRunning, error, run, stop, status } = useAgentSSE();
   const { processMessages, clearSurfaces } = useA2UIActions();
-  const [usecase, setUsecase] = useState<string>(USECASES[0].id); // Track B (Founder's Copilot) leads
+  const [usecase, setUsecase] = useState<string>(USECASES[0].id); // Founder's Copilot leads
   const [prompt, setPrompt] = useState<string>(USECASES[0].example);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_BYOK_API_KEY ?? "");
@@ -116,7 +116,7 @@ function Dashboard() {
     processMessages(buildCatalogBatch() as Parameters<typeof processMessages>[0]);
   }, [processMessages, clearSurfaces]);
 
-  // No auto-run on load: Track B (Founder's Copilot) is preselected with its example prefilled, but the
+  // No auto-run on load: Founder's Copilot is preselected with its example prefilled, but the
   // workflow runs only when the visitor clicks Run (so a page refresh never fires a request).
 
   return (

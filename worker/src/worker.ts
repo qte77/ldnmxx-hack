@@ -1,5 +1,6 @@
 import { makeEmitter, exportSpans, MAX_TRACE_SPANS, type Emitter, type Span } from "./trace/arize";
-import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/cards";
+import { withIncorporate } from "./a2ui/cards";
+import { registry } from "./workflows";
 import { callRenderModel, extractToolArgs, type ToolSpec } from "./agent/model";
 import { buildProviders, renderFree, runChain, type Provider } from "./agent/providers";
 import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent, type StageExec } from "./usecases";
@@ -49,10 +50,11 @@ const DEFAULT_PACE_MS = 450;
 const sleep = (ms: number): Promise<void> =>
   ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
 
-// Render the card batch, dispatched by the usecase's render mode. `route` stays canned (a model-invented
-// step-free route would hallucinate; real routing is Phase 3). `founders` generates the cards grounded in
-// the demo data: a BYOK key calls the chosen model directly (keyed path), otherwise the keyless free
-// chain runs; either falls back to the deterministic stub when there's nothing to call or it errors.
+// Render the card batch, dispatched by the usecase's render mode via the workflows.ts registry.
+// Deterministic modes (`route`, `care`, …) build purely from bundled data — meta null (a model-invented
+// route or care listing would hallucinate). `founders` is the one model-backed mode: it generates the
+// cards grounded in the demo data — a BYOK key calls the chosen model directly (keyed path), otherwise the
+// keyless free chain runs; either falls back to the deterministic stub when there's nothing to call or it errors.
 // `meta` describes the model that produced a live render (model/provider/usage); null for the canned route
 // cards and the deterministic stub. runUsecase reads it to derive the honest mode + accumulate tokens.
 interface RenderMeta {
@@ -65,10 +67,13 @@ async function renderBatch(
   render: RenderDef,
   emitter: Emitter,
   ctx: ModelCtx,
-  matches?: OpportunityMatch[]
+  matches?: OpportunityMatch[],
+  queryData?: unknown
 ): Promise<{ batch: unknown[]; meta: RenderMeta | null }> {
-  if (render.mode === "route") return { batch: buildRouteCards(), meta: null };
-  const stub = withIncorporate(buildOpportunityCards());
+  // Deterministic modes (route, care, …) build purely from bundled data via the registry — no model,
+  // meta null. `founders` is the one model-backed mode (below); its registry entry is the stub/fallback.
+  if (render.mode !== "founders") return { batch: registry.render[render.mode](queryData), meta: null };
+  const stub = registry.render.founders();
   if (!ctx.key && ctx.providers.length === 0) return { batch: stub, meta: null };
   const ac = new AbortController();
   const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
@@ -289,11 +294,17 @@ export async function runUsecase(
   emitter.span({ name: "run", attrs: runAttrs });
   write({ type: "RUN_STARTED" });
   let matches: OpportunityMatch[] | undefined;
+  let queryData: unknown;
   const usage: TokenTotals = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
   for (const stage of def.stages) {
     const t0 = Date.now();
-    // Model-backed stage on the keyless free-chain path (ctx.providers is empty when keyed / stub-forced).
-    if (stage.exec && ctx.providers.length > 0) {
+    const queryFn = stage.exec ? registry.query[stage.exec] : undefined;
+    if (queryFn) {
+      // Deterministic query stage (model-free, fetch-free): computes the render data over the bundled
+      // corpus regardless of whether a model provider exists, then narrates via its canned events below.
+      queryData = queryFn({ prompt: ctx.prompt });
+    } else if (stage.exec && ctx.providers.length > 0) {
+      // Model-backed stage on the keyless free-chain path (ctx.providers is empty when keyed / stub-forced).
       const ac = new AbortController();
       const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
       const outcome = await runStageModel(stage.exec, ctx, ac.signal).finally(() => { clearTimeout(timer); });
@@ -307,22 +318,25 @@ export async function runUsecase(
         continue;
       }
     }
-    // Canned stage (default, or model fallback) — never worse than today.
+    // Canned stage (default, query-stage narration, or model fallback) — never worse than today.
     for (const e of stage.events) {
       await sleep(paceMs);
       write(e);
     }
-    emitter.span({ name: stage.span, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
+    emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
   }
   await sleep(paceMs);
   const t0 = Date.now();
-  const { batch, meta } = await renderBatch(def.render, emitter, ctx, matches);
+  const { batch, meta } = await renderBatch(def.render, emitter, ctx, matches, queryData);
   write({ type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: batch });
   emitter.span({ name: "render", attrs: { kind: "render", latencyMs: Date.now() - t0 } });
   addUsage(usage, meta?.usage);
   // Honest 3-state: a live model answered ⇒ "live"; else a deterministic path (explicit ?demo=1 or a
   // canned route usecase) ⇒ "demo"; else the model path was asked for but degraded to the stub ⇒ "stub".
-  const mode: UsageEvent["mode"] = meta ? "live" : runAttrs.demo === true || def.render.mode === "route" ? "demo" : "stub";
+  // Deterministic workflows (route, care, …) are honestly "demo" — nothing degraded; only founders, which
+  // asked for a model and got none, is "stub".
+  const deterministic = def.render.mode !== "founders";
+  const mode: UsageEvent["mode"] = meta ? "live" : runAttrs.demo === true || deterministic ? "demo" : "stub";
   const usageEvent: UsageEvent = { type: "USAGE", mode, ...usage };
   if (meta) {
     usageEvent.model = meta.model;

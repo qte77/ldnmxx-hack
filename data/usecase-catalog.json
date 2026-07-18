@@ -1,11 +1,11 @@
 {
-  "updated": "2026-07-17",
-  "note": "Machine-readable candidate-usecase catalog. sources[] reference ids in data/sources.json. The RUNNABLE stage-defs live in usecases/*.json (only shipped ones); this is the idea/backlog layer that feeds it. status: shipped=live | v1=next build (plan 011) | committed=roadmap | backlog/round-2/round-3=candidate | cut=rejected.",
+  "updated": "2026-07-18",
+  "note": "Machine-readable candidate-usecase catalog. sources[] reference ids in data/sources.json. The RUNNABLE stage-defs live in usecases/*.json (only shipped ones); this is the idea/backlog layer that feeds it. status: shipped=live | building=in active development (this PR) | v1=next build (plan 011) | committed=roadmap | backlog/round-2/round-3=candidate | cut=rejected.",
   "record_shape": {
     "id": "kebab-case unique id",
     "name": "display name",
     "kind": "obvious | unexpected",
-    "status": "shipped | v1 | committed | backlog | round-2 | round-3 | cut",
+    "status": "shipped | building | v1 | committed | backlog | round-2 | round-3 | cut",
     "jtbd": "job-to-be-done, or for unexpected the surprising insight",
     "sources": ["ids referencing data/sources.json"],
     "mode": "wayfinder | direct",
@@ -27,7 +27,7 @@
     { "id": "on-it", "name": "On It", "kind": "obvious", "status": "shipped", "jtbd": "Get me there step-free, hands-free", "sources": ["tfl-unified", "postcodes-io", "osm-overpass"], "mode": "direct", "feasibility": "high", "risk": "canned stub today; live tools + voice planned", "first_checked": "2026-07-17", "last_checked": "2026-07-17" },
     { "id": "benefits-copilot", "name": "Benefits Copilot", "kind": "obvious", "status": "v1", "jtbd": "What might I be entitled to and exactly where to claim it — without pretending to be the official decision", "sources": ["govuk-content", "nhs-service-directory"], "mode": "wayfinder", "feasibility": "med", "risk": "wayfinder-not-adjudicator; needs curated scheme corpus + mandatory disclaimer (plan 011)", "first_checked": "2026-07-17", "last_checked": "2026-07-17" },
 
-    { "id": "sort-my-care", "name": "Sort My Care", "kind": "obvious", "status": "committed", "jtbd": "find a GP/dentist/pharmacy/urgent care taking patients near me", "sources": ["nhs-service-directory", "postcodes-io"], "mode": "wayfinder", "feasibility": "high", "risk": "NHS 'accepting patients' often stale — caveat; never triage", "first_checked": "2026-07-17", "last_checked": "2026-07-17" },
+    { "id": "sort-my-care", "name": "Sort My Care", "kind": "obvious", "status": "building", "jtbd": "find a GP/dentist/pharmacy/urgent care near me", "sources": ["nhs-service-directory", "postcodes-io"], "mode": "wayfinder", "feasibility": "high", "risk": "synthetic demo corpus today (ingest+D1 unbuilt); deterministic nearest-N signpost with a freshness caveat, never triage", "first_checked": "2026-07-17", "last_checked": "2026-07-18" },
     { "id": "sort-my-air", "name": "Sort My Air", "kind": "obvious", "status": "committed", "jtbd": "is the air near my kid's school / commute bad right now?", "sources": ["laqn", "breathe-london", "postcodes-io"], "mode": "direct", "feasibility": "high", "risk": "~400 sensors sparse; guidance links only, not medical advice", "first_checked": "2026-07-17", "last_checked": "2026-07-17" },
     { "id": "sort-my-bin-day", "name": "Sort My Bin Day", "kind": "obvious", "status": "committed", "jtbd": "what day is my bin collected, which bin does this go in?", "sources": ["council-bins", "govuk-content", "postcodes-io"], "mode": "direct", "feasibility": "med", "risk": "33-borough fragmentation -> curated per-borough corpus", "first_checked": "2026-07-17", "last_checked": "2026-07-17" },
     { "id": "sort-my-move", "name": "Sort My Move", "kind": "obvious", "status": "committed", "jtbd": "crime/schools/green space/flood/deprivation for a postcode, in one place", "sources": ["police-uk", "dfe-education-stats", "london-datastore", "ea-flood-monitoring", "ons-api", "postcodes-io"], "mode": "direct", "feasibility": "med", "risk": "5-6 heterogeneous APIs; informational only, not a survey", "first_checked": "2026-07-17", "last_checked": "2026-07-17" },

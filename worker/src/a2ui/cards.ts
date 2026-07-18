@@ -30,7 +30,7 @@ interface Route {
 const opportunities = opportunitiesJson as Opportunity[];
 const route = routeJson as Route;
 
-interface CardSpec {
+export interface CardSpec {
   key: string;
   title: string;
   lines: string[];
@@ -64,7 +64,7 @@ function cardComponents(card: CardSpec): { cardId: string; components: unknown[]
   return { cardId, components };
 }
 
-function cardsBatch(cards: CardSpec[]): unknown[] {
+export function cardsBatch(cards: CardSpec[]): unknown[] {
   const components: unknown[] = [];
   const rootChildren: string[] = [];
   for (const card of cards) {
@@ -86,7 +86,43 @@ function cardsBatch(cards: CardSpec[]): unknown[] {
   ];
 }
 
-// Track B — grant/opportunity cards with a qualify-first eligibility line.
+// Append one extra card to a self-contained batch built by cardsBatch (root = a Column explicitList).
+// Mirrors shared/incorporate.ts's appendIncorporate for Worker-built batches, reusing cardComponents so
+// the appended card renders identically. Unexpected root shape ⇒ the batch is returned unchanged (guard).
+function appendCard(batch: unknown[], spec: CardSpec): unknown[] {
+  const msgs = batch as {
+    surfaceUpdate?: { components?: { id: string; component: Record<string, unknown> }[] };
+  }[];
+  const update = msgs.find((m) => m.surfaceUpdate)?.surfaceUpdate;
+  if (!update || !Array.isArray(update.components)) return batch;
+  const root = update.components.find((c) => c.id === "root");
+  const col = (root?.component as { Column?: { children?: { explicitList?: string[] } } } | undefined)?.Column;
+  const list = col?.children?.explicitList;
+  if (!Array.isArray(list)) return batch;
+  const { cardId, components } = cardComponents(spec);
+  list.push(cardId);
+  update.components.push(...(components as { id: string; component: Record<string, unknown> }[]));
+  return batch;
+}
+
+// The generic "signpost, not advice" caveat card for the deterministic corpus workflows (Care now;
+// Wander/Scam next). The NHS search link is curated + verified, NEVER generated. Freshness ("as of
+// <date>") is shown per-workflow in its own summary card, from the corpus lastUpdated.
+const DISCLAIMER: CardSpec = {
+  key: "disclaimer",
+  title: "ℹ️ Always confirm with the official source",
+  lines: [
+    "A signpost to public services — not advice, a referral, or a booking. Details can change.",
+    "[Search official NHS services](https://www.nhs.uk/service-search)",
+  ],
+};
+
+// Append the deterministic disclaimer card to a corpus-workflow batch.
+export function appendDisclaimer(batch: unknown[]): unknown[] {
+  return appendCard(batch, DISCLAIMER);
+}
+
+// Founder's Copilot — grant/opportunity cards with a qualify-first eligibility line.
 export function buildOpportunityCards(opps: Opportunity[] = opportunities): unknown[] {
   return cardsBatch(
     opps.map((o) => ({
@@ -105,7 +141,7 @@ export function buildOpportunityCards(opps: Opportunity[] = opportunities): unkn
   );
 }
 
-// Track A — a step-free route: a summary card + one card per leg.
+// On It — a step-free route: a summary card + one card per leg.
 export function buildRouteCards(r: Route = route): unknown[] {
   const summary: CardSpec = {
     key: "summary",
@@ -123,7 +159,7 @@ export function buildRouteCards(r: Route = route): unknown[] {
   return cardsBatch([summary, ...legs]);
 }
 
-// Track B — the incorporate "how-to pack" now lives in dependency-free shared/incorporate.ts so the
+// Founder's Copilot — the incorporate "how-to pack" now lives in dependency-free shared/incorporate.ts so the
 // browser-BYOK founders render appends the SAME verified card. withIncorporate stays the Worker's entry
 // point (re-export): append the deterministic incorporate card to a founders batch (stub OR model).
 export const withIncorporate = appendIncorporate;

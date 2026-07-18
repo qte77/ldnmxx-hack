@@ -1,0 +1,6 @@
+{
+  "id": "stage-missing-name-example",
+  "stages": [
+    { "kind": "plan", "backend": "phash" }
+  ]
+}

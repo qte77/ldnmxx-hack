@@ -3,15 +3,24 @@
 ## One core, three seams
 
 One `POST /run?usecase=<id>` endpoint → a small `runUsecase` interpreter (plan → tool → render) → an A2UI
-HUD. Flip **Track B ⇄ A** via a UI toggle over the `?usecase=` param — each workflow's stage choreography
-is a `usecases/*.json` read at runtime (`worker/src/usecases.ts`); render modes (`founders`/`route`) stay
-in code. Only three seams change:
+HUD. The SPA flips between the two demo workflows (**Founder's Copilot ⇄ On It**) via a toggle over the
+`?usecase=` param; each workflow's stage choreography is a `usecases/*.json` read at runtime
+(`worker/src/usecases.ts`), and render + deterministic query dispatch **by name** through the
+`worker/src/workflows.ts` **registry** (`render` by mode — `founders`/`route`/`care`; `query` by exec) — so
+adding a corpus workflow is register + a JSON, never an engine edit (open/closed; ADR 0001). Per workflow,
+only these seams change:
 
-| Seam | Track B (Founder's Copilot) | Track A (On It) |
+| Seam | Founder's Copilot | On It |
 |---|---|---|
-| `tools[]` | `assess_stage` + `search_opportunities` — **live model tools** (each streams reasoning + its own Arize LLM span, #18); `find_contacts` (#9) · `incorporate` (#12) planned | lookup_postcode · get_tfl_journey — **PLANNED**; Track A is a canned stub today |
+| `tools[]` | `assess_stage` + `search_opportunities` — **live model tools** (each streams reasoning + its own Arize LLM span, #18); `find_contacts` (#9) · `incorporate` (#12) planned | lookup_postcode · get_tfl_journey — **PLANNED**; On It is a canned stub today |
 | `render` | built-in A2UI cards (Column/Card/Text) | static `buildRouteCards()` text today; RouteCard + lazy OSM `RouteMap` panel is **PLANNED** |
 | `input()` | text | text today (canned stub); voice (Web Speech STT + text fallback) is **PLANNED** |
+
+**Deterministic corpus workflows** (e.g. **Sort My Care**, `render.mode:"care"`, #72) are a fourth shape:
+a model-free + fetch-free `query` exec over a bundled corpus (`shared/sanitize.ts` → `worker/src/geo.ts` →
+`worker/src/care/*`) → card render + a curated disclaimer — registered, not wired into the core, and
+honestly reported as `USAGE mode:demo`. See [`usecase-workflows.md`](usecase-workflows.md) + ADR
+[`0001`](adr/0001-general-workflow-engine.md).
 
 ## Data flow — one direction, one trust crossing
 
@@ -49,7 +58,8 @@ sets the next run's `?demo=1` intent; the chip reports what the last run actuall
 
 - `contract.ts` = validation · `applyA2UIEvent.ts` = render seam · `useAgentSSE.ts` = transport ·
   `runUsecase` + injectable emitter = observability · `usecases.ts` = the use-case seam (loads + guards
-  `usecases/*.json`). (Worker source: `worker.ts`, `usecases.ts`, `agent/model.ts`, `a2ui/cards.ts`, `trace/arize.ts`.)
+  `usecases/*.json`); `workflows.ts` = the general registry (render mode + query exec dispatch). (Worker
+  source: `worker.ts`, `usecases.ts`, `workflows.ts`, `geo.ts`, `care/*`, `agent/model.ts`, `a2ui/cards.ts`, `trace/arize.ts`.)
 - **Trust boundary:** SPA holds no secrets; keys are Worker secrets only; Worker is the sole egress;
   the CORS allowlist is the gate. No third-party JS/fonts/tiles (self-hosted).
 

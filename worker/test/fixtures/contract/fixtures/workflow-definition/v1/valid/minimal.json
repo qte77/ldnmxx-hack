@@ -1,0 +1,6 @@
+{
+  "id": "minimal-example",
+  "stages": [
+    { "name": "only-stage" }
+  ]
+}
