@@ -3,3 +3,8 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
   Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+
+# Content-hashed build assets are immutable — cache for a year so repeat visits
+# skip revalidation. index.html stays on the default (revalidate) so redeploys land.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
