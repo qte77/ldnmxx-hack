@@ -259,6 +259,27 @@ describe("worker /run", () => {
     expect(res.status).toBe(200);
   });
 
+  // CORS fails CLOSED — an allowlisted origin is reflected; anything else gets a configured origin or the
+  // "null" deny sentinel, NEVER "*" (guards a misconfigured/empty ALLOWED_ORIGINS deploy).
+  function preflight(origin: string): Request {
+    return new Request("https://w.example/api/run", { method: "OPTIONS", headers: { origin } });
+  }
+  it("reflects an allowlisted origin on preflight", async () => {
+    const res = await worker.fetch(preflight("https://qte77.github.io"), env, ctx);
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://qte77.github.io");
+  });
+  it("never returns '*' for an unlisted origin — falls back to a configured origin", async () => {
+    const res = await worker.fetch(preflight("https://evil.example"), env, ctx);
+    const acao = res.headers.get("access-control-allow-origin");
+    expect(acao).not.toBe("*");
+    expect(acao).toBe("https://qte77.github.io"); // allowed[0]
+  });
+  it("fails closed to 'null' when ALLOWED_ORIGINS is empty", async () => {
+    const res = await worker.fetch(preflight("https://evil.example"), { ALLOWED_ORIGINS: "", PACE_MS: "0" }, ctx);
+    expect(res.headers.get("access-control-allow-origin")).toBe("null");
+  });
+
   it("renders via the Workers AI free provider (model:workers-ai span) on a keyless run with the AI binding", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const aiEnv = { ...env, AI: { run: vi.fn().mockResolvedValue(toolOutput(goodBatch)) } };
