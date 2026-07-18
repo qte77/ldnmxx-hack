@@ -1,6 +1,7 @@
 # Worker RUNTIME secrets/vars — copy to `worker/.dev.vars` (this folder, gitignored) for local
 # `wrangler dev`. In prod set each with `wrangler secret put <NAME>`. NEVER commit real values or put
-# them in the SPA bundle. (Cloudflare DEPLOY-time auth lives in worker/.env.example, not here.)
+# them in the SPA bundle. (Cloudflare DEPLOY-time auth — CLOUDFLARE_API_TOKEN / _ACCOUNT_ID — lives in the
+# repo-root .env, auto-sourced by scripts/provision_cf.sh; NOT here.)
 
 # --- Model access: keyed (BYOK) + keyless free chain (#37) ---
 # A BYOK Authorization header calls the chosen model directly (paid, span model:openrouter). Keyless runs

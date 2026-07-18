@@ -8,7 +8,7 @@ const validDef: UsecaseDef = {
   id: "x",
   title: "X",
   render: { mode: "route" },
-  stages: [{ span: "plan", kind: "plan", events: [{ type: "STEP_STARTED", text: "go" }] }],
+  stages: [{ name: "plan", kind: "plan", events: [{ type: "STEP_STARTED", text: "go" }] }],
 };
 
 describe("usecases guard", () => {
@@ -30,7 +30,7 @@ describe("usecases guard", () => {
         id: "x",
         title: "X",
         render: { mode: "founders" },
-        stages: [{ span: "plan", kind: "plan", exec: "assess_stage", events: [] }],
+        stages: [{ name: "plan", kind: "plan", exec: "assess_stage", events: [] }],
       })
     ).not.toThrow();
   });
@@ -41,7 +41,7 @@ describe("usecases guard", () => {
         id: "x",
         title: "X",
         render: { mode: "founders" },
-        stages: [{ span: "plan", kind: "plan", exec: "nope", events: [] }],
+        stages: [{ name: "plan", kind: "plan", exec: "nope", events: [] }],
       })
     ).toThrow();
   });
@@ -56,7 +56,7 @@ describe("runUsecase — swap-a-JSON proof", () => {
       title: "Demo X",
       render: { mode: "route" },
       stages: [
-        { span: "tool:custom_x", kind: "tool", events: [{ type: "TOOL_CALL_START", text: "custom_x" }] },
+        { name: "tool:custom_x", kind: "tool", events: [{ type: "TOOL_CALL_START", text: "custom_x" }] },
       ],
     };
     const events: { type: string; text?: string; a2uiMessages?: unknown[] }[] = [];

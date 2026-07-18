@@ -103,7 +103,7 @@ describe("makeEmitter", () => {
 
 describe("POST /trace forwarder", () => {
   const post = (body: unknown) =>
-    new Request("https://w.example/trace", {
+    new Request("https://w.example/api/trace", {
       method: "POST",
       headers: { "content-type": "application/json", origin: "https://qte77.github.io" },
       body: JSON.stringify(body),
@@ -134,7 +134,7 @@ describe("POST /trace forwarder", () => {
   });
 
   it("rejects a non-POST /trace with 405", async () => {
-    const res = await worker.fetch(new Request("https://w.example/trace", { method: "GET" }), arizeEnv as never, ctx);
+    const res = await worker.fetch(new Request("https://w.example/api/trace", { method: "GET" }), arizeEnv as never, ctx);
     expect(res.status).toBe(405);
   });
 });

@@ -1,0 +1,7 @@
+{
+  "id": "bad-output-example",
+  "stages": [
+    { "name": "only-stage" }
+  ],
+  "output": { "format": "pdf" }
+}

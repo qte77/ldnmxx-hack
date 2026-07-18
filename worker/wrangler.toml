@@ -4,13 +4,19 @@ name = "ldnmxx-hack-worker"
 main = "src/worker.ts"
 compatibility_date = "2026-07-01"
 
+# Same-origin API on the Pages domain: sortmy.london/api/* -> this Worker (Worker routes win over Pages).
+# Requires sortmy.london to be a zone on the Cloudflare account before `wrangler deploy`.
+routes = [
+  { pattern = "sortmy.london/api/*", zone_name = "sortmy.london" }
+]
+
 [observability]
 enabled = true
 head_sampling_rate = 1  # capture 100% of invocations → the ⌁ spans + request traces show in the Cloudflare dashboard (Workers ▸ Observability)
 
 [vars]
-# CORS allowlist: local Vite dev + the GitHub Pages origin (the Pages SPA calls the Worker cross-origin).
-ALLOWED_ORIGINS = "http://localhost:5173,https://qte77.github.io"
+# CORS allowlist: local Vite dev only — prod is same-origin (SPA + Worker /api on sortmy.london), no CORS.
+ALLOWED_ORIGINS = "http://localhost:5173,https://sortmy.london"
 
 # Per-IP throttle on POST /run → binding `RATE_LIMITER` (env.RATE_LIMITER.limit({key})). period is 10 or 60.
 [[ratelimits]]

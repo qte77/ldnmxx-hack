@@ -4,7 +4,7 @@
   "render": { "mode": "founders" },
   "stages": [
     {
-      "span": "plan",
+      "name": "plan",
       "kind": "plan",
       "exec": "assess_stage",
       "events": [
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "span": "tool:search_opportunities",
+      "name": "tool:search_opportunities",
       "kind": "tool",
       "exec": "search_opportunities",
       "events": [
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "span": "tool:incorporate",
+      "name": "tool:incorporate",
       "kind": "tool",
       "events": [
         { "type": "TOOL_CALL_START", "text": "incorporate" },

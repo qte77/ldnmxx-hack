@@ -4,7 +4,7 @@
   "render": { "mode": "route" },
   "stages": [
     {
-      "span": "plan",
+      "name": "plan",
       "kind": "plan",
       "events": [
         { "type": "STEP_STARTED", "text": "parse origin + destination" },
@@ -12,7 +12,7 @@
       ]
     },
     {
-      "span": "tool:lookup_postcode",
+      "name": "tool:lookup_postcode",
       "kind": "tool",
       "events": [
         { "type": "TOOL_CALL_START", "text": "lookup_postcode" },
@@ -20,7 +20,7 @@
       ]
     },
     {
-      "span": "tool:get_tfl_journey",
+      "name": "tool:get_tfl_journey",
       "kind": "tool",
       "events": [
         { "type": "TOOL_CALL_START", "text": "get_tfl_journey" },

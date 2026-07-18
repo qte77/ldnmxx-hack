@@ -4,7 +4,7 @@
 > read at runtime by the `runUsecase` interpreter (`worker/src/usecases.ts`). Deeper *tool behaviours*
 > (assess_stage reasoning, live routing, …) remain **target design** — see the shipped/planned tags per section.
 
-The two workflows the Worker's `runUsecase` interpreter plays, + judging alignment.
+The workflows the Worker's `runUsecase` interpreter plays, + judging alignment.
 One endpoint: `POST /run?usecase=<id>`. Render = **built-in A2UI cards** (AG Grid deferred).
 
 ## Stage-def schema (shipped — guarded at load)
@@ -13,23 +13,50 @@ One endpoint: `POST /run?usecase=<id>`. Render = **built-in A2UI cards** (AG Gri
 {
   "id": "founders-copilot",
   "title": "Founder's Copilot",
-  "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned)
+  "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned) | "care" (deterministic corpus query)
   "stages": [
-    { "span": "plan", "kind": "plan", "events": [
+    { "name": "plan", "kind": "plan", "events": [
       { "type": "STEP_STARTED", "text": "understand the idea" },
       { "type": "TEXT_MESSAGE_CONTENT", "text": "Assessing your stage and matching funding…" } ] },
-    { "span": "tool:search_opportunities", "kind": "tool", "events": [
+    { "name": "tool:search_opportunities", "kind": "tool", "events": [
       { "type": "TOOL_CALL_START", "text": "search_opportunities" },
       { "type": "TOOL_CALL_END", "text": "search_opportunities" } ] }
   ]
 }
 ```
-Each pre-render `stage` plays its `events` (paced) over SSE and emits one Arize span named `span`. The
+Each pre-render `stage` plays its `events` (paced) over SSE and emits one Arize span named `name`. The
 final render stage is dispatched by `render.mode` to a code path — prompts, card builders and the model
 call stay in `worker/src/worker.ts`, not embedded in JSON — emitting the `render_ui` batch + a `render`
 span. Adding a JSON (plus its render mode, if new) adds a workflow.
 
-## Track B — Founder's Copilot (one-click founder journey)
+## How to add a workflow (the general engine)
+
+Dispatch is table-driven via `worker/src/workflows.ts` (`registry.render` by `mode`, `registry.query` by
+`exec`). **Adding a deterministic corpus workflow never edits `runUsecase`/`renderBatch`:**
+
+1. **Corpus** — hand-authored synthetic `data/<workflow>/*.json` (real ingest + CF D1 are follow-ups).
+2. **Query** (optional) — a deterministic `(input) => data` fn; register it in `registry.query` under a new
+   `exec` and add that `exec` to `STAGE_EXECS` in `usecases.ts`. Model-free + fetch-free (the input's
+   security boundary is a small validator, e.g. `shared/sanitize.ts`).
+3. **Render** — a `(data) => a2uiBatch` fn reusing `cardsBatch` + `appendDisclaimer`; register it in
+   `registry.render` under a new `mode` and add that `mode` to `RENDER_MODES`.
+4. **Usecase JSON** — `usecases/<id>.json` (`render.mode`, a `plan` stage + a `tool` stage naming the
+   `exec`); register it in `usecases.ts`.
+5. **Tests** — unit-test the load-bearing modules (query/render); integration-test `/run?usecase=<id>` in
+   `run.test.ts`. The `usecases.contract.test.ts` ajv check runs automatically over the new JSON.
+
+Deterministic workflows report `USAGE mode:demo` (honest — not a degraded `stub`) and each stage emits an
+Arize span (`run`/`plan`/`query`/`render`). See **Sort My Care** below and ADR
+[`0001-general-workflow-engine.md`](adr/0001-general-workflow-engine.md).
+
+**Shared contract:** `id` + `stages[].name` (this schema's `span` field, renamed) is also the
+`workflow-definition/v1` envelope published by `qte77/protocols` and consumed by the sibling Python
+doc-workflows engine (`qte77/azure-doc-workflows`) — see `usecases/README.md`. The per-run `USAGE` event
+(mode/model/tokens; see `docs/architecture.md`'s HUD status bar section) is a **B-local SSE extension**: it
+rides the same stream as the stage/render events but is not part of the shared workflow-definition
+contract, which only describes the static stage choreography, not the runtime event stream.
+
+## Founder's Copilot (one-click founder journey)
 
 **Shipped today:** `search_opportunities` (→ grant cards, real model call with a deterministic stub
 fallback) and `incorporate` (→ the verified how-to-pack Card of real gov.uk / Companies House links).
@@ -68,7 +95,7 @@ RUN  /run?usecase=founders-copilot   (one-line idea + optional artifacts)
 - **Demo-critical** (ambitious): assess_stage + search_opportunities + incorporate; `find_contacts` is now
   grounded by the pre-scraped `contacts` corpus (no longer the soft spot). Drop the weakest only if time is tight.
 
-**Track B data — pre-scrape as much as possible (→ KV; keyless at request time):**
+**Founder's Copilot data — pre-scrape as much as possible (→ KV; keyless at request time):**
 *(PLANNED — no KV binding exists today; `search_opportunities` reads
 `data/demo/opportunities.sample.json` directly. KV wire-or-drop is tracked in #29.)*
 - `opportunities` — grants/accelerators (polyfetch seed). The core corpus.
@@ -76,14 +103,14 @@ RUN  /run?usecase=founders-copilot   (one-line idea + optional artifacts)
 - `eligibility` — structured criteria of the top 3–5 programs → machine-readable rules (the qualify gate / Eligibility Oracle).
 - `reference` — **SIC codes** + incorporation checklist + a stage rubric (bundle static, or one-shot scrape).
 
-So request-time Track B is **mostly KV-read + LLM composition** — the LLM *matches/explains over grounded
+So request-time Founder's Copilot is **mostly KV-read + LLM composition** — the LLM *matches/explains over grounded
 data* instead of inventing it (less hallucination = better idea-validation + trust). **Can't pre-scrape:**
 the founder's own idea (`assess_stage` input) and Companies House **name availability** for the user's chosen
 name (live, or mocked for the demo). Staleness → re-seed = cron (deferred #12); `data/demo/` = offline fallback.
 
-## Track A — On It (thin swap)
+## On It (thin swap)
 
-**Shipped today:** none of this — Track A is a **canned stub** (static `buildRouteCards()` text,
+**Shipped today:** none of this — On It is a **canned stub** (static `buildRouteCards()` text,
 always the same demo route, no live tools). Everything below (voice, postcodes.io, TfL, OSM/Overpass,
 the replay) is **target design, not yet built**.
 
@@ -101,16 +128,16 @@ RUN  /run?usecase=on-it   (voice: "step-free from E8 3GT to Westminster")
 - **OSM map (lean render seam):** an adjacent, **lazy-loaded** `RouteMap` panel — Leaflet + **keyless OSM
   raster tiles** (attribution shown, **read-only**) — draws the route + markers from the same postcodes.io/TfL
   coords. **Not** a custom A2UI component: no registration, no new render schema (stays consistent with
-  AG-Grid-deferred). It's a companion panel in `DashboardShell`, lazy so it never touches Track B's bundle.
+  AG-Grid-deferred). It's a companion panel in `DashboardShell`, lazy so it never touches Founder's Copilot's bundle.
   *(Even-leaner fallback: a built-in A2UI `Image` with a static-map URL — but keyless static maps are flaky;
   prefer the lazy Leaflet panel.)*
 - **Accessibility overlay (on-theme, lean) — the "easy-access" layer:** OSM already carries the data
   (`wheelchair=yes|limited|no`, `highway=elevator`, `ramp`, `tactile_paving`). Query **Overpass** (keyless)
   for these near the route → **color-coded markers** on the `RouteMap` = step-free/accessible points for the
-  mobility-constrained user (directly reinforces Track A's idea-validation). **Cache/wiremock the Overpass
+  mobility-constrained user (directly reinforces On It's idea-validation). **Cache/wiremock the Overpass
   result** for a deterministic demo (Overpass is rate-limited). *(A pre-rendered Wheelmap tile layer may
   exist, but its keyless-embed ToU is unconfirmed — prefer Overpass markers we control + OSM attribution.)*
-- **Track A = side project → pre-record it (from the REAL workflow, not a faked JSON).** Build the keyless
+- **On It = side project → pre-record it (from the REAL workflow, not a faked JSON).** Build the keyless
   loop **STT → postcode → path (+ map/a11y) → TTS** once, run it, and **capture the SSE stream →
   `ui/src/recordings/on-it.json`**; the demo plays it via `useReplayEngine` (our offline safety-net engine).
   This **bounds A's build effort** (record one clean run) and removes live flakiness (STT recognition,
@@ -126,17 +153,43 @@ RUN  /run?usecase=on-it   (voice: "step-free from E8 3GT to Westminster")
   A2UI `Map` component** variant (agent-emitted `{Map:…}`, #19's original — needs registration). No
   reporting/submitting on the day.
 
+## Sort My Care (deterministic corpus signpost)
+
+**Shipped (this PR, #72):** a **model-free + fetch-free** workflow on the general engine —
+`render.mode:"care"`, a `plan` stage + a `tool` stage (`exec:"fetch_care_services"`). The proof that
+adding a corpus workflow is register + a JSON, not an engine edit.
+
+**User:** any Londoner who needs a nearby public health/care service (GP, pharmacy, urgent care, dentist,
+mental health).
+
+```
+RUN  /run?usecase=sort-my-care   (postcode as the run prompt, e.g. "SW9 9SL")
+  plan(read your postcode)
+    → tool(fetch_care_services)  → deterministic query: normalise postcode → nearest-N over the corpus
+      → render(care cards: nearest services · distance · why · official link · freshness + disclaimer)
+```
+
+- **Query** — `worker/src/care/careServices.ts`: `shared/sanitize.ts` normalises the postcode (the security
+  boundary; **no SSRF** — no external fetch), `worker/src/geo.ts` does haversine + nearest-N over the bundled
+  **synthetic** corpus (`data/care/services.sample.json` + `postcodes.sample.json`). Invalid/unknown postcode
+  → a graceful "enter a valid postcode" / "none nearby" state.
+- **Render** — `worker/src/care/render.ts` `buildCareCards` reuses `cardsBatch` + `appendDisclaimer`: a
+  summary card (count + "data as of &lt;lastUpdated&gt;"), one card per service, and a curated
+  "confirm with the official source" disclaimer (real NHS link, **never** generated).
+- **Honesty** — the run reports `USAGE mode:demo` (deterministic, not a degraded stub); freshness is shown in
+  the render; it **signposts**, never triages/adjudicates. Real ingest + CF D1 (#13) are follow-ups.
+
 ## Judging alignment
 
 Target design, not a status report — see shipped/planned tags above. Honest today-state:
 
-| Criterion | Track B | Track A |
+| Criterion | Founder's Copilot | On It |
 |---|---|---|
 | **Idea validation** (Londoner evidence) | ⚠️ off-resource; lean on JTBD + qualify gate | target design only — canned stub today, no live demand signal |
 | **Technical** (stack) | shipped: `runUsecase` over `usecases/*.json`, real OpenRouter render + stub fallback, Arize console spans, built-in A2UI. Planned: KV, AI Gateway wiring (#29), Companies House | planned only: same engine, but no live tools/voice yet — stub renders static cards |
 | **Project readiness** | grants + incorporate cards built; stage/contacts planned | thin canned stub; full E2E is planned |
 | **UX/design** | ✅ watch-it-work HUD, one-click journey, EyeRest theme | planned: voice accessibility — not shipped |
 
-**Strategy:** A carries idea-validation; B carries the UX joy. Pitch primary track → one-click swap to the
-other = the single move that covers all four criteria (once the planned work above lands). See
-`submission.md`.
+**Strategy:** On It carries idea-validation; Founder's Copilot carries the UX joy. Pitch the primary
+workflow → one-click swap to the other = the single move that covers all four criteria (once the planned
+work above lands). See `submission.md`.

@@ -1,9 +1,7 @@
-import { useCallback, useState, type SyntheticEvent } from "react";
-import { useA2UIActions } from "@a2ui/react";
+import { useCallback, useEffect, useState, type SyntheticEvent } from "react";
 import { A2UISurfaceProvider, A2UISurface } from "./A2UISurface";
 import { EventStream } from "./EventStream";
-import { CatalogViewer } from "./CatalogViewer";
-import { buildCatalogBatch } from "./catalog";
+import { matchesToggle, readDevMode, writeDevMode } from "./devmode";
 import { useAgentSSE, type Byok, type RunStatus } from "./agent/useAgentSSE";
 
 // The two workflows the one engine serves — swap the usecase id, swap the app (the modularity proof).
@@ -11,14 +9,14 @@ const USECASES = [
   {
     id: "founders-copilot",
     label: "Founder's Copilot",
-    hint: "Track B — grants matched to your idea",
+    hint: "Grants matched to your idea",
     placeholder: "Describe your idea, e.g. an AI copilot for London founders",
     example: "an AI copilot for London founders",
   },
   {
     id: "on-it",
     label: "On It",
-    hint: "Track A — step-free London route",
+    hint: "Step-free London route",
     placeholder: "e.g. step-free from E8 3GT to Westminster",
     example: "step-free from E8 3GT to Westminster",
   },
@@ -91,13 +89,16 @@ function StatusChip({ status }: { status: RunStatus | null }) {
 
 function Dashboard() {
   const { eventLog, isRunning, error, run, stop, status } = useAgentSSE();
-  const { processMessages, clearSurfaces } = useA2UIActions();
-  const [usecase, setUsecase] = useState<string>(USECASES[0].id); // Track B (Founder's Copilot) leads
+  const [usecase, setUsecase] = useState<string>(USECASES[0].id); // Founder's Copilot leads
   const [prompt, setPrompt] = useState<string>(USECASES[0].example);
   const [showKey, setShowKey] = useState(false);
-  const [apiKey, setApiKey] = useState(import.meta.env.VITE_BYOK_API_KEY ?? "");
-  const [model, setModel] = useState(import.meta.env.VITE_BYOK_MODEL ?? "");
-  const [demo, setDemo] = useState(false); // Live (agents, default) vs the deterministic Demo path
+  // No env prefill — VITE_* is inlined into the build, so a key here would ship in the bundle. The ⚙ Key
+  // panel starts empty; a user-entered key is forwarded to the Worker per request and resolved server-side.
+  const [apiKey, setApiKey] = useState("");
+  const [model, setModel] = useState("");
+  // Dev mode reveals the AG-UI console + ⚙ Key panel (hidden in the civic default). Ctrl+K / Ctrl+I or
+  // ?dev=1 toggles it; the choice persists in localStorage (qte77-dev).
+  const [devMode, setDevMode] = useState(() => readDevMode(location.search));
 
   const active = USECASES.find((u) => u.id === usecase) ?? USECASES[0];
 
@@ -105,22 +106,35 @@ function Dashboard() {
     (e: SyntheticEvent) => {
       e.preventDefault();
       const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
-      void run(usecase, prompt, byok, demo);
+      void run(usecase, prompt, byok); // civic default is always Live; the Worker's ?demo=1 stays available
     },
-    [run, usecase, prompt, apiKey, model, demo]
+    [run, usecase, prompt, apiKey, model]
   );
 
-  // Render one live example of each core A2UI component on the surface (the catalog).
-  const renderCatalog = useCallback(() => {
-    clearSurfaces();
-    processMessages(buildCatalogBatch() as Parameters<typeof processMessages>[0]);
-  }, [processMessages, clearSurfaces]);
+  // Dev-mode toggle: Ctrl+K / Ctrl+I flips it (persisted), so the dev console is reachable without any
+  // civic-facing chrome — a civic visitor never sees it; a developer/debugger opts in.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!matchesToggle(e)) return;
+      e.preventDefault();
+      setDevMode((v) => !v);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-  // No auto-run on load: Track B (Founder's Copilot) is preselected with its example prefilled, but the
+  // Persist dev-mode (and reflect an explicit ?dev=1 / ?dev=0) so it survives a reload without the param.
+  useEffect(() => {
+    writeDevMode(devMode);
+  }, [devMode]);
+
+  // No auto-run on load: Founder's Copilot is preselected with its example prefilled, but the
   // workflow runs only when the visitor clicks Run (so a page refresh never fires a request).
 
   return (
     <div className="h-screen flex flex-col max-w-7xl mx-auto w-full">
+      {/* Accessible page heading (matches <title>); the visible brand mark stays until the 013b rebrand. */}
+      <h1 className="sr-only">sortmy.london — find the official public service you need</h1>
       <header className="flex items-center justify-between gap-3 px-4 py-3 bg-surface border-b border-border">
         <div className="flex items-baseline gap-2">
           <span className="text-lg font-bold text-primary">Groundwork</span>
@@ -148,42 +162,31 @@ function Dashboard() {
             </button>
           ))}
           <span className="w-px h-5 bg-border mx-1" aria-hidden />
-          {/* Live (agents) vs Demo (deterministic): sets the NEXT run's intent; the chip shows the last run's truth. */}
-          {(
-            [
-              { on: false, label: "Live", hint: "Agents answer, restricted to the corpus" },
-              { on: true, label: "Demo", hint: "Deterministic — no model call" },
-            ] as const
-          ).map((m) => (
+          {devMode && (
             <button
-              key={m.label}
               type="button"
-              onClick={() => setDemo(m.on)}
-              title={m.hint}
-              aria-pressed={m.on === demo}
-              className={`px-3 py-1 rounded border text-sm transition-colors ${
-                m.on === demo
-                  ? "border-primary text-primary"
-                  : "border-border text-text-muted hover:border-primary"
-              }`}
+              onClick={() => setShowKey((v) => !v)}
+              title="Bring your own model key (optional; kept in memory only)"
+              className="px-2 py-1 rounded border border-border text-xs text-text-muted hover:border-primary"
             >
-              {m.label}
+              ⚙ Key
             </button>
-          ))}
-          <CatalogViewer onRenderLive={renderCatalog} />
-          <button
-            type="button"
-            onClick={() => setShowKey((v) => !v)}
-            title="Bring your own model key (optional; kept in memory only)"
-            className="px-2 py-1 rounded border border-border text-xs text-text-muted hover:border-primary"
-          >
-            ⚙ Key
-          </button>
+          )}
+          {devMode && (
+            <button
+              type="button"
+              onClick={() => setDevMode(false)}
+              title="Exit dev mode (Ctrl+K / Ctrl+I)"
+              className="px-2 py-1 rounded border border-border text-xs text-text-muted hover:border-primary"
+            >
+              dev ✕
+            </button>
+          )}
           <ThemeToggle />
         </div>
       </header>
 
-      {showKey && (
+      {devMode && showKey && (
         <div className="flex flex-wrap items-center gap-2 px-4 py-2 bg-surface border-b border-border">
           <input
             type="password"
@@ -203,11 +206,15 @@ function Dashboard() {
       )}
 
       <form onSubmit={onSubmit} className="flex items-center gap-2 px-4 py-3 border-b border-border">
+        <label htmlFor="civic-query" className="sr-only">
+          What do you need? Enter your query or a London postcode.
+        </label>
         <input
+          id="civic-query"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder={active.placeholder}
-          className="flex-1 px-3 py-2 rounded border border-border bg-bg text-text"
+          className="flex-1 px-3 py-2 rounded border border-border bg-bg text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         />
         {isRunning ? (
           <button
@@ -218,33 +225,49 @@ function Dashboard() {
             Stop
           </button>
         ) : (
-          <button type="submit" className="px-4 py-2 rounded bg-primary text-primary-on font-medium">
+          <button
+            type="submit"
+            className="px-4 py-2 rounded bg-primary text-primary-on font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
             Run
           </button>
         )}
       </form>
 
       {error && (
-        <div className="px-4 py-2 text-sm text-data-negative border-b border-border">{error}</div>
+        <div role="alert" className="px-4 py-2 text-sm text-data-negative border-b border-border">
+          {devMode
+            ? error
+            : "Sorry — we couldn't reach the service just now. Please check your connection and try again in a moment."}
+        </div>
       )}
 
       <div className="flex flex-1 min-h-0">
         <main className="flex-1 overflow-y-auto p-4">
-          <div className="text-xs font-semibold text-primary uppercase tracking-wide mb-3 pb-2 border-b border-border">
-            A2UI Surface — {active.hint}
+          <h2 className="text-xs font-semibold text-primary uppercase tracking-wide mb-3 pb-2 border-b border-border">
+            {active.hint}
+          </h2>
+          <div aria-live="polite" aria-busy={isRunning}>
+            <A2UISurface />
           </div>
-          <A2UISurface />
         </main>
-        <aside className="w-96 border-l border-border flex flex-col min-h-0">
-          <div className="h-10 flex items-center justify-between gap-2 px-2 border-b border-border text-xs font-semibold text-data-positive uppercase tracking-wide">
-            <span>AG-UI Events</span>
-            <StatusChip status={status} />
-          </div>
-          <div className="flex-1 min-h-0">
-            <EventStream events={eventLog} />
-          </div>
-        </aside>
+        {devMode && (
+          <aside className="w-96 border-l border-border flex flex-col min-h-0">
+            <div className="h-10 flex items-center justify-between gap-2 px-2 border-b border-border text-xs font-semibold text-data-positive uppercase tracking-wide">
+              <span>AG-UI Events</span>
+              <StatusChip status={status} />
+            </div>
+            <div className="flex-1 min-h-0">
+              <EventStream events={eventLog} />
+            </div>
+          </aside>
+        )}
       </div>
+
+      <footer className="px-4 py-2 text-xs text-text-muted border-t border-border">
+        Free · no cookies · no tracking beyond anonymous page views. A signpost to official services —
+        always confirm details with the official source.
+      </footer>
     </div>
   );
 }
