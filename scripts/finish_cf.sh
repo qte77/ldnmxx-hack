@@ -16,6 +16,10 @@
 # Run WITH BASH:  DOMAIN=sortmy.london bash scripts/finish_cf.sh
 set -euo pipefail
 
+# Auto-load a gitignored repo-root .env (CLOUDFLARE_API_TOKEN / _ACCOUNT_ID) if present + not already set.
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+[ -f "$ROOT/.env" ] && [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && { set -a; . "$ROOT/.env"; set +a; }
+
 PROJECT="${PROJECT:-sortmy-london}"
 DOMAIN="${DOMAIN:-sortmy.london}"
 TARGET="${TARGET:-$PROJECT.pages.dev}"

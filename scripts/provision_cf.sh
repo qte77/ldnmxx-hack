@@ -14,6 +14,10 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
+# Auto-load a gitignored repo-root .env (deploy creds: CLOUDFLARE_API_TOKEN / _ACCOUNT_ID) if present and
+# not already exported — one source of truth for the full-CF deploy (Pages + Worker). Pre-exported vars
+# win. Runtime Worker secrets (OPENROUTER_KEY, ARIZE_*) do NOT go here — use `wrangler secret put`.
+[ -f "$REPO/.env" ] && [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && { set -a; . "$REPO/.env"; set +a; }
 WRANGLER="npx --yes wrangler"
 PROJECT="${PROJECT:-sortmy-london}"
 CF_TOKEN_FILE="${CF_TOKEN_FILE:-$HOME/.cf-token}"
@@ -39,7 +43,10 @@ echo "== 3. deploy ui/dist to Pages =="
 $WRANGLER pages deploy ui/dist --project-name "$PROJECT" --branch main
 
 echo "== 4. deploy the Worker (serves sortmy.london/api/*; needs the zone on the account) =="
-npm --prefix worker run deploy
+# Deploy from worker/ with an EXPLICIT --config. wrangler v4 walks UP the tree for config and prefers the
+# root Pages `wrangler.jsonc` over `worker/wrangler.toml` even when run inside worker/, so without --config
+# it fails with "Missing entry-point / you have run wrangler deploy on a Pages project".
+( cd "$REPO/worker" && $WRANGLER deploy --config wrangler.toml )
 
 echo
 echo "Deployed -> https://$PROJECT.pages.dev  (Worker /api via route on sortmy.london)"

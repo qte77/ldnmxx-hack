@@ -6,8 +6,12 @@ Groundwork runs fully on Cloudflare: the **SPA on Cloudflare Pages** at `sortmy.
 ## One-time setup
 
 1. **Zone:** add `sortmy.london` to the Cloudflare account (move its nameservers to Cloudflare).
-2. **API token** (Pages·Edit + Workers Scripts·Edit + Zone·Read + Zone·DNS·Edit) → `~/.cf-token`;
-   **account id** → `~/.cf-acct` (or export `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`).
+2. **API token** — scopes **Cloudflare Pages·Edit + Workers Scripts·Edit + Zone·Read + Zone·DNS·Edit**
+   (+ Workers AI·Read for the `AI` binding), **Zone Resources = `sortmy.london`**. Put it + the **account
+   id** in a gitignored repo-root **`.env`** (copy `.env.example`; `provision_cf.sh` / `finish_cf.sh`
+   auto-source it), or `~/.cf-token` / `~/.cf-acct`, or export `CLOUDFLARE_API_TOKEN` /
+   `CLOUDFLARE_ACCOUNT_ID`. *(Editing a token's permissions keeps its value; **rolling** it changes the
+   secret — update `.env` if you roll.)*
 3. **Worker secrets** (unchanged): `cd worker && npx wrangler secret put OPENROUTER_KEY` (+ `ARIZE_*` if used).
 
 ## Deploy
