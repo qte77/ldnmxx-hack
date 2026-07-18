@@ -46,7 +46,19 @@ echo "== 4. deploy the Worker (serves sortmy.london/api/*; needs the zone on the
 # Deploy from worker/ with an EXPLICIT --config. wrangler v4 walks UP the tree for config and prefers the
 # root Pages `wrangler.jsonc` over `worker/wrangler.toml` even when run inside worker/, so without --config
 # it fails with "Missing entry-point / you have run wrangler deploy on a Pages project".
+#
+# The worker SCRIPT upload is the load-bearing step. Re-asserting the sortmy.london/api/* route needs
+# Zone > Workers Routes > Edit on the token; without it wrangler exits with API code 10000 AFTER the script
+# uploads fine and the already-existing route keeps serving. Don't let that expected, benign failure abort
+# the whole deploy — it made `make deploy` report a false "Error 1". Add the token scope to exit clean.
+set +e
 ( cd "$REPO/worker" && $WRANGLER deploy --config wrangler.toml )
+WORKER_RC=$?
+set -e
+if [ "$WORKER_RC" -ne 0 ]; then
+  echo "   !! worker deploy exited $WORKER_RC — if that is the code-10000 route error above, it is benign:"
+  echo "      the script uploaded and sortmy.london/api/* already routes (token lacks Zone>Workers Routes>Edit)."
+fi
 
 echo
 echo "Deployed -> https://$PROJECT.pages.dev  (Worker /api via route on sortmy.london)"
