@@ -1,10 +1,16 @@
 # Groundwork
 
-> **A config-driven agent that streams its own UI.** On a single **Cloudflare Worker**, the model paints
-> a live **A2UI** interface — not just text — and *swap a JSON, swap the app*.
+> **The honest, free way to find the official public service you need in London — and know it's current.**
+> A civic tool on a single **Cloudflare Worker**: the model paints a live **A2UI** interface (not just
+> text), and *swap a JSON, swap the app*. The default UI is task-first and **civic-clean**; the AG-UI/A2UI
+> dev console lives behind a **dev mode** (`?dev=1` or `Ctrl+K`).
 
-**[▶ Live demo](https://sortmy.london)** · one engine, two London workflows — a
-founder-funding copilot and step-free routing · Londonmaxxing 003.
+**[▶ sortmy.london](https://sortmy.london)** · one engine, many London workflows — Sort My Care (NHS
+wayfinder), a founder-funding copilot, step-free routing · Londonmaxxing 003.
+
+> The **product** is a civic wayfinder (a signpost to official services, never advice — always confirm at
+> the official source). The **engine** underneath is the reusable asset: add a workflow by dropping in a
+> JSON. The visible product rebrand + task-first landing is tracked as a follow-on (**013b**).
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-58f4c2.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-58f4c2.svg)](CHANGELOG.md)
@@ -49,6 +55,11 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
   and fetch-free, with honest "data as of …" freshness and a "confirm with the official source" disclaimer.
   Proof that a new corpus workflow is register + a JSON, not an engine edit. `?usecase=sort-my-care`.
 - Keyless demo path; secrets stay Worker-only *(stack rationale below)*.
+
+**URL parameters** (all optional): `?usecase=<id>` selects the workflow (`founders-copilot` · `on-it` ·
+`sort-my-care`); `?theme=light|dark` forces the theme (else system); `?dev=1` reveals the AG-UI/A2UI dev
+console + ⚙ Key panel (also `Ctrl+K` / `Ctrl+I`; persisted in `localStorage`); `?demo=1` forces the
+Worker's deterministic path. No secret is ever read from the URL or inlined into the SPA bundle.
 
 <details>
 <summary>Screenshot — Founder's Copilot</summary>

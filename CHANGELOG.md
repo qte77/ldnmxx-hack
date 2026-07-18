@@ -6,7 +6,26 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
+### Security
+- **Removed the entire browser BYOK/model path** (#83, plan 013 · A). The deployed SPA had inlined a real
+  OpenRouter key (`VITE_BYOK_API_KEY`, via Vite) and called OpenRouter **directly from the browser** (live
+  `401 "User not found"`). Deleted `ui/src/agent/liveAgent.ts` + the `runByokPath`/`useByok` branch; every
+  run now streams through the Worker `POST /api/run` (SSE), and a BYOK key rides as an `Authorization`
+  header resolved **server-side** (`resolveRun`) — the browser never contacts a model host. The
+  `VITE_BYOK_*` env surface and the `@ai-sdk/openai` + `ai` deps are gone; no `VITE_*` var can inline a key
+  again. A red-first `runWorkerPath` test + an e2e sweep enforce the invariant across devices.
+
 ### Changed
+- **Console-gate → civic-clean default** (#85, plan 013 · B). The default UI is now just prompt + Run +
+  the A2UI surface; the AG-UI event console and the ⚙ Key panel are hidden behind a **dev mode** (Ctrl+K /
+  Ctrl+I or `?dev=1`, persisted in `localStorage["qte77-dev"]`). New pure, tested `ui/src/devmode.ts`. The
+  ◫ Catalog and the Live/Demo toggle were **deleted** (civic runs are always Live; the Worker's `?demo=1`
+  stays available).
+- **Brand theme — vendored, registry-independent** (#86, plan 013 · C, #82). Design tokens moved to a
+  single provenance-headed `ui/src/tokens.css` (from `qte77/brand`, `@qte77/ui-theme@0.2.0`) instead of a
+  hand-copied `@theme` block — keeping the build free of the `@qte77` private registry (no `.npmrc` / no
+  `NODE_AUTH_TOKEN`). Real fonts (`@fontsource/inter` + `jetbrains-mono`) now load (were named but never
+  `@font-face`d), and the favicon is recolored to the **zero-blue** EyeRest palette (was GitHub blue).
 - **Hosting → full Cloudflare.** The SPA now deploys to **Cloudflare Pages** at `sortmy.london`, and the
   Worker serves **same-origin `/api/*`** via a Worker route (was: GitHub Pages + a cross-origin
   `*.workers.dev` Worker over CORS). Endpoints are now `POST /api/run` / `POST /api/trace`; GitHub Pages
@@ -33,6 +52,16 @@ Post-hackathon work on `main`, after the v1.0.0 tag.
   opportunities that don't fit). Regression test added (a `this`-dependent fake binding).
 
 ### Added
+- **e2e UI sweep harness** (#84, plan 013 · D). `tests/e2e/ui_sweep.py` (Patchright, headless Chromium)
+  drives the SPA across viewport × device × orientation, capturing the DevTools console + network,
+  screenshots, an a11y snapshot, and desktop video — and **fails if the browser ever contacts a model
+  host**, so it doubles as the item-A regression gate. Plus `tests/e2e/devmode_check.py` for the dev-mode
+  gate. Runs via polyfetch's venv; artifacts in `tests/e2e/results/` (gitignored).
+- **Civic essentials** (#87, plan 013 · G). WCAG-AA accessibility (an sr-only `<h1>`, a results `<h2>`, a
+  labelled query input, `role="alert"` errors, `aria-live` results, focus-visible rings), civic SEO +
+  OpenGraph/Twitter metadata, a cookie-free privacy footer (Cloudflare Web Analytics is enabled per-project
+  in the CF dashboard — cookieless, no token in code), and friendly failure copy (raw detail only in dev
+  mode).
 - **Sort My Care + a general workflow engine** (#72). New `worker/src/workflows.ts` registry dispatches
   render by `mode` and deterministic query by `exec`, so adding a **corpus workflow** is register + a JSON —
   `runUsecase`/`renderBatch` never change (open/closed; `founders`/`route`/`care` all register). **Sort My
