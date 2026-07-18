@@ -1,0 +1,5 @@
+# sortmy.london — a free civic wayfinder; fully crawlable.
+User-agent: *
+Allow: /
+
+Sitemap: https://sortmy.london/sitemap.xml
