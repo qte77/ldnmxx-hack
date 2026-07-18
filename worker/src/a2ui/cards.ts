@@ -122,7 +122,7 @@ export function appendDisclaimer(batch: unknown[]): unknown[] {
   return appendCard(batch, DISCLAIMER);
 }
 
-// Track B — grant/opportunity cards with a qualify-first eligibility line.
+// Founder's Copilot — grant/opportunity cards with a qualify-first eligibility line.
 export function buildOpportunityCards(opps: Opportunity[] = opportunities): unknown[] {
   return cardsBatch(
     opps.map((o) => ({
@@ -141,7 +141,7 @@ export function buildOpportunityCards(opps: Opportunity[] = opportunities): unkn
   );
 }
 
-// Track A — a step-free route: a summary card + one card per leg.
+// On It — a step-free route: a summary card + one card per leg.
 export function buildRouteCards(r: Route = route): unknown[] {
   const summary: CardSpec = {
     key: "summary",
@@ -159,7 +159,7 @@ export function buildRouteCards(r: Route = route): unknown[] {
   return cardsBatch([summary, ...legs]);
 }
 
-// Track B — the incorporate "how-to pack" now lives in dependency-free shared/incorporate.ts so the
+// Founder's Copilot — the incorporate "how-to pack" now lives in dependency-free shared/incorporate.ts so the
 // browser-BYOK founders render appends the SAME verified card. withIncorporate stays the Worker's entry
 // point (re-export): append the deterministic incorporate card to a founders batch (stub OR model).
 export const withIncorporate = appendIncorporate;

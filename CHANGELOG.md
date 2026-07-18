@@ -28,6 +28,16 @@ Post-hackathon work on `main`, after the v1.0.0 tag.
   opportunities that don't fit). Regression test added (a `this`-dependent fake binding).
 
 ### Added
+- **Sort My Care + a general workflow engine** (#72). New `worker/src/workflows.ts` registry dispatches
+  render by `mode` and deterministic query by `exec`, so adding a **corpus workflow** is register + a JSON —
+  `runUsecase`/`renderBatch` never change (open/closed; `founders`/`route`/`care` all register). **Sort My
+  Care** is the pilot: a **model-free + fetch-free** postcode → nearest public-health/care-services query
+  (`shared/sanitize.ts` UK-postcode boundary — no SSRF; `worker/src/geo.ts` haversine + nearest-N;
+  `worker/src/care/*` over a **synthetic** corpus `data/care/*.json`), rendered as A2UI cards with corpus
+  **freshness** ("data as of …") + a curated "confirm with the official source" disclaimer (`cards.ts`
+  `appendDisclaimer`). Deterministic runs now report `USAGE mode:demo` (not a degraded `stub`). Reachable at
+  `?usecase=sort-my-care` (postcode passed as the run prompt); no new env/secret or CLI switch. Real ingest +
+  CF D1 (#13) are follow-ups.
 - Phase 2 (#18) PR-3 — a **HUD status bar**. The Worker now emits ONE terminal `USAGE` event per run
   (`{ mode, model?, provider?, promptTokens, completionTokens, totalTokens }`, between the render write and
   `RUN_FINISHED`), summed across the live stages + render. The SPA renders an **honest 3-state chip** in the
