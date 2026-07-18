@@ -1,0 +1,24 @@
+{
+  "id": "sort-my-care",
+  "title": "Sort My Care",
+  "render": { "mode": "care" },
+  "stages": [
+    {
+      "name": "plan",
+      "kind": "plan",
+      "events": [
+        { "type": "STEP_STARTED", "text": "read your postcode" },
+        { "type": "TEXT_MESSAGE_CONTENT", "text": "Finding public health & care services near you…" }
+      ]
+    },
+    {
+      "name": "query",
+      "kind": "tool",
+      "exec": "fetch_care_services",
+      "events": [
+        { "type": "TOOL_CALL_START", "text": "fetch_care_services" },
+        { "type": "TOOL_CALL_END", "text": "fetch_care_services" }
+      ]
+    }
+  ]
+}

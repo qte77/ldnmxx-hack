@@ -1,0 +1,79 @@
+[
+  {
+    "id": "gp-stockwell",
+    "name": "Stockwell Group Practice",
+    "authority": "NHS South East London ICB",
+    "category": "GP surgery",
+    "why": "Register with a local GP for appointments, prescriptions and referrals.",
+    "officialUrl": "https://www.nhs.uk/nhs-services/gps/",
+    "lat": 51.4651,
+    "lng": -0.1220,
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "pharmacy-brixton",
+    "name": "Brixton Community Pharmacy",
+    "authority": "NHS England",
+    "category": "Pharmacy",
+    "why": "Free advice and treatment for minor illnesses without a GP appointment (Pharmacy First).",
+    "officialUrl": "https://www.nhs.uk/nhs-services/pharmacies/",
+    "lat": 51.4613,
+    "lng": -0.1156,
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "walkin-lambeth",
+    "name": "Lambeth Walk-in Health Centre",
+    "authority": "NHS South East London ICB",
+    "category": "Urgent care",
+    "why": "Walk-in urgent care for injuries and illnesses that are not life-threatening.",
+    "officialUrl": "https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/",
+    "lat": 51.4919,
+    "lng": -0.1156,
+    "lastUpdated": "2026-05-15"
+  },
+  {
+    "id": "dentist-southwark",
+    "name": "Southwark NHS Dental Practice",
+    "authority": "NHS South East London ICB",
+    "category": "Dentist",
+    "why": "NHS dental checkups and treatment; call ahead to ask about availability.",
+    "officialUrl": "https://www.nhs.uk/nhs-services/dentists/",
+    "lat": 51.5010,
+    "lng": -0.0980,
+    "lastUpdated": "2026-04-20"
+  },
+  {
+    "id": "mentalhealth-lambeth",
+    "name": "Lambeth Talking Therapies",
+    "authority": "NHS Talking Therapies",
+    "category": "Mental health",
+    "why": "Free NHS talking therapies for anxiety and depression; self-referral available.",
+    "officialUrl": "https://www.nhs.uk/nhs-services/mental-health-services/nhs-talking-therapies/",
+    "lat": 51.4560,
+    "lng": -0.1130,
+    "lastUpdated": "2026-06-10"
+  },
+  {
+    "id": "gp-whitechapel",
+    "name": "Whitechapel Health Centre",
+    "authority": "NHS North East London ICB",
+    "category": "GP surgery",
+    "why": "Register with a local GP for appointments, prescriptions and referrals.",
+    "officialUrl": "https://www.nhs.uk/nhs-services/gps/",
+    "lat": 51.5190,
+    "lng": -0.0610,
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "pharmacy-islington",
+    "name": "Islington Late-Night Pharmacy",
+    "authority": "NHS England",
+    "category": "Pharmacy",
+    "why": "Free advice and treatment for minor illnesses without a GP appointment (Pharmacy First).",
+    "officialUrl": "https://www.nhs.uk/nhs-services/pharmacies/",
+    "lat": 51.5360,
+    "lng": -0.1050,
+    "lastUpdated": "2026-05-28"
+  }
+]
