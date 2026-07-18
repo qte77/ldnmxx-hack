@@ -3,13 +3,23 @@ title: "Plan 007 — Phase 2: model-driven pipeline (#18) + usecase expansion"
 type: plan
 updated: 2026-07-09
 issue: 18
-status: approved, 0% built
+status: "PR-1/2/3 shipped; PR-4 (Arize live) next — blocked account-side #50; PR-5 superseded by the civic pivot (plans 010–012)"
 pairs_with: docs/handoffs/007-phase2-model-pipeline.md
 ---
 
 # Plan 007 — Phase 2: model-driven pipeline (#18) + usecase expansion
 
-> **Approved, 0% built.** Build as **5 phased, strict-TDD PRs** (branch per PR → CI-gated → squash-on-green
+> **Arize verification (2026-07-17, PR-4 / #50):** account **unblocked**, but an OTLP smoke test (our
+> `worker/src/trace/arize.ts` JSON shape → `POST https://otlp.arize.com/v1/traces`) returns **HTTP 500
+> `{"code":13,"message":"unable to validate authorization from span"}`** using the keys in `worker/.dev.vars`.
+> Diagnosis: **(a)** the JSON/OTLP payload is *accepted* (NOT a protobuf problem — resolves the code comment's
+> worry); **(b)** the header names `space_id` + `api_key` are *correct* (match the official `arize-otel-go`);
+> **(c)** so the failure is the **keys** — regenerate the Arize AX API key + space id post-unblock, update
+> `worker/.dev.vars` + the Worker secrets, re-run the smoke test (expect 200), *then* close #50 + tick PR-4.
+> **Our export code needs no change.**
+>
+> **PR-1/2/3 shipped; PR-4 (Arize live, blocked account-side #50) is the one remaining Phase-2 item; PR-5
+> superseded by the civic pivot (plans 010–012).** Originally scoped as **5 phased, strict-TDD PRs** (branch per PR → CI-gated → squash-on-green
 > → prune). The **Source map** at the bottom is the current code state — trust it instead of re-exploring.
 
 ## Context

@@ -3,6 +3,7 @@ title: "Plan 011 — benefits-copilot: wayfinder MVP scope"
 type: plan
 updated: 2026-07-17
 status: proposed — depends on plan 010 decision #1 (narrow-to-benefits, wayfinder-first)
+resume: docs/handoffs/012-cf-deploy-and-care.md  (the pivot's living handoff)
 refs: ["docs/plans/010-civic-tool-v1.md", "#66 (domain)", "#29 (spend guardrail)"]
 ---
 

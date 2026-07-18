@@ -23,7 +23,7 @@ when all five are done.
 | PR-2 | free-chain generalization (`runChain`/`tryCall`) + per-stage dispatch (`StageDef.exec`, reasoning + LLM span, thread matches → render) | [x] merged |
 | PR-3 | **HUD status bar** — Demo⇄Live toggle + mode/model + cost chip (`USAGE` event). *Reshaped from "cost chip"; detailed plan+handoff: **008*** | [x] merged |
 | PR-4 | Arize live + notes (#50 / `AGENT_LEARNINGS.md`) — **closes #18** | [ ] **next** |
-| PR-5 | capstone: corpus-agnostic `match` render + 3 new usecases | [ ] |
+| PR-5 | ~~capstone: corpus-agnostic `match` render + 3 new usecases~~ — **superseded by the civic pivot** (plans 010–012; usecases now in `data/usecase-catalog.json`, built per plan 012) | [ ] superseded |
 
 **Current position:** PR-1 + PR-2 + PR-3 merged — the free chain is generic (`runChain`/`tryCall`), the
 founder workflow's plan + search stages run live model tools (`assess_stage` / `search_opportunities`)
