@@ -1,8 +1,9 @@
 # worker/ — Cloudflare Worker (`ldnmxx-hack-worker`)
 
-The middleware. `POST /run?usecase=founders-copilot|on-it` → `runUsecase` (plan→tool→render) → SSE
-(AG-UI events → A2UI batch), plus `POST /trace` (browser span forwarder). Self-contained
-(`wrangler.toml`, `package.json`, `tsconfig`); tests in `worker/test/`. Secrets are Worker secrets only.
+The middleware. `POST /run?usecase=founders-copilot|on-it|sort-my-care` → `runUsecase`
+(plan→tool→render) → SSE (AG-UI events → A2UI batch), plus `POST /trace` (browser span forwarder).
+Self-contained (`wrangler.toml`, `package.json`, `tsconfig`); tests in `worker/test/`. Secrets are Worker
+secrets only.
 
 **Built + deployed:** live at
 <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev>. Files: `src/worker.ts` (`runUsecase`,
@@ -11,6 +12,14 @@ injection guard + per-IP rate-limit, `/trace`), `src/usecases.ts` (loads/guards 
 (keyless free chain: Workers AI → OpenRouter `:free` → GitHub Models → stub), `src/a2ui/cards.ts`
 (deterministic stub cards from `data/demo/*.json`), `src/trace/arize.ts` (console spans + real Arize
 OTLP export when `ARIZE_API_KEY`+`ARIZE_SPACE_ID` are set).
+
+**General engine.** `src/workflows.ts` is the registry — render `mode` → card builder, deterministic
+query `exec` → corpus query. Adding a **corpus workflow** is register + a JSON; `runUsecase`/`renderBatch`
+never change (open/closed). Pilot: **Sort My Care** (`src/care/*`, `usecases/sort-my-care.json`) — a
+model-free + fetch-free postcode → nearest-NHS signpost over a **synthetic** corpus (`data/care/*.json`;
+real ingest + CF D1 are follow-ups). It reports honestly as deterministic (`USAGE mode:demo`) and shows the
+corpus freshness + a curated "confirm with the official source" disclaimer in the render. No new env or CLI
+switch — the only new surface is `?usecase=sort-my-care` (postcode passed as the run `prompt`).
 
 **Run:** `npm run dev` (or `make dev-worker`); tests via `npm run test` (plain-vitest `worker.fetch()`).
 
