@@ -64,8 +64,8 @@ forced-empty on demo/injection); (4) CORS allowlist — now **fails closed** (ne
 guard (`shared/guard.ts`) applied Worker-side; (6) postcode SSRF boundary — `sort-my-care` is provably
 fetch-free; (7) per-IP rate-limit (429); (8) least-privilege deploy token (Zone-scoped). Hardening landed:
 **CSP** (`ui/public/_headers`; anti-FOUC script externalized to `theme-init.js`; `font-src` allows `data:`)
-+ **fail-closed CORS** (+3 tests). Follow-ups (non-blocking): a 1200×630 `og:image`; optional adoption of
-`@qte77/ui-theme` once #67 provisions the token.
+plus **fail-closed CORS** (never `*`, with 3 new preflight tests). Follow-ups (non-blocking): a 1200×630
+`og:image`; optional adoption of `@qte77/ui-theme` once #67 provisions the token.
 
 **Deploy wrinkle (non-fatal):** `wrangler deploy` (Worker) re-asserts the `sortmy.london/api/*` route each
 run and the CF token lacks Zone **Workers-Routes·Edit**, so that step errors (`code 10000`) — but the Worker
