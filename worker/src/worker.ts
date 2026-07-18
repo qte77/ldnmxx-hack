@@ -151,14 +151,44 @@ function modelLabel(def: UsecaseDef, key: string, providerCount: number, model: 
 // Validate + cap a browser-posted span batch for the /trace forwarder (each element must have a name).
 async function readSpans(request: Request): Promise<Span[]> {
   try {
-    const body = (await request.json()) as { spans?: unknown };
-    if (!Array.isArray(body.spans)) return [];
-    return body.spans
+    const body = await request.json<{ spans?: unknown }>();
+    const spans: unknown[] = Array.isArray(body.spans) ? body.spans : [];
+    return spans
       .filter((s): s is Span => !!s && typeof (s as Span).name === "string")
       .slice(0, MAX_TRACE_SPANS);
   } catch {
     return [];
   }
+}
+
+// First non-empty string (an empty "" must fall through to the next default — hence not ??).
+const firstNonEmpty = (...vals: (string | undefined)[]): string =>
+  vals.find((v) => v !== undefined && v.length > 0) ?? "";
+
+// Parse the optional JSON body (prompt + model), tolerating a missing/invalid one.
+async function readRunBody(request: Request): Promise<{ prompt: string; bodyModel: string }> {
+  try {
+    const body = await request.json<{ prompt?: unknown; model?: unknown }>();
+    return {
+      prompt: typeof body.prompt === "string" ? body.prompt : "",
+      bodyModel: typeof body.model === "string" ? body.model : "",
+    };
+  } catch {
+    return { prompt: "", bodyModel: "" }; // missing/invalid body is fine
+  }
+}
+
+// Extract a BYOK bearer token from the Authorization header (empty when absent).
+function readBearer(request: Request): string {
+  const auth = request.headers.get("Authorization") ?? "";
+  return auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+}
+
+// Pace only the pure-stub path so it "streams" like an agent working; a real model path (keyed or free
+// chain) is paced by its own latency. Overridable via PACE_MS (tests set "0").
+function resolvePace(env: Env, hasModel: boolean): number {
+  if (env.PACE_MS !== undefined) return Number(env.PACE_MS);
+  return hasModel ? 0 : DEFAULT_PACE_MS;
 }
 
 // Resolve model access + the span attrs + pacing. Keyed (paid) path = a BYOK header only; our
@@ -170,17 +200,8 @@ async function resolveRun(
   def: UsecaseDef,
   demo: boolean
 ): Promise<{ modelCtx: ModelCtx; runAttrs: Record<string, unknown>; paceMs: number }> {
-  let prompt = "";
-  let bodyModel = "";
-  try {
-    const body = (await request.json()) as { prompt?: string; model?: string };
-    prompt = body.prompt ?? "";
-    bodyModel = body.model ?? "";
-  } catch {
-    // missing/invalid body is fine
-  }
-  const auth = request.headers.get("Authorization") ?? "";
-  const byokKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+  const { prompt, bodyModel } = await readRunBody(request);
+  const byokKey = readBearer(request);
   // Prompt-injection guard: a flagged prompt (or a demo/auto-run) forces the deterministic stub — never
   // worse than today, and page loads / bots can't drive any model.
   const injection = detectInjection(prompt);
@@ -191,8 +212,8 @@ async function resolveRun(
   const providers = !forceStub && !key ? freeChain(env) : [];
   const modelCtx: ModelCtx = {
     key,
-    model: bodyModel || env.DEFAULT_MODEL || FALLBACK_MODEL,
-    baseURL: env.AI_GATEWAY_URL || OPENROUTER_BASE,
+    model: firstNonEmpty(bodyModel, env.DEFAULT_MODEL, FALLBACK_MODEL),
+    baseURL: firstNonEmpty(env.AI_GATEWAY_URL, OPENROUTER_BASE),
     prompt,
     providers,
   };
@@ -204,10 +225,7 @@ async function resolveRun(
     blocked: injection.flagged,
     demo, // lets runUsecase tell an explicit DEMO run from a STUB fallback for the USAGE mode
   };
-  // Pace the pure-stub path so it "streams" like an agent working; a real model path (keyed or free
-  // chain) is paced by its own latency. Overridable via PACE_MS (tests set "0").
-  const realModel = key.length > 0 || providers.length > 0;
-  const paceMs = env.PACE_MS !== undefined ? Number(env.PACE_MS) : realModel ? 0 : DEFAULT_PACE_MS;
+  const paceMs = resolvePace(env, key.length > 0 || providers.length > 0);
   return { modelCtx, runAttrs, paceMs };
 }
 
@@ -273,7 +291,7 @@ interface UsageEvent extends AgentEvent {
   totalTokens: number;
 }
 
-type TokenTotals = { promptTokens: number; completionTokens: number; totalTokens: number };
+interface TokenTotals { promptTokens: number; completionTokens: number; totalTokens: number }
 
 // Fold one stage/render usage into the running totals (each field is optional per provider → default 0).
 function addUsage(totals: TokenTotals, u?: { promptTokens?: number; completionTokens?: number; totalTokens?: number }): void {
@@ -281,6 +299,64 @@ function addUsage(totals: TokenTotals, u?: { promptTokens?: number; completionTo
   totals.promptTokens += u.promptTokens ?? 0;
   totals.completionTokens += u.completionTokens ?? 0;
   totals.totalTokens += u.totalTokens ?? 0;
+}
+
+// Play a stage's canned events (paced) — the narration for query, plain, and model-fallback stages.
+async function playCanned(
+  stage: UsecaseDef["stages"][number],
+  write: (e: AgentEvent) => void,
+  paceMs: number
+): Promise<void> {
+  for (const e of stage.events) {
+    await sleep(paceMs);
+    write(e);
+  }
+}
+
+// Run a model-backed stage under a 20s abort timeout; null on any miss (caller plays canned events).
+async function runStageWithTimeout(exec: StageExec, ctx: ModelCtx): Promise<StageOutcome | null> {
+  const ac = new AbortController();
+  const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
+  return runStageModel(exec, ctx, ac.signal).finally(() => { clearTimeout(timer); });
+}
+
+// Play one stage and emit its span: a deterministic query stage computes render data then narrates; a
+// model-backed stage streams its reasoning (free-chain path) or falls back to canned; a plain stage just
+// narrates. Returns any query data / model matches for the render.
+async function playStage(
+  stage: UsecaseDef["stages"][number],
+  ctx: ModelCtx,
+  write: (e: AgentEvent) => void,
+  emitter: Emitter,
+  paceMs: number,
+  usage: TokenTotals
+): Promise<{ queryData?: unknown; matches?: OpportunityMatch[] }> {
+  const t0 = Date.now();
+  const queryFn = stage.exec ? registry.query[stage.exec] : undefined;
+  if (queryFn) {
+    // Deterministic query stage (model-free, fetch-free): compute render data over the bundled corpus, then
+    // narrate via the canned events regardless of whether a model provider exists.
+    const queryData = queryFn({ prompt: ctx.prompt });
+    await playCanned(stage, write, paceMs);
+    emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
+    return { queryData };
+  }
+  // Model-backed stage on the keyless free-chain path (ctx.providers is empty when keyed / stub-forced).
+  if (stage.exec && ctx.providers.length > 0) {
+    const outcome = await runStageWithTimeout(stage.exec, ctx);
+    if (outcome) {
+      write({ type: "TOOL_CALL_START", text: stage.exec });
+      write({ type: "TEXT_MESSAGE_CONTENT", text: outcome.reasoning });
+      write({ type: "TOOL_CALL_END", text: stage.exec });
+      addUsage(usage, outcome.usage);
+      emitter.span({ name: `model:${stage.exec}`, attrs: { model: outcome.model, ...outcome.usage } });
+      return outcome.matches ? { matches: outcome.matches } : {};
+    }
+  }
+  // Canned stage (default, or model fallback) — never worse than today.
+  await playCanned(stage, write, paceMs);
+  emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
+  return {};
 }
 
 // The data-driven interpreter: play each stage (a model-backed stage runs its forced tool and streams the
@@ -300,33 +376,9 @@ export async function runUsecase(
   let queryData: unknown;
   const usage: TokenTotals = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
   for (const stage of def.stages) {
-    const t0 = Date.now();
-    const queryFn = stage.exec ? registry.query[stage.exec] : undefined;
-    if (queryFn) {
-      // Deterministic query stage (model-free, fetch-free): computes the render data over the bundled
-      // corpus regardless of whether a model provider exists, then narrates via its canned events below.
-      queryData = queryFn({ prompt: ctx.prompt });
-    } else if (stage.exec && ctx.providers.length > 0) {
-      // Model-backed stage on the keyless free-chain path (ctx.providers is empty when keyed / stub-forced).
-      const ac = new AbortController();
-      const timer: ReturnType<typeof setTimeout> = setTimeout(() => { ac.abort(); }, 20000);
-      const outcome = await runStageModel(stage.exec, ctx, ac.signal).finally(() => { clearTimeout(timer); });
-      if (outcome) {
-        write({ type: "TOOL_CALL_START", text: stage.exec });
-        write({ type: "TEXT_MESSAGE_CONTENT", text: outcome.reasoning });
-        write({ type: "TOOL_CALL_END", text: stage.exec });
-        if (outcome.matches) matches = outcome.matches;
-        addUsage(usage, outcome.usage);
-        emitter.span({ name: `model:${stage.exec}`, attrs: { model: outcome.model, ...outcome.usage } });
-        continue;
-      }
-    }
-    // Canned stage (default, query-stage narration, or model fallback) — never worse than today.
-    for (const e of stage.events) {
-      await sleep(paceMs);
-      write(e);
-    }
-    emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
+    const r = await playStage(stage, ctx, write, emitter, paceMs, usage);
+    if (r.queryData !== undefined) queryData = r.queryData;
+    if (r.matches) matches = r.matches;
   }
   await sleep(paceMs);
   const t0 = Date.now();

@@ -249,13 +249,13 @@ describe("worker /run", () => {
 
   it("rate-limits with 429 when the limiter rejects the IP", async () => {
     const limitedEnv = { ...env, RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: false }) } };
-    const res = await worker.fetch(post("founders-copilot"), limitedEnv as never, ctx);
+    const res = await worker.fetch(post("founders-copilot"), limitedEnv, ctx);
     expect(res.status).toBe(429);
   });
 
   it("passes through when the limiter allows the IP", async () => {
     const okEnv = { ...env, RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: true }) } };
-    const res = await worker.fetch(post("founders-copilot"), okEnv as never, ctx);
+    const res = await worker.fetch(post("founders-copilot"), okEnv, ctx);
     expect(res.status).toBe(200);
   });
 

@@ -138,7 +138,7 @@ describe("fetch-based providers reuse callRenderModel", () => {
 const echoSpec: ToolSpec<{ ok?: boolean }> = {
   tool: { type: "function", function: { name: "echo" } },
   toolName: "echo",
-  extract: (d) => extractToolArgs(d, "echo") as { ok?: boolean } | null,
+  extract: (d) => extractToolArgs(d, "echo"),
   validate: (v) => v.ok === true,
 };
 function echoOut(args: unknown): unknown {

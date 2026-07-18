@@ -36,37 +36,61 @@ export interface UsecaseDef {
 
 const RENDER_MODES: RenderMode[] = ["founders", "route", "care"];
 
+// Narrow to unknown[] (not the any[] that Array.isArray infers, which would defeat the type-safety lints).
+const isArray = (v: unknown): v is unknown[] => Array.isArray(v);
+
+// Contract core: every stage needs a non-empty name (played verbatim over SSE).
+function assertStageNames(id: string, stages: unknown[]): void {
+  for (const s of stages) {
+    const name = (s as { name?: unknown }).name;
+    if (typeof name !== "string" || name.length === 0) {
+      throw new Error(`usecase ${id}: every stage needs a non-empty name`);
+    }
+  }
+}
+
+// TS-engine extras: each stage needs a kind + an events array; exec, if present, must be a known op.
+function assertStageShapes(id: string, stages: unknown[]): void {
+  for (const s of stages) {
+    const stage = s as { kind?: unknown; events?: unknown; exec?: unknown };
+    if (typeof stage.kind !== "string" || !isArray(stage.events)) {
+      throw new Error(`usecase ${id}: every stage needs kind and an events array`);
+    }
+    if (stage.exec !== undefined && !STAGE_EXECS.includes(stage.exec as StageExec)) {
+      throw new Error(`usecase ${id}: stage.exec must be one of ${STAGE_EXECS.join(", ")}`);
+    }
+  }
+}
+
+function assertRenderMode(id: string, render: unknown): void {
+  const mode = (render as { mode?: unknown } | null)?.mode;
+  if (typeof mode !== "string" || !RENDER_MODES.includes(mode as RenderMode)) {
+    throw new Error(`usecase ${id}: render.mode must be one of ${RENDER_MODES.join(", ")}`);
+  }
+}
+
 // Tiny load-time guard. Usecases are trusted, build-time JSON (bundled like data/demo/*.json), so this
 // is not external-input validation — it just turns an authoring slip into a clear startup error.
 // Checks the shared workflow-definition/v1 contract core first (id, non-empty ordered stages[].name —
 // see qte77/protocols), then the TS engine's own stricter extras (title, render.mode, stage.kind/events).
 export function assertUsecaseDef(x: unknown): asserts x is UsecaseDef {
-  const d = x as Partial<UsecaseDef>;
-  if (!d || typeof d.id !== "string" || d.id.length === 0) {
+  if (typeof x !== "object" || x === null) {
+    throw new Error("usecase: must be an object");
+  }
+  const d = x as { id?: unknown; title?: unknown; render?: unknown; stages?: unknown };
+  if (typeof d.id !== "string" || d.id.length === 0) {
     throw new Error("usecase: id must be a non-empty string");
   }
-  if (!Array.isArray(d.stages) || d.stages.length === 0) {
-    throw new Error(`usecase ${d.id}: stages must be a non-empty array`);
+  const id = d.id;
+  if (!isArray(d.stages) || d.stages.length === 0) {
+    throw new Error(`usecase ${id}: stages must be a non-empty array`);
   }
-  for (const s of d.stages) {
-    if (typeof s?.name !== "string" || s.name.length === 0) {
-      throw new Error(`usecase ${d.id}: every stage needs a non-empty name`);
-    }
-  }
+  assertStageNames(id, d.stages);
   if (typeof d.title !== "string") {
-    throw new Error(`usecase ${d.id}: title must be a string`);
+    throw new Error(`usecase ${id}: title must be a string`);
   }
-  if (!d.render || !RENDER_MODES.includes(d.render.mode as RenderMode)) {
-    throw new Error(`usecase ${d.id}: render.mode must be one of ${RENDER_MODES.join(", ")}`);
-  }
-  for (const s of d.stages) {
-    if (typeof s.kind !== "string" || !Array.isArray(s.events)) {
-      throw new Error(`usecase ${d.id}: every stage needs kind and an events array`);
-    }
-    if (s.exec !== undefined && !STAGE_EXECS.includes(s.exec)) {
-      throw new Error(`usecase ${d.id}: stage.exec must be one of ${STAGE_EXECS.join(", ")}`);
-    }
-  }
+  assertRenderMode(id, d.render);
+  assertStageShapes(id, d.stages);
 }
 
 function load(json: unknown): UsecaseDef {

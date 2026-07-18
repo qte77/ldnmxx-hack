@@ -160,9 +160,9 @@ export function buildProviders(opts: {
   githubModel?: string;
 }): Provider[] {
   const list: Provider[] = [];
-  if (opts.ai) list.push(workersAiProvider(opts.ai, opts.workersAiModel || DEFAULT_WORKERS_AI_MODEL));
+  if (opts.ai) list.push(workersAiProvider(opts.ai, opts.workersAiModel ?? DEFAULT_WORKERS_AI_MODEL));
   if (opts.openRouterKey)
     list.push(openRouterFreeProvider(opts.openRouterKey, opts.openRouterFreeModels ?? DEFAULT_OPENROUTER_FREE_MODELS));
-  if (opts.githubToken) list.push(githubModelsProvider(opts.githubToken, opts.githubModel || DEFAULT_GITHUB_MODEL));
+  if (opts.githubToken) list.push(githubModelsProvider(opts.githubToken, opts.githubModel ?? DEFAULT_GITHUB_MODEL));
   return list;
 }

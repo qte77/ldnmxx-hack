@@ -112,7 +112,7 @@ describe("POST /trace forwarder", () => {
   it("accepts a browser span batch and forwards it to Arize (202)", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
-    const res = await worker.fetch(post({ spans }), arizeEnv as never, ctx);
+    const res = await worker.fetch(post({ spans }), arizeEnv, ctx);
     expect(res.status).toBe(202);
     expect(fetchMock).toHaveBeenCalledOnce();
   });
@@ -120,7 +120,7 @@ describe("POST /trace forwarder", () => {
   it("returns 202 but forwards nothing when Arize is unconfigured", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
-    const res = await worker.fetch(post({ spans }), { ALLOWED_ORIGINS: "https://qte77.github.io" } as never, ctx);
+    const res = await worker.fetch(post({ spans }), { ALLOWED_ORIGINS: "https://qte77.github.io" }, ctx);
     expect(res.status).toBe(202);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -128,13 +128,13 @@ describe("POST /trace forwarder", () => {
   it("caps the forwarded batch at MAX_TRACE_SPANS", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
-    const many = Array.from({ length: MAX_TRACE_SPANS + 50 }, (_, i) => ({ name: `s${i}` }));
-    await worker.fetch(post({ spans: many }), arizeEnv as never, ctx);
+    const many = Array.from({ length: MAX_TRACE_SPANS + 50 }, (_, i) => ({ name: `s${String(i)}` }));
+    await worker.fetch(post({ spans: many }), arizeEnv, ctx);
     expect(otlpSpans(JSON.parse(fetchMock.mock.calls[0][1].body)).length).toBe(MAX_TRACE_SPANS);
   });
 
   it("rejects a non-POST /trace with 405", async () => {
-    const res = await worker.fetch(new Request("https://w.example/api/trace", { method: "GET" }), arizeEnv as never, ctx);
+    const res = await worker.fetch(new Request("https://w.example/api/trace", { method: "GET" }), arizeEnv, ctx);
     expect(res.status).toBe(405);
   });
 });

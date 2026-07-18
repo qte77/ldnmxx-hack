@@ -28,7 +28,7 @@ const hexId = (bytes: number): string => {
   return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 };
 
-const msToNano = (ms: number): string => `${Math.round(ms)}000000`;
+const msToNano = (ms: number): string => `${String(Math.round(ms))}000000`;
 
 // OpenInference span kind: the run chain → CHAIN, a model render → LLM, a tool stage → TOOL, else CHAIN.
 function openInferenceKind(s: Span): string {
@@ -74,7 +74,7 @@ export function spansToOtlp(spans: Span[], env: TraceEnv): unknown {
   return {
     resourceSpans: [
       {
-        resource: { attributes: [kv("service.name", env.ARIZE_PROJECT || DEFAULT_PROJECT)] },
+        resource: { attributes: [kv("service.name", env.ARIZE_PROJECT ?? DEFAULT_PROJECT)] },
         scopeSpans: [{ scope: { name: "groundwork-worker" }, spans: otlpSpans }],
       },
     ],
