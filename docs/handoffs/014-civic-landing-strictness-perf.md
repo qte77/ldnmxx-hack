@@ -1,7 +1,7 @@
 ---
-title: "Handoff 014 — resume: sortmy.london civic landing · max strictness · performance (0/8 not started)"
+title: "Handoff 014 — resume: sortmy.london civic landing · max strictness · performance (7/8 shipped — only S5 remains)"
 type: handoff
-updated: 2026-07-18
+updated: 2026-07-19
 pairs_with: docs/plans/014-civic-landing-strictness-perf.md
 ---
 

@@ -30,14 +30,14 @@ progressive disclosure** (no routing — calm hero, one primary action, reveal-o
 
 | # | Workstream | Status |
 |---|---|---|
-| 0 | Persist plan + handoff to repo (this) | ☐ to ship |
-| P | Performance — cache headers · zod dedupe · font subsetting · font preload · bundle-size CI guard · measured baseline | ☐ to ship |
-| S1–S2 | Strictness quick — engines/nvmrc/npmrc · npm audit · semgrep/codeql breadth · Permissions-Policy/HSTS · #71 | ☐ to ship |
-| U | Civic landing + rebrand + real og:image + a11y statement · drop founders-copilot · axe pass (#88) | ☐ to ship |
-| S3–S4 | Worker ESLint + strict tsconfig (isolated) | ☐ to ship |
-| I | Close 13 stale issues · update #88 · open 015 tracker | ☐ to ship |
-| D | Docs (CHANGELOG/README/architecture/UserStory/design/roadmap + stale Makefile CLI) | ☐ to ship |
-| S5 | Max strictness — verbatimModuleSyntax · noPropertyAccess · jsx-a11y · eslint-security · unicorn | ☐ to ship |
+| 0 | Persist plan + handoff to repo (this) | ✅ shipped (#97) |
+| P | Performance — cache headers · zod dedupe · font subsetting · bundle-size CI guard · measured baseline | ✅ shipped (#98/#101; P4 preload deferred — LCP already good) |
+| S1–S2 | Strictness quick — engines/nvmrc/npmrc · npm audit · semgrep/codeql breadth · Permissions-Policy/HSTS · #71 | ✅ shipped (#105/#106; #71 closed) |
+| U | Civic landing + rebrand + real og:image + a11y statement · drop founders-copilot (#88) | ✅ shipped (#109/#110; #88 closed; live) |
+| S3–S4 | Worker ESLint + strict tsconfig (isolated) | ✅ shipped (#111/#112; TS7→6 for eslint compat) |
+| I | Close stale issues · open 015 tracker | ✅ shipped (closed 6 verified; 015 = #113) |
+| D | Docs (CHANGELOG/README/sub-READMEs/env/catalog + Makefile CLI) | ▶ this PR (Makefile fixed in #99) |
+| S5 | Max strictness — verbatimModuleSyntax · noPropertyAccess · jsx-a11y · eslint-security · unicorn | ☐ to ship (each its own PR) |
 
 ---
 

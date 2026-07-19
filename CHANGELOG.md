@@ -6,6 +6,25 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 Post-hackathon work on `main`, after the v1.0.0 tag.
 
+### Plan 014 — civic landing · performance · max strictness · deploy fixes
+
+- **Civic landing + rebrand (U, #109/#110)** — task-first, progressive-disclosure page; **Sort My Care**
+  is the flagship (a London postcode → NHS & care services), **On It** (step-free routes) revealed on
+  demand; Founder's Copilot dropped from the civic default (kept at `?usecase=founders-copilot`). Added a
+  real 1200×630 `og:image` + `robots.txt` + `sitemap.xml` + a WCAG footer statement, and a tested
+  `readUsecase()` flow-router. Mobile-first; verified live via the e2e sweep.
+- **Load performance (P, #98/#101)** — immutable `Cache-Control` on `/assets/*`; deduped zod to v3
+  (-17.9 KB gz JS); latin-only Inter, dropped JetBrains Mono (-14.5 KB gz CSS); a gzip bundle-size CI guard.
+- **Max strictness (S1–S4, #105/#106/#111/#112)** — `engines` / `.nvmrc` / `.npmrc`; pinned + broadened
+  Semgrep, `npm audit`, CodeQL `security-extended`, SHA-pinned dependency-review; `Permissions-Policy` +
+  HSTS; dependabot `cooldown` + `.npmrc` `min-release-age` supply-chain hardening. Worker ESLint
+  (strictTypeChecked — 70 findings fixed, `resolveRun`/`runUsecase`/`assertUsecaseDef` refactored) + the 7
+  strict tsconfig flags to `ui` parity — no behaviour change (119 tests green).
+- **Deploy/dev CLI fixes (#99/#102/#104)** — `make deploy` now builds + ships the SPA (was worker-only);
+  worker `dev`/`deploy` pass `--config wrangler.toml` (wrangler v4 else misreads the root Pages config);
+  `provision_cf.sh` tolerates the benign code-10000 worker-route step; deleted the dead `seed` target.
+- **Docs (#103)** — `docs/engineering-practices.md` playbook + `AGENT_LEARNINGS.md` ledger.
+
 ### Security
 - **Removed the entire browser BYOK/model path** (#83, plan 013 · A). The deployed SPA had inlined a real
   OpenRouter key (`VITE_BYOK_API_KEY`, via Vite) and called OpenRouter **directly from the browser** (live
