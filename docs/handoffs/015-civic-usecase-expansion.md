@@ -20,18 +20,19 @@ the flagship from synthetic → real data. Tracker: **#113**.
 015 makes it *broader and real*: generalise the engine so a new corpus usecase is register-only
 (**W1**, #80); add **Sort My Scam Check** (#74) and **Sort My Wander** (#73); and replace the synthetic
 Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5**, #13/#10). Plus a small **014 carry-over**
-(S5 strictness, shared lint, release cut, axe-core, e2e Tier-2 manifest).
+(S5 strictness, shared lint, axe-core, e2e Tier-2 manifest; **v1.1.0 release shipped** #120 — only the
+`git tag -a v1.1.0` push remains).
 
 ## Queue & order
 
-`C` 014 carry-over (quick — S5 knobs each its own PR · shared lint · v1.1.0 tag · axe-core · e2e runs.jsonl)
+`C` 014 carry-over (quick — S5 knobs each its own PR · shared lint · push the v1.1.0 tag · axe-core · e2e runs.jsonl)
 → `W1` engine general query-stage + manifest (#80, unblocks the rest) → `W2` Scam (#74) · `W3` Wander (#73)
 → `W4` real Care corpus (#13) · `W5` ingest cron (#10) → `W6` D1 store (only if the corpus outgrows JSON).
 
 ## First actions
 
 1. This plan+handoff are step 0 — commit on `docs/015-plan-handoff`, PR, squash-merge on green, prune.
-2. Cheapest win first: knock out a **C** item (e.g. `shared/*.ts` lint or the v1.1.0 release cut), then
+2. Cheapest win first: knock out a **C** item (e.g. `shared/*.ts` lint or pushing the v1.1.0 tag), then
    start **W1** (the engine generalisation) since W2/W3 depend on it.
 3. For each new usecase: register a render/query mode in `worker/src/workflows.ts`, a `usecases/<id>.json`,
    and a corpus; add a `ui/src/App.tsx` `USECASES` entry (civic ones surface; demos stay `?usecase=`); add
