@@ -70,6 +70,9 @@ P4 font-preload (only if a web-perf measurement shows LCP is font-bound).
 - **e2e** via `/workspaces/qte77/polyfetch-scrape/.venv/bin/python tests/e2e/ui_sweep.py <url> <label>`
   (updated to the new civic labels). Full local run needs the user's `CLOUDFLARE_API_TOKEN` (worker AI
   binding); vite-only renders the landing. `_headers`/CSP only apply after a Pages deploy, not vite preview.
+  Each run writes `results/<label>/summary.json` (machine-readable verdict: target/ran_at/verdict/counts) —
+  the **cross-session handoff artifact**. For a long/async run: background-launch the sweep, record a
+  manifest line, and poll `summary.json` on the next wake (see the plan's "long/async e2e" note).
 - **Worker is on TS 6** (typescript-eslint can't parse TS 7). Keep it aligned with `ui`.
 
 ## Open / context

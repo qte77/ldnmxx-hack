@@ -18,8 +18,10 @@ Examples:
 Artifacts land in tests/e2e/results/<label>/ (gitignored). Video uses raw Patchright's
 record_video_dir (polyfetch's render_session has a teardown bug that drops the file).
 """
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from patchright.sync_api import sync_playwright
 
 TARGET = sys.argv[1] if len(sys.argv) > 1 else "https://sortmy.london"
@@ -181,7 +183,26 @@ def main():
             unf += u
     print(f"\nARTIFACTS: {OUT}")
     print("=" * 60)
-    return report(model_hits, unf)
+    rc = report(model_hits, unf)
+    write_summary(rc, model_hits, unf)
+    return rc
+
+
+def write_summary(rc, model_hits, unf):
+    """Machine-readable verdict at results/<label>/summary.json — the cross-session handoff artifact
+    (a next session reads this instead of re-parsing stdout, and it can carry an in-flight run's state)."""
+    summary = {
+        "target": TARGET,
+        "label": LABEL,
+        "ran_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "verdict": "PASS" if rc == 0 else "FAIL",
+        "model_host_hits": len(model_hits),
+        "openrouter_or_401_lines": len(unf),
+        "configs": [c[0] for c in CONFIGS],
+    }
+    with open(os.path.join(OUT, "summary.json"), "w") as f:
+        json.dump(summary, f, indent=2)
+    print(f"SUMMARY: {os.path.join(OUT, 'summary.json')} -> {summary['verdict']}")
 
 
 if __name__ == "__main__":

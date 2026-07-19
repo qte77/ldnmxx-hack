@@ -23,6 +23,8 @@ data/real/
 
 # Claude Code local settings + its temp write files (rules/skills stay tracked)
 .claude/settings.local.json*
+# Stray auto-memory index the agent harness writes to the repo root (not project content)
+MEMORY.md
 
 # misc
 *.log
