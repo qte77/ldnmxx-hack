@@ -64,7 +64,8 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
   (curated, both). **Each knob its own PR; expect a fix wave** like S3/S4.
 - **`shared/*.ts` lint** — `guard.ts`/`sanitize.ts` are security-critical and still unlinted (S3 was
   worker-only). Small cross-dir eslint setup.
-- **Release cut** — tag **v1.1.0**, move CHANGELOG `[Unreleased]` under a dated heading (`make bump`).
+- **Release** — v1.1.0 **shipped** (#120: version + CHANGELOG `[1.1.0]` + README badge). Only
+  `git tag -a v1.1.0` + push remains (outward-facing — the user runs it).
 - **axe-core in the e2e sweep** — inject axe for a concrete WCAG pass/fail (today: aria snapshot only).
 - **e2e Tier-2 handoff** — a committed `tests/e2e/runs.jsonl` manifest so an in-flight/long sweep resumes
   across sessions (summary.json already lands per run; #116).
