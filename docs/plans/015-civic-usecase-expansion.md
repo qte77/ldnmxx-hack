@@ -80,3 +80,71 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 - **Verify per usecase:** `make test` + `tsc` + `eslint` (ui+worker) + markdownlint + the e2e sweep clean
   (0 model-host, a11y heading/button, `summary.json` PASS); "signpost not advice" disclaimer + freshness
   present; deterministic honesty (`USAGE mode:demo`). Real data ToU-gated + gitignored.
+
+## Source Map (jump straight in — do NOT re-explore)
+
+Line numbers current as of 2026-07-19 (worker refactored in 014·S3/S4). The **W1 "register-only" target**
+is `worker/src/workflows.ts` — generalise it so a new corpus usecase needs no bespoke TS.
+
+**Engine / dispatch (`worker/src/`)**
+
+- `workflows.ts` (**KEY, 35 LOC**) — the whole registry: `registry.render: Record<RenderMode, RenderFn>` +
+  `registry.query: Partial<Record<StageExec, QueryFn>>` (`:23-35`). `render.founders`→opportunity cards
+  (model-backed), `render.route`→`buildRouteCards()`, `render.care`→`buildCareCards(data as CareQuery)`;
+  `query.fetch_care_services`→`queryCareServices(prompt)`. Adding a corpus usecase **today** = extend the
+  `RenderMode`/`StageExec` unions + add a `render.<mode>`/`query.<exec>` here. **W1** = make this
+  manifest-driven (one generic query + one generic render), so it is register-only.
+- `worker.ts` — `runUsecase` (`:365`, the data-driven interpreter: loop `def.stages`→`playStage`→
+  `renderBatch`), `playStage` (`:326`, dispatch deterministic-query vs model-exec vs canned), `renderBatch`
+  (`:66`), `resolveRun` (`:197`, injection-guard + `ModelCtx`), `runStageModel` (`:254`), `fetch` handler
+  (`:404`; `/api/run`|`/api/trace` allowlist + rate-limit). `interface Env` (`:20-36`).
+- `usecases.ts` — `type RenderMode` (`:26`) + `type StageExec`/`STAGE_EXECS` (`:17-18`): **extend both for a
+  new mode/exec**; `UsecaseDef`/`StageDef` (`:20-35`); `assertUsecaseDef` load-guard (`:76-94`); `registry`
+  (`:101-105`, add the `usecases/<id>.json` import + entry); `getUsecase` (`:109`).
+- `a2ui/cards.ts` — `cardsBatch(CardSpec[])` (`:67`, generic builder), `appendDisclaimer` (`:121`,
+  "signpost not advice" caveat), `buildRouteCards`/`buildOpportunityCards`; `CardSpec` (`:33`).
+
+**Care flow (flagship; W4 makes it real)** — `care/careServices.ts` `queryCareServices` (`:28-51`); imports
+the **synthetic** corpus at **`:4-5`** (`data/care/services.sample.json` + `postcodes.sample.json`) — **W4
+replaces those two imports** with ingested data. `care/contract.ts` `CareService`/`CareQuery` (`:9-25`);
+`care/render.ts` `buildCareCards` (`:7-33`, freshness `asOf` + disclaimer). `geo.ts` `nearestN`/`haversineKm`
+(`:13-35`).
+
+**Model chain** — `agent/providers.ts` `buildProviders` (`:154`, free chain Workers-AI → OpenRouter `:free`
+→ GitHub Models), `runChain` (`:134`); `agent/model.ts` `callModelTool`/`callRenderModel` (`:73`/`:124`),
+`ORResponse` (`:32`).
+
+**Shared (security boundary)** — `shared/sanitize.ts` `normalisePostcode` (`:13-20`, the ONLY user string
+reaching a query — no external fetch, no SSRF); `shared/guard.ts` `detectInjection` (`:33`, ReDoS-safe
+patterns); `assessTool.ts`/`searchTool.ts` (forced-tool schemas + validators), `prompt.ts`, `incorporate.ts`,
+`renderTool.ts` `isSelfContainedBatch` (`:22`, the render-safety invariant). **S5: these are still UNLINTED**
+(worker eslint `files` glob is `worker/**` only).
+
+**UI (`ui/src/`)** — `App.tsx` `USECASES` array (`:11-45`: `sort-my-care` flagship, `on-it`,
+`founders-copilot` civic:false demo) — **add a new civic usecase entry here**; `FLAGSHIP_ID` (`:48`).
+`usecase.ts` `readUsecase` (`:4`, `?usecase=` router). `agent/useAgentSSE.ts` `runWorkerPath` (`:114`, the
+ONLY transport → `POST /api/run` SSE; the browser never calls a model host).
+
+**Data** — `usecases/{founders-copilot,on-it,sort-my-care}.json` (stage defs). `data/care/{services,
+postcodes}.sample.json` (**synthetic; W4 target**). `data/sources.json` (~60 vetted sources — e.g.
+`nhs-service-directory`, `historic-england`, `companies-house`/`fca-register`, `osm-overpass` for W2/W3/W4;
+`gaps[]` documents holes). `data/usecase-catalog.json` (backlog/idea layer). **`ingest/` has NO code yet —
+only `ingest/README.md`** (planned `seed.py`: polite scrape → JSON → KV): the **W4/W5 empty starting point**.
+
+**Config / S5 + W5 targets**
+
+- `worker/tsconfig.json` + `ui/tsconfig.app.json` — full strict set already; **S5 adds** `verbatimModuleSyntax`
+  and `noPropertyAccessFromIndexSignature`.
+- `worker/eslint.config.js` (strictTypeChecked + sonarjs, node) — **S5 adds `eslint-plugin-security`** + a
+  `shared/*.ts` glob; `ui/eslint.config.js` — **S5 adds `eslint-plugin-jsx-a11y`**; both **+ `unicorn`**.
+- `worker/wrangler.toml` — routes `sortmy.london/api/*`, `[ai]`, `[[ratelimits]]` 20/60; **no `[triggers]`
+  yet → W5 adds `[triggers] crons=[…]` + a `scheduled()` handler in `worker.ts`**.
+- `.github/workflows/ci.yml` — jobs security / ui / worker / dependency-review (SHA-pinned; worker has no
+  build step). `tests/e2e/ui_sweep.py` — `CONFIGS` 5 viewports (`:35`), `sweep()` clicks the civic labels
+  (`:60`), `write_summary`→`summary.json` (`:191`). `Makefile` — `dev`/`test`/`deploy`(→`provision_cf.sh`)/`bump`.
+
+**Add-a-usecase recipe** (deterministic corpus): ① `usecases/<id>.json` (stage def: a `plan` + a `query`-exec
+stage). ② extend `RenderMode`/`StageExec` (usecases.ts) + register `render.<mode>`/`query.<exec>`
+(workflows.ts). ③ corpus in `data/<id>/*.json` + a `queryXServices`-style fn. ④ `ui/src/App.tsx` `USECASES`
+entry (civic → surfaces; demo → `?usecase=` only). ⑤ e2e sweep label + `make test` + `tsc`/`eslint` green +
+a Pages redeploy (user runs). Keep `runUsecase`/`renderBatch`/`cardsBatch` CLOSED (open/closed).
