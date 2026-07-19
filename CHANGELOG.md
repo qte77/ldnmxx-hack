@@ -4,7 +4,10 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
-Post-hackathon work on `main`, after the v1.0.0 tag.
+## [1.1.0] - 2026-07-19
+
+Post-hackathon work on `main` (plans 013 + 014), after the v1.0.0 tag: the browser-BYOK security pivot, the
+civic landing + `sortmy.london` rebrand, load performance, and max strictness / security hardening — live.
 
 ### Plan 014 — civic landing · performance · max strictness · deploy fixes
 

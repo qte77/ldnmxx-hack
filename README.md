@@ -14,7 +14,7 @@ wayfinder), a founder-funding copilot, step-free routing · Londonmaxxing 003.
 > reusable asset: add a workflow by dropping in a `usecases/*.json`.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-58f4c2.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-58f4c2.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.0-58f4c2.svg)](CHANGELOG.md)
 [![CI](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/qte77/ldnmxx-hack/actions/workflows/codeql.yaml/badge.svg)](https://github.com/qte77/ldnmxx-hack/actions/workflows/codeql.yaml)
 [![CodeFactor](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack/badge)](https://www.codefactor.io/repository/github/qte77/ldnmxx-hack)
