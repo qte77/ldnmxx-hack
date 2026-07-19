@@ -7,7 +7,9 @@ pairs_with: docs/plans/015-civic-usecase-expansion.md
 
 # Handoff 015 — resume point
 
-**Read [`docs/plans/015-civic-usecase-expansion.md`](../plans/015-civic-usecase-expansion.md) FIRST.**
+**Read [`docs/plans/015-civic-usecase-expansion.md`](../plans/015-civic-usecase-expansion.md) FIRST** — it
+carries a full **Source Map** (file:line for the engine registry, care flow, UI, shared, data, config) + an
+**add-a-usecase recipe**, so do NOT re-map or re-gather context.
 Predecessor **014 is shipped + live** on `sortmy.london` — see `docs/handoffs/014-*` (its Source Map, still
 the canonical file:line map) and `docs/engineering-practices.md`. 015 broadens the civic usecases and moves
 the flagship from synthetic → real data. Tracker: **#113**.
