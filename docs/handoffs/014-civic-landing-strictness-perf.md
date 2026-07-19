@@ -1,5 +1,5 @@
 ---
-title: "Handoff 014 — resume: sortmy.london (9/10 shipped + live) — only S5 (deepest strictness) remains"
+title: "Handoff 014 — COMPLETE + live on sortmy.london (S5 + follow-ups folded into plan 015)"
 type: handoff
 updated: 2026-07-19
 pairs_with: docs/plans/014-civic-landing-strictness-perf.md
@@ -7,9 +7,11 @@ pairs_with: docs/plans/014-civic-landing-strictness-perf.md
 
 # Handoff 014 — resume point
 
-**Plan 014 is 9/10 shipped and live on `sortmy.london`.** Only **S5 (deepest strictness)** remains.
-Read [`docs/plans/014-civic-landing-strictness-perf.md`](../plans/014-civic-landing-strictness-perf.md)
-for the Source Map + full context. Predecessor: `013-ui-pivot-security-brand-e2e.md` (done, live).
+**Plan 014 is COMPLETE + live on `sortmy.london`.** Its last workstream (S5 deepest strictness) + the
+follow-ups are folded into **[plan 015](../plans/015-civic-usecase-expansion.md)** as the "014 carry-over"
+— **resume from [handoff 015](015-civic-usecase-expansion.md), not here.** This doc is the historical record
+of 014 + its Source Map still lives in
+[`docs/plans/014-*`](../plans/014-civic-landing-strictness-perf.md). Predecessor: `013-*` (done, live).
 
 ## What shipped (13 PRs this cycle, all merged + live)
 
@@ -33,21 +35,15 @@ for the Source Map + full context. Predecessor: `013-ui-pivot-security-brand-e2e
   env / catalog / progress (#114).
 - **I** issue triage — closed 6 verified-shipped (#88/#72/#78/#82/#18/#67); opened **015 tracker #113**
   (civic usecase expansion + real data: #73/#74/#80/#13/#10/#8). Legacy-showcase issues (#4/#6/#7/#9/#11/#12)
-  left OPEN as backlog (deviated from the plan's mass-close — get a call before closing them).
+  closed as off-strategy.
 
-## The one remaining workstream — S5 (deepest strictness)
+## S5 + follow-ups — moved to plan 015
 
-Each knob is its **own PR** off updated `main`; expect a **fix wave** like S3/S4 (mechanical). Verify per PR:
-`tsc` + `eslint` (ui + worker) + `vitest` (22 ui / 119 worker) + build + markdownlint green. Order suggestion:
-
-1. `verbatimModuleSyntax` on **both** tsconfigs (rewrites imports → `import type`).
-2. `noPropertyAccessFromIndexSignature` on both (forces bracket access on index signatures).
-3. `eslint-plugin-jsx-a11y` on `ui/eslint.config.js`.
-4. `eslint-plugin-security` on `worker/eslint.config.js`.
-5. `eslint-plugin-unicorn` (curated subset) on both.
-
-Optional follow-ups: **`shared/*.ts` lint** (cross-dir eslint setup — not covered by the worker config yet);
-P4 font-preload (only if a web-perf measurement shows LCP is font-bound).
+014's last workstream **S5 (deepest strictness** — `verbatimModuleSyntax` · `noPropertyAccessFromIndexSignature`
+· jsx-a11y · eslint-security · unicorn, **each its own PR, expect a fix wave** like S3/S4) and the follow-ups
+(`shared/*.ts` lint · v1.1.0 release cut · axe-core in the sweep · e2e Tier-2 `runs.jsonl`) are now the
+**"014 carry-over"** in [plan 015](../plans/015-civic-usecase-expansion.md) /
+[handoff 015](015-civic-usecase-expansion.md). Resume there.
 
 ## Conventions (hard — unchanged)
 

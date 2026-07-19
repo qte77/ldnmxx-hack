@@ -2,7 +2,7 @@
 title: "Plan 014 — sortmy.london: civic landing (progressive disclosure) · strictness · performance"
 type: plan
 updated: 2026-07-18
-status: "9/10 shipped + live on sortmy.london — only S5 (deepest strictness) remains"
+status: "COMPLETE + live on sortmy.london — S5 (deepest strictness) + follow-ups folded into plan 015"
 refs: ["#88 (013b landing/rebrand)", "#71 (dependabot grouping)", "013 plan/handoff (predecessor)", "proposed 015 = #73/#74/#80/#13/#10"]
 ---
 
@@ -37,7 +37,7 @@ progressive disclosure** (no routing — calm hero, one primary action, reveal-o
 | S3–S4 | Worker ESLint + strict tsconfig (isolated) | ✅ shipped (#111/#112; TS7→6 for eslint compat) |
 | I | Close stale issues · open 015 tracker | ✅ shipped (closed 6 verified; 015 = #113) |
 | D | Docs (CHANGELOG/README/sub-READMEs/env/catalog + Makefile CLI) | ✅ shipped (#114; Makefile in #99) |
-| S5 | Max strictness — verbatimModuleSyntax · noPropertyAccess · jsx-a11y · eslint-security · unicorn | ☐ to ship (each its own PR) |
+| S5 | Max strictness — verbatimModuleSyntax · noPropertyAccess · jsx-a11y · eslint-security · unicorn | ➡️ folded into plan 015 (carry-over) |
 
 ---
 
