@@ -9,8 +9,9 @@
 wayfinder), a founder-funding copilot, step-free routing · Londonmaxxing 003.
 
 > The **product** is a civic wayfinder (a signpost to official services, never advice — always confirm at
-> the official source). The **engine** underneath is the reusable asset: add a workflow by dropping in a
-> JSON. The visible product rebrand + task-first landing is tracked as a follow-on (**013b**).
+> the official source): a **task-first, progressive-disclosure landing** with **Sort My Care** as the
+> flagship, live at [sortmy.london](https://sortmy.london). The **engine** underneath (Groundwork) is the
+> reusable asset: add a workflow by dropping in a `usecases/*.json`.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-58f4c2.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-58f4c2.svg)](CHANGELOG.md)

@@ -1,12 +1,13 @@
 # ui/ — SPA (Cloudflare Pages)
 
-Vite + React + TS, built on top of `qte77/agenthud-agui-a2ui` per `docs/plans/001-build-plan.md`.
-Calls `POST /run?usecase=<id>` (SSE), renders the A2UI HUD (built-in cards) + event log; header toggle
-swaps Track B ⇄ A. Tests in `ui/tests/`.
+Vite + React + TS, built on top of `qte77/agenthud-agui-a2ui`. The civic landing for
+**sortmy.london**: a task-first, progressive-disclosure page — **Sort My Care** is the flagship
+(a London postcode → nearby NHS & care services), **On It** (step-free routes) is revealed on demand.
+Calls `POST /api/run?usecase=<id>` (SSE) and renders the A2UI cards (Column / Card / Text). Dev chrome
+(event log, ⚙ Key) is gated behind `?dev` / Ctrl+K. Tests in `ui/tests/`.
 
-**Built + deployed:** live at <https://qte77.github.io/ldnmxx-hack/>. Key files: `src/App.tsx` (shell +
-usecase toggle), `src/agent/useAgentSSE.ts` (SSE transport), `src/A2UISurface.tsx` (render seam),
-`src/catalog.ts`/`src/CatalogViewer.tsx` (live A2UI component catalog), `src/EventStream.tsx` (live
-event log).
+**Live:** <https://sortmy.london>. Key files: `src/App.tsx` (landing hero + progressive disclosure),
+`src/usecase.ts` (`?usecase=` routing, tested), `src/agent/useAgentSSE.ts` (SSE transport),
+`src/A2UISurface.tsx` (render seam), `src/EventStream.tsx` (dev-only event log).
 
-**Run:** `npm run dev` (or `make dev-ui`). Scripts: `dev`, `build`, `typecheck`, `lint`, `test`.
+**Run:** `npm run dev` (or `make dev-ui`). Scripts: `dev`, `build`, `typecheck`, `lint`, `test`, `size`.

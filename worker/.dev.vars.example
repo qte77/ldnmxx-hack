@@ -31,6 +31,6 @@ ARIZE_PROJECT=           # optional OTLP resource service.name (defaults to "gro
 COMPANIES_HOUSE_KEY=     # reserved for the live name-availability check; demo uses the verified pack
 
 # --- CORS / origins (also mirrored in wrangler.toml [vars]) ---
-ALLOWED_ORIGINS=http://localhost:5173,https://qte77.github.io
+ALLOWED_ORIGINS=http://localhost:5173,https://sortmy.london
 
 # Bindings (NOT secrets) live in worker/wrangler.toml: [ai] AI (Workers AI) + [[ratelimits]] RATE_LIMITER.
