@@ -51,7 +51,7 @@ const sleep = (ms: number): Promise<void> =>
   ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
 
 // Render the card batch, dispatched by the usecase's render mode via the workflows.ts registry.
-// Deterministic modes (`route`, `care`, …) build purely from bundled data — meta null (a model-invented
+// Deterministic modes (`route`, `corpus`) build purely from bundled data — meta null (a model-invented
 // route or care listing would hallucinate). `founders` is the one model-backed mode: it generates the
 // cards grounded in the demo data — a BYOK key calls the chosen model directly (keyed path), otherwise the
 // keyless free chain runs; either falls back to the deterministic stub when there's nothing to call or it errors.

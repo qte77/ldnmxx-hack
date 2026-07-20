@@ -57,6 +57,47 @@ def click(page, name, exact=False, t=2500):
         return False
 
 
+FLAGSHIP_POSTCODE = "SW9 9SL"
+# Markers proving the deterministic CORPUS WORKFLOW actually rendered, not just the landing hero:
+# the summary card naming the postcode, the freshness line, and the curated disclaimer.
+FLAGSHIP_MARKERS = (
+    f"near {FLAGSHIP_POSTCODE}",
+    "data as of",
+    "Always confirm with the official source",
+)
+
+
+def run_flagship(page, out, tag):
+    """Type a REAL postcode, run Sort My Care, and assert corpus cards rendered.
+
+    Load-bearing: clicking the CTA with an empty input only ever produces the "enter a valid
+    postcode" state, so without typing + asserting, a completely broken query_corpus/corpus-render
+    would still pass this sweep. Needs the Worker (`make dev`, or a deployed target) — a vite-only
+    run serves the landing page and will correctly fail here.
+    """
+    try:
+        page.fill("#civic-query", FLAGSHIP_POSTCODE)
+    except Exception as e:
+        print(f"    !! FLAGSHIP fill: {e}")
+        return False
+    if not click(page, "Find care services", t=3000):
+        print("    !! FLAGSHIP: CTA not found")
+        return False
+    page.wait_for_timeout(8000)
+    try:
+        page.screenshot(path=f"{out}/{tag}-05-after-run.png")
+        body = page.inner_text("body")
+    except Exception as e:
+        print(f"    !! FLAGSHIP read: {e}")
+        return False
+    missing = [m for m in FLAGSHIP_MARKERS if m not in body]
+    if missing:
+        print(f"    !! FLAGSHIP did not render corpus cards; missing={missing}")
+        return False
+    print(f"    flagship: corpus cards rendered for {FLAGSHIP_POSTCODE}")
+    return True
+
+
 def sweep(page, out, tag):
     def shot(n):
         try:
@@ -69,9 +110,7 @@ def sweep(page, out, tag):
     # Progressive-disclosure civic flows (014·U): switch to On It, then back to the Care flagship.
     click(page, "Step-free journeys") and shot("03-onit")
     click(page, "Care services near you") and shot("04-care")
-    if click(page, "Find care services", t=3000):  # the flagship CTA (was "Run")
-        page.wait_for_timeout(6000)
-        shot("05-after-run")
+    return run_flagship(page, out, tag)
 
 
 def model_host_hits(net):
@@ -152,15 +191,16 @@ def run_config(pw, name, kw, video):
     hook(page, cons, net)
     load(page)
     print(f"    title={page.title()!r} viewport={page.viewport_size}")
-    sweep(page, OUT, name)
+    flagship_ok = sweep(page, OUT, name)
     if name == "desktop":
         snapshot_a11y(page)
     mh, unf = summarize(cons, net)
     close_context(context, browser, page, video)
-    return mh, unf
+    return mh, unf, flagship_ok
 
 
-def report(model_hits, unf):
+def report(model_hits, unf, broken):
+    ok = True
     if model_hits or unf:
         print(f"FAIL: browser contacted a model host ({len(model_hits)}) / "
               f"openrouter|'user not found' console lines ({len(unf)}) — item-A regression.")
@@ -168,27 +208,35 @@ def report(model_hits, unf):
             print("   MODEL-HOST", h)
         for u in unf:
             print("   CONSOLE", u)
+        ok = False
+    if broken:
+        print(f"FAIL: the Sort My Care flagship did not render corpus cards on: {', '.join(broken)}.")
+        ok = False
+    if not ok:
         return 1
-    print("PASS: no browser→model-host request and no openrouter/401 console line across all configs.")
+    print("PASS: no browser→model-host request, no openrouter/401 console line, and the corpus "
+          "flagship rendered on every config.")
     return 0
 
 
 def main():
     print(f"TARGET={TARGET}  LABEL={LABEL}  OUT={OUT}")
-    model_hits, unf = [], []
+    model_hits, unf, broken = [], [], []
     with sync_playwright() as pw:
         for name, kw, video in CONFIGS:
-            mh, u = run_config(pw, name, kw, video)
+            mh, u, flagship_ok = run_config(pw, name, kw, video)
             model_hits += mh
             unf += u
+            if not flagship_ok:
+                broken.append(name)
     print(f"\nARTIFACTS: {OUT}")
     print("=" * 60)
-    rc = report(model_hits, unf)
-    write_summary(rc, model_hits, unf)
+    rc = report(model_hits, unf, broken)
+    write_summary(rc, model_hits, unf, broken)
     return rc
 
 
-def write_summary(rc, model_hits, unf):
+def write_summary(rc, model_hits, unf, broken):
     """Machine-readable verdict at results/<label>/summary.json — the cross-session handoff artifact
     (a next session reads this instead of re-parsing stdout, and it can carry an in-flight run's state)."""
     summary = {
@@ -199,6 +247,8 @@ def write_summary(rc, model_hits, unf):
         "model_host_hits": len(model_hits),
         "openrouter_or_401_lines": len(unf),
         "configs": [c[0] for c in CONFIGS],
+        "flagship_rendered": [c[0] for c in CONFIGS if c[0] not in broken],
+        "flagship_broken": broken,
     }
     with open(os.path.join(OUT, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2)

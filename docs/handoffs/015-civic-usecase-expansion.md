@@ -34,8 +34,7 @@ Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5
 - **Data architecture decided:** the request path reads an **in-house CF D1** store; sources are fetched
   out-of-band on a **cron + explicit trigger**, with **migrations** for schema and **one view per corpus**
   projecting onto `CorpusRecord`. This promotes W6/D1 from "only if forced" to the foundation W4/W5 build
-  on. Python for `ingest/` must be **strict ruff + typing + pydantic + pydantic-settings**, manifest in
-  `ingest/pyproject.toml` (never root).
+  on.
 - Remaining C: S5 knobs (each its own PR), axe-core in the sweep, `runs.jsonl`, and the `v1.1.0` tag push
   (the user runs that).
 
