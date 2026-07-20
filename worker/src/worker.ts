@@ -28,11 +28,9 @@ export interface Env {
   PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
   RATE_LIMITER?: RateLimit; // per-IP limiter (wrangler [[ratelimits]]); absent in tests → skipped
   AI?: Ai; // Cloudflare Workers AI binding (first keyless free provider); absent → skipped
-  GITHUB_MODELS_TOKEN?: string; // GitHub Models free-tier token (last free provider; retires 2026-07-30)
   WORKERS_AI_MODEL?: string; // override the default Workers AI model id
   OPENROUTER_FREE_MODEL?: string; // override the OpenRouter :free model (single)
   OPENROUTER_FREE_MODELS?: string; // override the OpenRouter :free fallback list (comma-separated)
-  GITHUB_MODEL?: string; // override the default GitHub Models model id
 }
 
 interface ModelCtx {
@@ -134,10 +132,8 @@ function freeChain(env: Env): Provider[] {
   return buildProviders({
     ai: env.AI,
     openRouterKey: env.OPENROUTER_KEY,
-    githubToken: env.GITHUB_MODELS_TOKEN,
     workersAiModel: env.WORKERS_AI_MODEL,
     openRouterFreeModels,
-    githubModel: env.GITHUB_MODEL,
   });
 }
 

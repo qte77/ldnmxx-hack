@@ -5,10 +5,10 @@
 
 # --- Model access: keyed (BYOK) + keyless free chain (#37) ---
 # A BYOK Authorization header calls the chosen model directly (paid, span model:openrouter). Keyless runs
-# use a free chain (Workers AI → OpenRouter :free → GitHub Models → stub), first-valid-wins — so the
-# Worker rarely/never spends. Every tier is structurally validated; a bad tier falls through to the stub.
+# use a free chain (Workers AI → OpenRouter :free → stub), first-valid-wins — so the Worker rarely/never
+# spends. Every tier is structurally validated; a bad tier falls through to the stub. (A GitHub Models
+# tier was dropped in #127 — the service retired 2026-07-30.)
 OPENROUTER_KEY=           # OpenRouter API key — feeds the keyless :free provider (never a paid call)
-GITHUB_MODELS_TOKEN=      # GitHub Models free-tier token — last free provider (service retires 2026-07-30)
 DEFAULT_MODEL=anthropic/claude-haiku-4.5  # model for the BYOK keyed path when the request omits one
 PACE_MS=450              # per-step reveal delay (ms) for the pure-stub path; a real model paces by latency
 AI_GATEWAY_URL=          # optional OpenAI-compatible base for the keyed path (else OpenRouter); AI Gateway dormant (#29)
@@ -18,7 +18,6 @@ CF_GATEWAY_ID=           # NOT yet read by code — reserved for future AI Gatew
 WORKERS_AI_MODEL=        # default @cf/openai/gpt-oss-120b; any ChatCompletions-typed model (glm-4.7-flash 429s on capacity)
 OPENROUTER_FREE_MODEL=   # override the OpenRouter :free model (single)
 OPENROUTER_FREE_MODELS=  # override the :free fallback LIST (comma-separated); default = 6 verified free+tools models, tried in order
-GITHUB_MODEL=            # e.g. openai/gpt-4o-mini
 
 # --- Observability: Arize (OPTIONAL; console default when unset) ---
 # Set BOTH to enable the real OTLP export (OpenInference spans → https://otlp.arize.com/v1/traces);

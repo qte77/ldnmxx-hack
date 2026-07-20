@@ -3,10 +3,10 @@
 // Phase-2 assess_stage / search_opportunities stages all run through the SAME plumbing, each reusing its
 // dependency-free validator so a malformed/empty/errored result from any tier just falls through — never
 // worse than the fallback. The chain is built only from bindings/secrets present, cheapest-first
-// (Cloudflare Workers AI → OpenRouter :free using our key → GitHub Models). No spend on our part: Workers
-// AI is free, OpenRouter runs :free model ids, GitHub Models is free-tier (retires 2026-07-30). The
-// OpenRouter tier walks a LIST of :free models (they rate-limit / rotate), logging each fall-through for
-// `wrangler tail`; the winning model id lands in the span's `model` attr.
+// (Cloudflare Workers AI → OpenRouter :free using our key). No spend on our part: Workers AI is free and
+// OpenRouter runs :free model ids. The OpenRouter tier walks a LIST of :free models (they rate-limit /
+// rotate), logging each fall-through for `wrangler tail`; the winning model id lands in the span's
+// `model` attr. (A third GitHub Models tier was dropped in #127 — the service retired 2026-07-30.)
 
 import { RENDER_UI_TOOL, isSelfContainedBatch } from "../../../shared/renderTool";
 import {
@@ -19,11 +19,9 @@ import {
 } from "./model";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
-const GITHUB_MODELS_BASE = "https://models.github.ai/inference"; // OpenAI-compatible; retires 2026-07-30
 
 // Defaults are tuning knobs (overridable via env) — the guard makes a wrong pick non-fatal (falls through).
 export const DEFAULT_WORKERS_AI_MODEL = "@cf/openai/gpt-oss-120b"; // verified 2026-07-08; @cf/zai-org/glm-4.7-flash hits capacity 429
-export const DEFAULT_GITHUB_MODEL = "openai/gpt-4o-mini";
 // A LIST of currently-live free + tool-capable OpenRouter models (verified 2026-07-08). :free models
 // rate-limit (HTTP 429) and rotate often, so we fall through several before giving up to the next tier.
 export const DEFAULT_OPENROUTER_FREE_MODELS = [
@@ -121,14 +119,6 @@ export function openRouterFreeProvider(
   return { name: "openrouter-free", tryCall, tryRender: (args) => tryCall(RENDER_SPEC, args).then(asRender) };
 }
 
-// GitHub Models (free tier), OpenAI-compatible, called server-side. Last in the chain; the service retires
-// 2026-07-30, after which it 404s and simply falls through — drop it then.
-export function githubModelsProvider(token: string, model: string = DEFAULT_GITHUB_MODEL): Provider {
-  const tryCall = <T>(spec: ToolSpec<T>, { system, user, signal }: CallArgs): Promise<ModelToolResult<T> | null> =>
-    callModelTool<T>({ apiKey: token, model, baseURL: GITHUB_MODELS_BASE, system, user, signal, ...spec });
-  return { name: "github-models", tryCall, tryRender: (args) => tryCall(RENDER_SPEC, args).then(asRender) };
-}
-
 // Generic first-valid-wins chain: run `call` on each provider until one returns non-null; returns which
 // provider won so the caller can span model:<name>.
 export async function runChain<T>(
@@ -154,15 +144,12 @@ export function renderFree(
 export function buildProviders(opts: {
   ai?: Ai | undefined;
   openRouterKey?: string | undefined;
-  githubToken?: string | undefined;
   workersAiModel?: string | undefined;
   openRouterFreeModels?: string[] | undefined;
-  githubModel?: string | undefined;
 }): Provider[] {
   const list: Provider[] = [];
   if (opts.ai) list.push(workersAiProvider(opts.ai, opts.workersAiModel ?? DEFAULT_WORKERS_AI_MODEL));
   if (opts.openRouterKey)
     list.push(openRouterFreeProvider(opts.openRouterKey, opts.openRouterFreeModels ?? DEFAULT_OPENROUTER_FREE_MODELS));
-  if (opts.githubToken) list.push(githubModelsProvider(opts.githubToken, opts.githubModel ?? DEFAULT_GITHUB_MODEL));
   return list;
 }
