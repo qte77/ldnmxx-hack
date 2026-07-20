@@ -44,7 +44,8 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
 - **The engine:** one `POST /run?usecase=<id>` + a small `runUsecase` interpreter (plan → tool → render) —
   each workflow's plan→tool→render choreography is a declarative `usecases/*.json`, selected by the
   `usecase` query param; render + deterministic query dispatch by name via the `worker/src/workflows.ts`
-  registry (`founders`/`route`/`care`), so adding a corpus workflow is register + a JSON (open/closed).
+  registry (`founders`/`route`/`corpus`), so adding a corpus workflow is **register-only** — a
+  `corpus/registry.ts` entry + a JSON + a UI entry, no engine edit (open/closed).
 - **Generative UI:** the agent streams **AG-UI** events that render as built-in **A2UI cards** — it
   paints the interface, not just text (AG Grid deferred).
 - **Example workflow — Founder's Copilot (flagship):** describe your idea → the model **assesses your

@@ -1,7 +1,7 @@
 {
   "id": "sort-my-care",
   "title": "Sort My Care",
-  "render": { "mode": "care" },
+  "render": { "mode": "corpus" },
   "stages": [
     {
       "name": "plan",
@@ -14,7 +14,8 @@
     {
       "name": "query",
       "kind": "tool",
-      "exec": "fetch_care_services",
+      "exec": "query_corpus",
+      "corpus": "care",
       "events": [
         { "type": "TOOL_CALL_START", "text": "fetch_care_services" },
         { "type": "TOOL_CALL_END", "text": "fetch_care_services" }

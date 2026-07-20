@@ -106,20 +106,21 @@ function appendCard(batch: unknown[], spec: CardSpec): unknown[] {
 }
 
 // The generic "signpost, not advice" caveat card for the deterministic corpus workflows (Care now;
-// Wander/Scam next). The NHS search link is curated + verified, NEVER generated. Freshness ("as of
-// <date>") is shown per-workflow in its own summary card, from the corpus lastUpdated.
-const DISCLAIMER: CardSpec = {
+// Wander/Scam next). The official link is supplied PER CORPUS from its curated, verified labels
+// (corpus/registry.ts) — never hardcoded here and never generated. Freshness ("as of <date>") is
+// shown per-workflow in its own summary card, from the corpus lastUpdated.
+const disclaimerCard = (link: { text: string; url: string }): CardSpec => ({
   key: "disclaimer",
   title: "ℹ️ Always confirm with the official source",
   lines: [
     "A signpost to public services — not advice, a referral, or a booking. Details can change.",
-    "[Search official NHS services](https://www.nhs.uk/service-search)",
+    `[${link.text}](${link.url})`,
   ],
-};
+});
 
 // Append the deterministic disclaimer card to a corpus-workflow batch.
-export function appendDisclaimer(batch: unknown[]): unknown[] {
-  return appendCard(batch, DISCLAIMER);
+export function appendDisclaimer(batch: unknown[], link: { text: string; url: string }): unknown[] {
+  return appendCard(batch, disclaimerCard(link));
 }
 
 // Founder's Copilot — grant/opportunity cards with a qualify-first eligibility line.

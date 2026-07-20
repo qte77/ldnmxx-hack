@@ -44,6 +44,27 @@ risks the shared path.
 5. **"Wayfinder" is a UX pattern, not the engine.** The engine is general; a workflow signposts to official
    services (never adjudicates/triages), enforced by a curated disclaimer card.
 
+## Amendment (#80, plan 015 · W1) — the corpus seam became generic
+
+The decisions above stand; the corpus half is now **register-only** rather than "register a render fn +
+a query fn". This ADR is kept as the historical record — where the two differ, this amendment wins.
+
+- The per-workflow `care` mode + `fetch_care_services` exec were replaced by a **single generic
+  `corpus` mode + `query_corpus` exec parameterised by a corpus id**, carried on the stage def. A new
+  corpus workflow now adds NO mode, NO exec and NO TS beyond one `worker/src/corpus/registry.ts` entry
+  (records + postcodes + labels), so consequence 1 below is stronger than originally written.
+- Point 3 ("each workflow owns its LOCAL contract") is **superseded for corpus workflows**: they share
+  one `worker/src/corpus/contract.ts` (`CorpusRecord`/`CorpusRow`/`CorpusLabels`/`CorpusQuery`).
+  Justified by evidence rather than speculation — the shape was identical across Care and Wander, and
+  it is the schema W4/W5 ingest and the per-corpus D1 view project onto. Non-corpus workflows keep
+  local contracts.
+- Point 2's example exec is now `query_corpus`; the curated official link moved from a hardcoded
+  constant in `a2ui/cards.ts` into per-corpus `labels`, so `appendDisclaimer` takes the link.
+- The **third minus below is partly resolved**: a `query_corpus` stage's `corpus` id IS now validated
+  against the registry keys at load time, so that drift is caught at startup. The `RENDER_MODES`/
+  `STAGE_EXECS` constants remain a second source of truth.
+- Query fns now return a `Promise`, so the W4 D1-backed source is a drop-in with no seam change.
+
 ## Consequences
 
 - **+** New corpus workflows (Wander #73, Scam #74) are additive: register + JSON + corpus + tests. No

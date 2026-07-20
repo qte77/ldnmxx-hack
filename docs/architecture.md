@@ -6,8 +6,8 @@ One `POST /run?usecase=<id>` endpoint → a small `runUsecase` interpreter (plan
 HUD. The SPA flips between the two demo workflows (**Founder's Copilot ⇄ On It**) via a toggle over the
 `?usecase=` param; each workflow's stage choreography is a `usecases/*.json` read at runtime
 (`worker/src/usecases.ts`), and render + deterministic query dispatch **by name** through the
-`worker/src/workflows.ts` **registry** (`render` by mode — `founders`/`route`/`care`; `query` by exec) — so
-adding a corpus workflow is register + a JSON, never an engine edit (open/closed; ADR 0001). Per workflow,
+`worker/src/workflows.ts` **registry** (`render` by mode — `founders`/`route`/`corpus`; `query` by exec) — so
+adding a corpus workflow is **register-only**, never an engine edit (open/closed; ADR 0001). Per workflow,
 only these seams change:
 
 | Seam | Founder's Copilot | On It |
@@ -16,11 +16,15 @@ only these seams change:
 | `render` | built-in A2UI cards (Column/Card/Text) | static `buildRouteCards()` text today; RouteCard + lazy OSM `RouteMap` panel is **PLANNED** |
 | `input()` | text | text today (canned stub); voice (Web Speech STT + text fallback) is **PLANNED** |
 
-**Deterministic corpus workflows** (e.g. **Sort My Care**, `render.mode:"care"`, #72) are a fourth shape:
-a model-free + fetch-free `query` exec over a bundled corpus (`shared/sanitize.ts` → `worker/src/geo.ts` →
-`worker/src/care/*`) → card render + a curated disclaimer — registered, not wired into the core, and
-honestly reported as `USAGE mode:demo`. See [`usecase-workflows.md`](usecase-workflows.md) + ADR
-[`0001`](adr/0001-general-workflow-engine.md).
+**Deterministic corpus workflows** (e.g. **Sort My Care**, `render.mode:"corpus"`, #72/#80) are a fourth
+shape: a model-free + fetch-free `query_corpus` exec over a bundled corpus (`shared/sanitize.ts` →
+`worker/src/geo.ts` → `worker/src/corpus/*`) → card render + a curated disclaimer — registered, not wired
+into the core, and honestly reported as `USAGE mode:demo`. The mode and exec are **generic over a corpus
+id** (#80), so a new one is a `corpus/registry.ts` entry + a JSON + a UI entry with no engine TS: the
+query pre-formats each row's display line (so the render is shape-agnostic and a future match-shaped
+workflow reuses it), and the load-guard rejects an unregistered `corpus` id at startup. The query seam
+returns a `Promise` so a D1-backed source can replace the bundled JSON without touching dispatch. See
+[`usecase-workflows.md`](usecase-workflows.md) + ADR [`0001`](adr/0001-general-workflow-engine.md).
 
 ## Data flow — one direction, one trust crossing
 
@@ -69,7 +73,7 @@ sets the next run's `?demo=1` intent; the chip reports what the last run actuall
 - `contract.ts` = validation · `applyA2UIEvent.ts` = render seam · `useAgentSSE.ts` = transport ·
   `runUsecase` + injectable emitter = observability · `usecases.ts` = the use-case seam (loads + guards
   `usecases/*.json`); `workflows.ts` = the general registry (render mode + query exec dispatch). (Worker
-  source: `worker.ts`, `usecases.ts`, `workflows.ts`, `geo.ts`, `care/*`, `agent/model.ts`, `a2ui/cards.ts`, `trace/arize.ts`.)
+  source: `worker.ts`, `usecases.ts`, `workflows.ts`, `geo.ts`, `corpus/*`, `agent/model.ts`, `a2ui/cards.ts`, `trace/arize.ts`.)
 - **Trust boundary:** SPA holds no secrets; keys are Worker secrets only; Worker is the sole egress;
   the CORS allowlist is the gate. No third-party JS/fonts/tiles (self-hosted).
 

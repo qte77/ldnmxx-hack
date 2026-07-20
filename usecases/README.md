@@ -7,7 +7,10 @@ the app**, same engine, same `/run` endpoint.
 
 Render implementations (prompts, card builders, the model call) stay in code, referenced by
 `render.mode` (`founders` = model-generated grant cards with stub fallback · `route` = the canned
-step-free route). A wholly new render behaviour still needs a new mode in code.
+step-free route · `corpus` = the GENERIC deterministic corpus render). A wholly new render *behaviour*
+still needs a new mode in code — but a new **corpus** workflow does not: pair `"mode": "corpus"` with a
+`query_corpus` stage naming a corpus registered in `worker/src/corpus/registry.ts`, and the engine needs
+no TS change. An unregistered `corpus` id is rejected at load time.
 
 **Contract:** each file is also a `workflow-definition/v1` (`qte77/protocols`) — the language-neutral
 envelope shared with the Python doc-workflows engine (`qte77/azure-doc-workflows`). The two engines only
@@ -22,9 +25,11 @@ Schema (guarded at load):
 {
   "id": "on-it",
   "title": "On It",
-  "render": { "mode": "founders" | "route" },
+  "render": { "mode": "founders" | "route" | "corpus" },
   "stages": [
-    { "name": "plan", "kind": "plan", "events": [ { "type": "STEP_STARTED", "text": "…" } ] }
+    { "name": "plan", "kind": "plan", "events": [ { "type": "STEP_STARTED", "text": "…" } ] },
+    // a corpus workflow's query stage — `corpus` must name a registered corpus
+    { "name": "query", "kind": "tool", "exec": "query_corpus", "corpus": "care", "events": [] }
   ]
 }
 ```

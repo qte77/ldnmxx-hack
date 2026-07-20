@@ -25,7 +25,7 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 
 | # | Workstream | Status |
 |---|---|---|
-| W1 | Engine: general query stage + workflow manifest (#80) — make a new corpus usecase register-only | ☐ to ship |
+| W1 | Engine: general query stage + workflow manifest (#80) — make a new corpus usecase register-only | ☑ shipped (#125) |
 | W2 | Sort My Scam Check (#74) — clone-firm fraud **flag** (Companies House / FCA), never a verdict | ☐ to ship |
 | W3 | Sort My Wander (#73) — free/obscure heritage discovery (Historic England / OSM / Wikidata) | ☐ to ship |
 | W4 | Real Care corpus (#13) — replace synthetic `data/care/*` with an ingested NHS directory + freshness | ☐ to ship |
@@ -62,8 +62,11 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 - **S5 · deepest strictness (plan 014):** `verbatimModuleSyntax` · `noPropertyAccessFromIndexSignature` (both
   tsconfigs) · `eslint-plugin-jsx-a11y` (ui) · `eslint-plugin-security` (worker) · `eslint-plugin-unicorn`
   (curated, both). **Each knob its own PR; expect a fix wave** like S3/S4.
-- **`shared/*.ts` lint** — `guard.ts`/`sanitize.ts` are security-critical and still unlinted (S3 was
-  worker-only). Small cross-dir eslint setup.
+- **`shared/*.ts` lint** — ☑ shipped (#123 + #124, issue #122). NOT the quick win assumed: ESLint 10
+  refuses files above its config dir, so it needed a root `eslint.config.js` (`basePath: "shared"` +
+  pinned worker tsconfig project), chained into worker's `lint`. Fixing the findings surfaced a real
+  bug — `isValidSearchResult` threw on `matches: [null]` — caused by a circular `as Partial<T>` cast.
+  See `AGENT_LEARNINGS.md`.
 - **Release** — v1.1.0 **shipped** (#120: version + CHANGELOG `[1.1.0]` + README badge). Only
   `git tag -a v1.1.0` + push remains (outward-facing — the user runs it).
 - **axe-core in the e2e sweep** — inject axe for a concrete WCAG pass/fail (today: aria snapshot only).

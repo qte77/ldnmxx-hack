@@ -1,7 +1,7 @@
 ---
-title: "Handoff 015 — start: civic usecase expansion + real data (0/7 not started; 014 shipped+live)"
+title: "Handoff 015 — in progress: C (shared lint) + W1 (engine register-only) shipped; W2/W3/W4/W5 next"
 type: handoff
-updated: 2026-07-19
+updated: 2026-07-20
 pairs_with: docs/plans/015-civic-usecase-expansion.md
 ---
 
@@ -22,6 +22,22 @@ the flagship from synthetic → real data. Tracker: **#113**.
 Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5**, #13/#10). Plus a small **014 carry-over**
 (S5 strictness, shared lint, axe-core, e2e Tier-2 manifest; **v1.1.0 release shipped** #120 — only the
 `git tag -a v1.1.0` push remains).
+
+## Progress (2026-07-20)
+
+- ☑ **C · `shared/*.ts` lint** — #123 + #124 (issue #122). Root `eslint.config.js` was required (ESLint 10
+  refuses files above its config dir); fixing the findings surfaced a real bug (`isValidSearchResult`
+  threw on `matches: [null]`) from a circular `as Partial<T>` cast. See `AGENT_LEARNINGS.md`.
+- ☑ **W1 · engine register-only (#80)** — #125. Generic `corpus` mode + `query_corpus` exec over a corpus
+  id; `worker/src/corpus/*` replaces `worker/src/care/*`; load-guard on the corpus id; query fns return a
+  `Promise` (D1-ready). **W2/W3 are now unblocked and need no engine TS.**
+- **Data architecture decided:** the request path reads an **in-house CF D1** store; sources are fetched
+  out-of-band on a **cron + explicit trigger**, with **migrations** for schema and **one view per corpus**
+  projecting onto `CorpusRecord`. This promotes W6/D1 from "only if forced" to the foundation W4/W5 build
+  on. Python for `ingest/` must be **strict ruff + typing + pydantic + pydantic-settings**, manifest in
+  `ingest/pyproject.toml` (never root).
+- Remaining C: S5 knobs (each its own PR), axe-core in the sweep, `runs.jsonl`, and the `v1.1.0` tag push
+  (the user runs that).
 
 ## Queue & order
 
