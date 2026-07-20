@@ -27,7 +27,7 @@ function incorporateComponents(): { cardId: string; components: unknown[] } {
     { id: titleId, component: { Text: { text: { literalString: INCORPORATE_TITLE }, usageHint: "h3" } } },
   ];
   INCORPORATE_LINES.forEach((line, i) => {
-    const id = `l-${key}-${i}`;
+    const id = `l-${key}-${String(i)}`;
     lineIds.push(id);
     components.push({ id, component: { Text: { text: { literalString: line }, usageHint: "caption" } } });
   });

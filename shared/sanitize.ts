@@ -12,7 +12,7 @@ const UK_POSTCODE = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/i;
 // Return the canonical "OUTWARD INWARD" upper-cased postcode (single space), or null if none is found.
 export function normalisePostcode(raw: string): string | null {
   if (typeof raw !== "string") return null;
-  const m = raw.match(UK_POSTCODE);
+  const m = UK_POSTCODE.exec(raw);
   const outward = m?.[1];
   const inward = m?.[2];
   if (outward === undefined || inward === undefined) return null;

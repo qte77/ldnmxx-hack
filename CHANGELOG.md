@@ -4,6 +4,19 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 015 — civic usecase expansion + real data
+
+- **`shared/*.ts` now linted (C, plan 015)** — the `shared/` security boundary (`guard.ts`,
+  `sanitize.ts`, the tool validators) was the last unlinted TS in the repo: ESLint 10 refuses files
+  above a config's own directory, so `worker/eslint.config.js` could never reach `../shared`. Added a
+  root `eslint.config.js` that re-uses the worker's strict ruleset (DRY) scoped via `basePath: "shared"`,
+  with the parser pinned to the worker tsconfig (which now includes `../shared`); wired into
+  `worker`'s `lint` script so CI gates it. Fixed the 6 findings — notably `isValidAssessResult` /
+  `isValidSearchResult` cast straight to `Partial<T>`, which told the type-checker the untrusted parsed
+  model JSON could never be `null` and made their null-guards look redundant; they now narrow before
+  casting (same runtime behaviour, guard preserved). Also `RegExp#exec` in `normalisePostcode` and a
+  complexity split of `isSelfContainedBatch`. No behaviour change (119 tests green).
+
 ## [1.1.0] - 2026-07-19
 
 Post-hackathon work on `main` (plans 013 + 014), after the v1.0.0 tag: the browser-BYOK security pivot, the

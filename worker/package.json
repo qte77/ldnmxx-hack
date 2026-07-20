@@ -12,7 +12,8 @@
     "deploy": "wrangler deploy --config wrangler.toml",
     "tail": "wrangler tail --format pretty",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . && npm run lint:shared",
+    "lint:shared": "cd .. && worker/node_modules/.bin/eslint shared",
     "test": "vitest run",
     "test:watch": "vitest"
   },

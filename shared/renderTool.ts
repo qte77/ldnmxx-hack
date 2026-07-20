@@ -17,6 +17,26 @@ export const RENDER_UI_TOOL = {
   },
 };
 
+// Record one component's defined id into `ids` and the child ids it references into `refs`
+// (Card.child + the first property's Column-style children.explicitList). Split out of
+// isSelfContainedBatch purely to keep that guard under the complexity budget — behaviour is identical.
+function collectComponentIds(comp: unknown, ids: Set<string>, refs: string[]): void {
+  const c = comp as {
+    id?: unknown;
+    component?: Record<string, { child?: unknown; children?: { explicitList?: unknown } }>;
+  };
+  if (typeof c.id === "string") ids.add(c.id);
+  if (!c.component) return;
+  const props = Object.values(c.component)[0];
+  const card = c.component.Card;
+  if (card && typeof card.child === "string") refs.push(card.child);
+  const list = props?.children?.explicitList;
+  if (!Array.isArray(list)) return;
+  for (const x of list) {
+    if (typeof x === "string") refs.push(x);
+  }
+}
+
 // Structural self-containment guard: root defined + in ids, every referenced child id (Card.child +
 // Column explicitList) defined. Mirrors worker/test's assertSelfContained and ui/'s contract re-check.
 export function isSelfContainedBatch(batch: unknown): batch is unknown[] {
@@ -32,19 +52,7 @@ export function isSelfContainedBatch(batch: unknown): batch is unknown[] {
     if (typeof m.beginRendering?.root === "string") root = m.beginRendering.root;
     const comps = m.surfaceUpdate?.components;
     if (!Array.isArray(comps)) continue;
-    for (const comp of comps) {
-      const c = comp as {
-        id?: unknown;
-        component?: Record<string, { child?: unknown; children?: { explicitList?: unknown } }>;
-      };
-      if (typeof c.id === "string") ids.add(c.id);
-      if (!c.component) continue;
-      const props = Object.values(c.component)[0];
-      const card = c.component.Card;
-      if (card && typeof card.child === "string") refs.push(card.child);
-      const list = props?.children?.explicitList;
-      if (Array.isArray(list)) for (const x of list) if (typeof x === "string") refs.push(x);
-    }
+    for (const comp of comps) collectComponentIds(comp, ids, refs);
   }
   if (!root || !ids.has(root)) return false;
   return refs.every((r) => ids.has(r));
