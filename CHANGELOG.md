@@ -6,6 +6,12 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Plan 015 — civic usecase expansion + real data
 
+- **Chain: dropped the GitHub Models tier (#127)** — the third keyless free provider
+  (`models.github.ai`, `openai/gpt-4o-mini`) **retires 2026-07-30**, after which it would 404 and cost a
+  guaranteed-fail round-trip on every keyless run before falling through. Removed `githubModelsProvider`,
+  `GITHUB_MODELS_BASE`, `DEFAULT_GITHUB_MODEL`, the `githubToken`/`githubModel` build options, and the
+  `GITHUB_MODELS_TOKEN`/`GITHUB_MODEL` env + `.dev.vars.example` entries. The keyless chain is now two
+  tiers (Workers AI → OpenRouter :free); BYOK and the deterministic stub are unchanged. 131 tests green.
 - **Engine: a corpus usecase is now register-only (W1, #80)** — the per-workflow render mode `care` and
   query exec `fetch_care_services` are replaced by a **generic `corpus` mode + `query_corpus` exec
   parameterised by a corpus id** carried on the stage def. Adding a deterministic corpus workflow

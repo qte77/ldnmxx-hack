@@ -27,7 +27,7 @@ export interface ModelToolResult<T> {
   usage: { promptTokens?: number | undefined; completionTokens?: number | undefined; totalTokens?: number | undefined };
 }
 
-// The OpenAI-compatible chat-completions response shape we consume (OpenRouter, GitHub Models, and —
+// The OpenAI-compatible chat-completions response shape we consume (OpenRouter :free/BYOK, and —
 // same shape — Cloudflare Workers AI's ChatCompletions output).
 export interface ORResponse {
   choices?: { message?: { tool_calls?: { function?: { name?: string; arguments?: string } }[] } }[];

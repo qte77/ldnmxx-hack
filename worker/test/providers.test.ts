@@ -2,7 +2,6 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   workersAiProvider,
   openRouterFreeProvider,
-  githubModelsProvider,
   renderFree,
   runChain,
   buildProviders,
@@ -25,7 +24,7 @@ const goodBatch = [
   },
 ];
 
-// OpenAI-compatible tool-call response (OpenRouter / GitHub Models / Workers AI ChatCompletions all share it).
+// OpenAI-compatible tool-call response (OpenRouter :free / Workers AI ChatCompletions share it).
 function toolOutput(batch: unknown): unknown {
   return {
     choices: [
@@ -91,12 +90,11 @@ describe("renderFree (first-valid-wins)", () => {
 describe("buildProviders", () => {
   it("includes only providers whose binding/secret is present, cheapest-first", () => {
     const ai = { run: vi.fn() } as unknown as Ai;
-    expect(buildProviders({ ai, openRouterKey: "k", githubToken: "t" }).map((p) => p.name)).toEqual([
+    expect(buildProviders({ ai, openRouterKey: "k" }).map((p) => p.name)).toEqual([
       "workers-ai",
       "openrouter-free",
-      "github-models",
     ]);
-    expect(buildProviders({ githubToken: "t" }).map((p) => p.name)).toEqual(["github-models"]);
+    expect(buildProviders({ openRouterKey: "k" }).map((p) => p.name)).toEqual(["openrouter-free"]);
     expect(buildProviders({}).map((p) => p.name)).toEqual([]);
   });
 });
@@ -126,11 +124,6 @@ describe("fetch-based providers reuse callRenderModel", () => {
   it("openrouter-free returns null when every model in the list fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) }));
     expect(await openRouterFreeProvider("k", ["a:free", "b:free"]).tryRender({ system: "s", user: "u" })).toBeNull();
-  });
-
-  it("github-models returns null on a non-2xx response", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) }));
-    expect(await githubModelsProvider("t", "m").tryRender({ system: "s", user: "u" })).toBeNull();
   });
 });
 
