@@ -30,7 +30,7 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 | W3 | Sort My Wander (#73) — free/obscure heritage discovery (Historic England / OSM / Wikidata) | ☐ to ship |
 | W4 | Real Care corpus (#13) — replace synthetic `data/care/*` with an ingested NHS directory + freshness | ☐ to ship |
 | W5 | Ingest cron (#10) — scheduled re-seed (CF Cron Trigger); pairs with the e2e Tier-3 monitor | ☐ to ship |
-| W6 | Data store (#13) — CF **D1** only if the corpus outgrows bundled JSON | ☐ to ship |
+| W6 | Data store (#13) — CF **D1** as the FOUNDATION for W4/W5 (no longer "only if forced") | ☐ to ship |
 | C | **014 carry-over** (small; do first / in parallel) — see below | ☐ to ship |
 
 ## Workstreams
@@ -54,8 +54,18 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 - **W5 · Ingest cron (#10).** A **CF Cron Trigger** (scheduled Worker) re-seeds the corpus on a cadence and
   records freshness. This is the natural home for a **Tier-3 e2e uptime monitor** too (run the sweep against
   the live URL on a schedule, write the verdict to KV / a status badge, alert on FAIL).
-- **W6 · Data store (#13).** If the ingested corpus outgrows a bundled JSON, move it to **CF D1**; the query
-  exec reads D1 instead of the JSON import. Only when W4 forces it (YAGNI until then).
+- **W6 · Data store (#13) — DECIDED: D1 is the foundation, not a contingency.** The chosen model is
+  **read-through-a-store**: the request path reads an in-house **CF D1** ONLY; sources are fetched
+  **out-of-band** on a cron + an explicit trigger. This is *more* aligned with the locked invariants than
+  live-per-request fetch — the hot path stays **fetch-free** (no SSRF/ToU/rate-limit online), **secrets stay
+  off the hot path** (only the ingester holds source keys), `asOf` becomes a real ingest timestamp, and
+  ToU-gated raw data lives server-side (never in git or the bundle). Use `wrangler d1 migrations` for
+  versioned schema and **one SQL view per corpus** (`care_signposts`, `wander_places`, …) projecting onto
+  the frozen `CorpusRecord` — **the view is the corpus contract in SQL**, so ingest-schema churn updates the
+  view, not the query code. W1 already returns `Promise` from query fns, so a `D1CorpusSource` is a drop-in;
+  the `CorpusSource` interface gets designed here, when a real second implementation exists (AHA).
+  **Ordering consequence:** W6 precedes or merges with W5 — a cron cannot write into a build-time static
+  JSON import, so the store must exist first.
 
 ## C — 014 carry-over (small; independent of the above)
 
@@ -67,16 +77,23 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
   pinned worker tsconfig project), chained into worker's `lint`. Fixing the findings surfaced a real
   bug — `isValidSearchResult` threw on `matches: [null]` — caused by a circular `as Partial<T>` cast.
   See `AGENT_LEARNINGS.md`.
-- **Release** — v1.1.0 **shipped** (#120: version + CHANGELOG `[1.1.0]` + README badge). Only
-  `git tag -a v1.1.0` + push remains (outward-facing — the user runs it).
+- **Release** — v1.1.0 **shipped** (#120) and the **tag is pushed** — annotated `v1.1.0` on the release
+  commit `8286890`, deliberately NOT `main` (which carries unreleased C/W1 work).
 - **axe-core in the e2e sweep** — inject axe for a concrete WCAG pass/fail (today: aria snapshot only).
 - **e2e Tier-2 handoff** — a committed `tests/e2e/runs.jsonl` manifest so an in-flight/long sweep resumes
   across sessions (summary.json already lands per run; #116).
 
 ## Order · conventions · verification
 
-- **Order:** C (carry-over, quick) → W1 (engine, unblocks the rest) → W2/W3 (new usecases) → W4/W5 (real
-  data + cron) → W6 (store, if forced). Each usecase adds its e2e sweep label + screenshots.
+- **Order (revised):** ~~C~~ ☑ → ~~W1~~ ☑ → **W3 Wander** → W2 Scam → W6/D1 foundation + W4/W5. Two
+  changes from the original: **W3 before W2** (Wander is nearest-N and therefore genuinely register-only,
+  so it proves W1 with zero engine TS; Scam is a *match* shape needing one new `query_scam` exec), and
+  **W6/D1 is no longer "only if forced"** — the decided data architecture makes it the foundation W4/W5
+  build on (see below). Each usecase adds its e2e sweep label + screenshots.
+- **Review backlog (not blocking W3):** #127 GitHub Models tier retires 2026-07-30 · #128 `asOf` freshness
+  depends on an unvalidated date format (fix before W4 — it is a trust claim) · #129 derive
+  `RENDER_MODES`/`STAGE_EXECS` from registry keys (closes ADR 0001's known minus) · #130 e2e assert On It
+  and record video in both orientations.
 - **Conventions (hard, unchanged from 014):** branch-per-topic → Conventional Commits → CI-gated PR →
   squash-merge `--admin` **only on green** → **prune**. `env -u GH_TOKEN -u GITHUB_TOKEN` · noreply ·
   `--no-gpg-sign` (rebase: `-c commit.gpgsign=false`) · SHA-pin Actions · **strict module-TDD** (tests first

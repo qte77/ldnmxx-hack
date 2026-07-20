@@ -20,8 +20,9 @@ the flagship from synthetic → real data. Tracker: **#113**.
 015 makes it *broader and real*: generalise the engine so a new corpus usecase is register-only
 (**W1**, #80); add **Sort My Scam Check** (#74) and **Sort My Wander** (#73); and replace the synthetic
 Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5**, #13/#10). Plus a small **014 carry-over**
-(S5 strictness, shared lint, axe-core, e2e Tier-2 manifest; **v1.1.0 release shipped** #120 — only the
-`git tag -a v1.1.0` push remains).
+(S5 strictness, shared lint, axe-core, e2e Tier-2 manifest; **v1.1.0 shipped** #120 and the
+`v1.1.0` tag is now pushed — it points at the release commit `8286890`, NOT `main`, which carries
+unreleased work).
 
 ## Progress (2026-07-20)
 
@@ -35,23 +36,42 @@ Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5
   out-of-band on a **cron + explicit trigger**, with **migrations** for schema and **one view per corpus**
   projecting onto `CorpusRecord`. This promotes W6/D1 from "only if forced" to the foundation W4/W5 build
   on.
-- Remaining C: S5 knobs (each its own PR), axe-core in the sweep, `runs.jsonl`, and the `v1.1.0` tag push
-  (the user runs that).
+- ☑ **e2e now asserts the flagship** — #126. The sweep clicked the CTA but never typed a postcode and
+  asserted nothing, so a broken `query_corpus`/corpus-render would still have PASSED. It now types
+  `SW9 9SL` and requires the summary + `data as of` + disclaimer markers, per config.
+- ☑ **Deployed + verified live** — Pages + Worker on `sortmy.london`; the corpus seam renders real rows
+  (`3 services near SW9 9SL · data as of 2026-06-01`) on all 5 configs, 0 console errors, 0 model-host hits.
+- ☑ **`v1.1.0` tag pushed** (on `8286890`, the release commit).
+- Remaining C: S5 knobs (each its own PR), axe-core in the sweep, `runs.jsonl` manifest.
 
 ## Queue & order
 
-`C` 014 carry-over (quick — S5 knobs each its own PR · shared lint · push the v1.1.0 tag · axe-core · e2e runs.jsonl)
-→ `W1` engine general query-stage + manifest (#80, unblocks the rest) → `W2` Scam (#74) · `W3` Wander (#73)
-→ `W4` real Care corpus (#13) · `W5` ingest cron (#10) → `W6` D1 store (only if the corpus outgrows JSON).
+~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ → **`W3` Wander (#73) ← START HERE** · `W2` Scam (#74)
+→ `W6`/D1 foundation + `W4` real Care corpus (#13) · `W5` ingest cron (#10).
 
-## First actions
+**W3 before W2** (swapped from the original order): Wander is nearest-N, so it is genuinely register-only
+and proves W1 end-to-end with zero engine TS. Scam is a *match* shape and needs one new `query_scam` exec,
+so it is no longer the cheaper of the two.
 
-1. This plan+handoff are step 0 — commit on `docs/015-plan-handoff`, PR, squash-merge on green, prune.
-2. Cheapest win first: knock out a **C** item (e.g. `shared/*.ts` lint or pushing the v1.1.0 tag), then
-   start **W1** (the engine generalisation) since W2/W3 depend on it.
-3. For each new usecase: register a render/query mode in `worker/src/workflows.ts`, a `usecases/<id>.json`,
-   and a corpus; add a `ui/src/App.tsx` `USECASES` entry (civic ones surface; demos stay `?usecase=`); add
-   an e2e sweep label. Keep `runUsecase`/`renderBatch` closed (open/closed).
+## First actions — resume at W3 (Sort My Wander, #73)
+
+**The add-a-usecase recipe below CHANGED in W1.** Do NOT add a render mode or query exec — that is
+exactly what #80 removed. A nearest-N corpus usecase is now register-only:
+
+1. **Corpus** — `data/wander/{places,postcodes}.sample.json` matching `CorpusRecord`
+   (`id/name/authority/why/officialUrl/lastUpdated` + `lat/lng`). Keyless sources: Historic England NHLE,
+   OSM Overpass, Wikidata, OS Open Greenspace. Synthetic + committed; real/scraped stays ToU-gated.
+2. **Register** — one entry in `worker/src/corpus/registry.ts`: `records`, `postcodes`, and `labels`
+   (`noun: "place"`, a `summaryLine`, the **curated** `officialLink`, and the two empty-state hints).
+   Do NOT cast the JSON imports — left uncast, the data is structurally *checked* against `CorpusRecord`,
+   so a malformed row is a compile error rather than a silently-asserted shape.
+3. **Usecase JSON** — `usecases/sort-my-wander.json`: `"render": { "mode": "corpus" }` + a tool stage
+   `"exec": "query_corpus", "corpus": "wander"`; add the import + entry to the `usecases.ts` registry map.
+   An unregistered corpus id is a **startup error**, so a typo fails loudly.
+4. **UI** — a `USECASES` entry in `ui/src/App.tsx` (`civic: true` to surface it).
+5. **Verify** — `make test` + `tsc` + `eslint` (worker+shared+ui) + markdownlint, then the e2e sweep.
+   **No new module tests**: the generic `queryCorpus`/`buildCorpusCards` are already covered, and a corpus
+   is data, not a module. Keep `runUsecase`/`renderBatch`/`cardsBatch` closed.
 
 ## Conventions (hard — unchanged)
 
@@ -74,12 +94,40 @@ Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5
 - **Worker is on TS 6** (typescript-eslint can't parse TS 7) — keep aligned with `ui`. Worker + ui are both
   strictTypeChecked + full strict tsconfig now; new code must pass on the first try.
 - **e2e** via `/workspaces/qte77/polyfetch-scrape/.venv/bin/python tests/e2e/ui_sweep.py <url> <label>` —
-  writes `results/<label>/summary.json` (verdict). Full local run needs the user's `CLOUDFLARE_API_TOKEN`
-  (worker AI binding); vite-only renders the landing; `_headers`/CSP only live after a Pages deploy.
+  writes `results/<label>/summary.json` (verdict). Since #126 it **types a postcode and asserts the Care
+  flagship renders**, so it now REQUIRES a running Worker (`make dev` or a deployed target) — a vite-only
+  run serves the landing page and correctly fails. `_headers`/CSP only live after a Pages deploy.
+- **ESLint 10 cannot lint files above its config dir** (`basePath` only scopes *downward*), and the typed
+  project *service* walks UP from each file. Hence the root `eslint.config.js` for `shared/`. Do not
+  blanket-inherit a consumer's rule relaxations into the security boundary. See `AGENT_LEARNINGS.md`.
+- **Never cast untrusted input to `as Partial<T>`** — it asserts the field types you are trying to verify,
+  makes real null-guards look redundant, and hid a live throw (#124). Narrow, then use
+  `Record<string, unknown>`.
 - **Deploy = Pages-only for UI changes**: `wrangler pages deploy ui/dist --project-name sortmy-london
   --branch main`. Worker-route re-assert wants Zone→Workers-Routes→Edit (else benign code 10000).
 
+## Backlog from the 015 review (not blocking W3)
+
+Dated / trust-critical first:
+
+- **#127 · GitHub Models tier retires 2026-07-30** — delete the third free-chain tier before it becomes a
+  guaranteed-fail round-trip. Time-boxed.
+- **#128 · `asOf` freshness depends on an unvalidated date format** — `lastUpdated.sort()[0]` is only
+  chronological because the samples are ISO `YYYY-MM-DD`. W4's real ingest could silently break the
+  "data as of …" trust claim. Fix at the ingest boundary **before** W4 exists.
+- **#129 · derive `RENDER_MODES`/`STAGE_EXECS` from the registry keys** — closes ADR 0001's known
+  "two sources of truth" minus, which W1 only half-fixed (corpus ids are validated; the mode/exec
+  constants are still hand-maintained).
+- **#130 · e2e: assert On It + record video in both orientations** — On It has the same unasserted hole
+  #126 just fixed for Care; video is currently desktop-only.
+
+Lower value: `docs/submission.md` is a stale v1.0.0 deck (references `runStages`/KV/`UsecaseInspector` —
+none exist) and holds the only roadmap content; dead `category` field in the care corpus; reserved-unread
+env vars (`CF_ACCOUNT_ID`, `CF_GATEWAY_ID`, `COMPANIES_HOUSE_KEY`); the `renderTool`/`incorporate` shape
+casts (improvable, not unsafe); `eslint-plugin-security` (S5) lands most valuably on `shared/`.
+
 ## Open / context
 
-`sortmy.london` live (014 in). `MEMORY.md` at repo root = stray auto-memory (gitignored, #116; do not
-commit). Legacy-showcase issues closed in 014 triage; the civic-relevant backlog is this plan / #113.
+`sortmy.london` live (014 + 015·C/W1 in, deployed + e2e-verified). Legacy-showcase issues closed in 014
+triage; the civic-relevant backlog is this plan / #113. Note #116 is a merged **PR**, not an open issue —
+the stray root `MEMORY.md` gitignore already landed there.
