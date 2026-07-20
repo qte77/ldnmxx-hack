@@ -47,8 +47,10 @@ export const SEARCH_OPPORTUNITIES_TOOL = {
 // invented ids), each with a numeric score + a whyItFits string. An empty/invalid result falls back to the
 // canned pre-scored cards (never worse than today).
 export function isValidSearchResult(value: unknown, allowedIds: readonly string[]): value is SearchResult {
+  // Reject non-objects (incl. null) FIRST so the cast below is honest — see assessTool.ts.
+  if (typeof value !== "object" || value === null) return false;
   const v = value as Partial<SearchResult>;
-  if (!v || typeof v.reasoning !== "string" || !Array.isArray(v.matches) || v.matches.length === 0) {
+  if (typeof v.reasoning !== "string" || !Array.isArray(v.matches) || v.matches.length === 0) {
     return false;
   }
   const allowed = new Set(allowedIds);

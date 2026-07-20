@@ -33,9 +33,12 @@ export interface AssessResult {
 // Structural guard: reasoning + a known stage + a string[] of unlock steps. Reject anything else so the
 // caller falls back to the canned stage text (never worse than today).
 export function isValidAssessResult(value: unknown): value is AssessResult {
+  // Reject non-objects (incl. null) FIRST so the cast below is honest — casting straight to
+  // Partial<AssessResult> would tell the type-checker the value can't be null and silently
+  // strip this guard, even though the input is untrusted parsed model JSON.
+  if (typeof value !== "object" || value === null) return false;
   const v = value as Partial<AssessResult>;
   return (
-    !!v &&
     typeof v.reasoning === "string" &&
     typeof v.stage === "string" &&
     (STAGES as readonly string[]).includes(v.stage) &&
