@@ -1,6 +1,7 @@
 import foundersJson from "../../usecases/founders-copilot.json";
 import onitJson from "../../usecases/on-it.json";
 import sortMyCareJson from "../../usecases/sort-my-care.json";
+import { corpusIds } from "./corpus/registry";
 
 // A usecase is pure data: the plan/tool stage choreography (played verbatim over SSE) plus a render
 // `mode` naming which code path builds the final A2UI card batch. Prompts, card builders and the model
@@ -14,16 +15,19 @@ export interface AgentEvent {
 // dispatched by the workflows.ts registry in runUsecase: MODEL execs (assess_stage/search_opportunities)
 // run a forced tool on the keyless free-chain — any miss falls back to the canned events; QUERY execs
 // (fetch_care_services) run a deterministic corpus query regardless of whether a model provider exists.
-export type StageExec = "assess_stage" | "search_opportunities" | "fetch_care_services";
-export const STAGE_EXECS: StageExec[] = ["assess_stage", "search_opportunities", "fetch_care_services"];
+export type StageExec = "assess_stage" | "search_opportunities" | "query_corpus";
+export const STAGE_EXECS: StageExec[] = ["assess_stage", "search_opportunities", "query_corpus"];
 
 export interface StageDef {
   name: string;
   kind: string;
   events: AgentEvent[];
   exec?: StageExec;
+  // Which registered corpus a `query_corpus` stage reads (see corpus/registry.ts). Required for that
+  // exec, unused by the others — validated at load time so a typo fails loudly at startup.
+  corpus?: string;
 }
-export type RenderMode = "founders" | "route" | "care";
+export type RenderMode = "founders" | "route" | "corpus";
 export interface RenderDef {
   mode: RenderMode;
 }
@@ -34,7 +38,7 @@ export interface UsecaseDef {
   stages: StageDef[];
 }
 
-const RENDER_MODES: RenderMode[] = ["founders", "route", "care"];
+const RENDER_MODES: RenderMode[] = ["founders", "route", "corpus"];
 
 // Narrow to unknown[] (not the any[] that Array.isArray infers, which would defeat the type-safety lints).
 const isArray = (v: unknown): v is unknown[] => Array.isArray(v);
@@ -49,16 +53,28 @@ function assertStageNames(id: string, stages: unknown[]): void {
   }
 }
 
+// A `query_corpus` stage must name a REGISTERED corpus. Without this a typo'd id would surface as a
+// silently empty card batch at request time; here it is a clear startup error instead.
+function assertStageCorpus(id: string, exec: unknown, corpus: unknown): void {
+  if (exec !== "query_corpus") return;
+  if (typeof corpus !== "string" || !corpusIds.includes(corpus)) {
+    throw new Error(
+      `usecase ${id}: a query_corpus stage needs corpus to be one of ${corpusIds.join(", ")}`
+    );
+  }
+}
+
 // TS-engine extras: each stage needs a kind + an events array; exec, if present, must be a known op.
 function assertStageShapes(id: string, stages: unknown[]): void {
   for (const s of stages) {
-    const stage = s as { kind?: unknown; events?: unknown; exec?: unknown };
+    const stage = s as { kind?: unknown; events?: unknown; exec?: unknown; corpus?: unknown };
     if (typeof stage.kind !== "string" || !isArray(stage.events)) {
       throw new Error(`usecase ${id}: every stage needs kind and an events array`);
     }
     if (stage.exec !== undefined && !STAGE_EXECS.includes(stage.exec as StageExec)) {
       throw new Error(`usecase ${id}: stage.exec must be one of ${STAGE_EXECS.join(", ")}`);
     }
+    assertStageCorpus(id, stage.exec, stage.corpus);
   }
 }
 

@@ -6,6 +6,19 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Plan 015 — civic usecase expansion + real data
 
+- **Engine: a corpus usecase is now register-only (W1, #80)** — the per-workflow render mode `care` and
+  query exec `fetch_care_services` are replaced by a **generic `corpus` mode + `query_corpus` exec
+  parameterised by a corpus id** carried on the stage def. Adding a deterministic corpus workflow
+  (Wander #73, Scam #74 next) now needs **no engine TS**: one `worker/src/corpus/registry.ts` entry
+  (records + postcodes + curated labels), a `usecases/<id>.json`, and a UI entry —
+  `runUsecase`/`renderBatch`/`cardsBatch` stay closed. The query pre-formats each row's display line, so
+  the render is shape-agnostic and a future match-shaped workflow reuses it verbatim; the curated
+  official link moved out of a hardcoded constant into per-corpus labels. A `query_corpus` stage naming
+  an unregistered corpus is now a **startup error** instead of a silently empty batch, and query fns
+  return a `Promise` so the W4 D1-backed source is a drop-in with no seam change. Sort My Care is
+  migrated to the generic path (same output); the bespoke `worker/src/care/*` is deleted. 132 tests
+  green, including an end-to-end proof that a corpus usecase runs from its def alone.
+
 - **`shared/*.ts` now linted (C, plan 015)** — the `shared/` security boundary (`guard.ts`,
   `sanitize.ts`, the tool validators) was the last unlinted TS in the repo: ESLint 10 refuses files
   above a config's own directory, so `worker/eslint.config.js` could never reach `../shared`. Added a

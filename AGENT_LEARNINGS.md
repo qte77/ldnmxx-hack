@@ -20,6 +20,30 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
 - **Refs:** PR #99 (deploy) + #102 (route tolerance); the `dev` script needs the same fix;
   `scripts/provision_cf.sh`.
 
+## ESLint 10 cannot lint files above its config; a `Partial<T>` cast hides real guards
+
+- **Pattern (config):** `worker/eslint.config.js` could never lint `../shared/*.ts` — ESLint 10
+  resolves a config's base path from the config file's own directory and **refuses files above
+  it**, and `basePath` only scopes *downward*. The typed-lint project **service** compounds it by
+  locating a project by walking **up** from each file, and `shared/` has no tsconfig above it. So
+  the "clean root, no root package manifest" layout leaves shared code structurally unlintable.
+- **Fix:** a **root** `eslint.config.js` that imports the worker's ruleset by relative path (so its
+  bare deps still resolve from `worker/node_modules` — no root `package.json` needed), scoped with
+  `basePath: "shared"`, and the parser pinned to the classic `project: ["./worker/tsconfig.json"]`
+  (which must `include` `../shared`) instead of `projectService`. Chain it into worker's `lint`
+  script so CI gates it with no ci.yml change. **Do not blanket-inherit the consumer's rule
+  relaxations** into a security boundary — re-enable them explicitly.
+- **Pattern (types):** casting untrusted parsed JSON straight to `as Partial<T>` asserts the very
+  field types the validator exists to verify. It is circular: the type-checker then reports the real
+  runtime null-guards as `no-unnecessary-condition`, and deleting them is a security regression. It
+  hid a live bug — `isValidSearchResult` **threw** on `matches: [null]` instead of returning `false`.
+- **Fix:** narrow (`typeof x !== "object" || x === null`) then cast to **`Record<string, unknown>`** —
+  a *bridging* cast that asserts nothing about values, so every `typeof` check does real work. Prefer
+  *widening* casts (`STAGES as readonly string[]`) over *assuming* ones. Guard each element of an
+  untrusted array too. Also drop unnecessary casts on bundled JSON imports so the data is structurally
+  **checked** against its interface rather than asserted.
+- **Refs:** PR #123 (root config) + #124 (validator hardening, +2 tests), issue #122.
+
 ## Verify on the live target, not mocks or localhost
 
 - **Pattern:** "Deploy done" was assumed but the site still served the previous build (a

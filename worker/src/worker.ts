@@ -335,8 +335,9 @@ async function playStage(
   const queryFn = stage.exec ? registry.query[stage.exec] : undefined;
   if (queryFn) {
     // Deterministic query stage (model-free, fetch-free): compute render data over the bundled corpus, then
-    // narrate via the canned events regardless of whether a model provider exists.
-    const queryData = queryFn({ prompt: ctx.prompt });
+    // narrate via the canned events regardless of whether a model provider exists. Awaited so a
+    // D1-backed corpus source can slot in at W4 without changing this dispatch.
+    const queryData = await queryFn({ prompt: ctx.prompt, corpus: stage.corpus });
     await playCanned(stage, write, paceMs);
     emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
     return { queryData };

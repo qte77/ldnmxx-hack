@@ -13,7 +13,7 @@ One endpoint: `POST /run?usecase=<id>`. Render = **built-in A2UI cards** (AG Gri
 {
   "id": "founders-copilot",
   "title": "Founder's Copilot",
-  "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned) | "care" (deterministic corpus query)
+  "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned) | "corpus" (generic deterministic corpus query)
   "stages": [
     { "name": "plan", "kind": "plan", "events": [
       { "type": "STEP_STARTED", "text": "understand the idea" },
@@ -32,18 +32,26 @@ span. Adding a JSON (plus its render mode, if new) adds a workflow.
 ## How to add a workflow (the general engine)
 
 Dispatch is table-driven via `worker/src/workflows.ts` (`registry.render` by `mode`, `registry.query` by
-`exec`). **Adding a deterministic corpus workflow never edits `runUsecase`/`renderBatch`:**
+`exec`). Since #80 the corpus mode + exec are **generic over a corpus id**, so a deterministic corpus
+workflow is **register-only** — no new mode, no new exec, and no edit to
+`runUsecase`/`renderBatch`/`cardsBatch`:
 
 1. **Corpus** — hand-authored synthetic `data/<workflow>/*.json` (real ingest + CF D1 are follow-ups).
-2. **Query** (optional) — a deterministic `(input) => data` fn; register it in `registry.query` under a new
-   `exec` and add that `exec` to `STAGE_EXECS` in `usecases.ts`. Model-free + fetch-free (the input's
-   security boundary is a small validator, e.g. `shared/sanitize.ts`).
-3. **Render** — a `(data) => a2uiBatch` fn reusing `cardsBatch` + `appendDisclaimer`; register it in
-   `registry.render` under a new `mode` and add that `mode` to `RENDER_MODES`.
-4. **Usecase JSON** — `usecases/<id>.json` (`render.mode`, a `plan` stage + a `tool` stage naming the
-   `exec`); register it in `usecases.ts`.
-5. **Tests** — unit-test the load-bearing modules (query/render); integration-test `/run?usecase=<id>` in
-   `run.test.ts`. The `usecases.contract.test.ts` ajv check runs automatically over the new JSON.
+2. **Register it** — one entry in `worker/src/corpus/registry.ts`: `records` + `postcodes` + `labels`
+   (noun, summary line, the **curated** official link, and the two empty-state hints). The official link
+   lives here in reviewed TS, never in usecase JSON.
+3. **Usecase JSON** — `usecases/<id>.json` with `"render": { "mode": "corpus" }` and a `tool` stage
+   `"exec": "query_corpus", "corpus": "<id>"`; add the import + entry to the `usecases.ts` registry map.
+   An unregistered `corpus` id is a **startup error**, not a silently empty batch.
+4. **UI** — a `USECASES` entry in `ui/src/App.tsx` (civic ones surface; demos stay `?usecase=`).
+5. **Tests** — the generic `queryCorpus`/`buildCorpusCards` modules are already covered
+   (`corpus.test.ts`, `corpus.render.test.ts`); a new corpus is data, so it needs no new module tests.
+   The `usecases.contract.test.ts` ajv check runs automatically over the new JSON.
+
+Only a genuinely new *retrieval shape* (e.g. a name/number match rather than nearest-N) needs code: a new
+`QueryFn` registered under a new `exec`. It reuses the same `corpus` render, because each row carries its
+own pre-formatted display line. Query fns return a `Promise` so a D1-backed corpus can replace the bundled
+JSON without touching the seam.
 
 Deterministic workflows report `USAGE mode:demo` (honest — not a degraded `stub`) and each stage emits an
 Arize span (`run`/`plan`/`query`/`render`). See **Sort My Care** below and ADR
@@ -155,9 +163,10 @@ RUN  /run?usecase=on-it   (voice: "step-free from E8 3GT to Westminster")
 
 ## Sort My Care (deterministic corpus signpost)
 
-**Shipped (this PR, #72):** a **model-free + fetch-free** workflow on the general engine —
-`render.mode:"care"`, a `plan` stage + a `tool` stage (`exec:"fetch_care_services"`). The proof that
-adding a corpus workflow is register + a JSON, not an engine edit.
+**Shipped (#72; generalised in #80):** a **model-free + fetch-free** workflow on the general engine —
+`render.mode:"corpus"`, a `plan` stage + a `tool` stage (`exec:"query_corpus"`, `corpus:"care"`). The
+proof that adding a corpus workflow is register-only, not an engine edit — Care is now just the first
+entry in the corpus registry.
 
 **User:** any Londoner who needs a nearby public health/care service (GP, pharmacy, urgent care, dentist,
 mental health).
@@ -165,17 +174,19 @@ mental health).
 ```
 RUN  /run?usecase=sort-my-care   (postcode as the run prompt, e.g. "SW9 9SL")
   plan(read your postcode)
-    → tool(fetch_care_services)  → deterministic query: normalise postcode → nearest-N over the corpus
-      → render(care cards: nearest services · distance · why · official link · freshness + disclaimer)
+    → tool(query_corpus, corpus=care)  → deterministic query: normalise postcode → nearest-N over the corpus
+      → render(corpus cards: nearest services · distance · why · official link · freshness + disclaimer)
 ```
 
-- **Query** — `worker/src/care/careServices.ts`: `shared/sanitize.ts` normalises the postcode (the security
-  boundary; **no SSRF** — no external fetch), `worker/src/geo.ts` does haversine + nearest-N over the bundled
-  **synthetic** corpus (`data/care/services.sample.json` + `postcodes.sample.json`). Invalid/unknown postcode
-  → a graceful "enter a valid postcode" / "none nearby" state.
-- **Render** — `worker/src/care/render.ts` `buildCareCards` reuses `cardsBatch` + `appendDisclaimer`: a
-  summary card (count + "data as of &lt;lastUpdated&gt;"), one card per service, and a curated
-  "confirm with the official source" disclaimer (real NHS link, **never** generated).
+- **Query** — `worker/src/corpus/query.ts` `queryCorpus`: resolves the corpus by id, `shared/sanitize.ts`
+  normalises the postcode (the security boundary; **no SSRF** — no external fetch), `worker/src/geo.ts`
+  does haversine + nearest-N over the bundled **synthetic** corpus (`data/care/services.sample.json` +
+  `postcodes.sample.json`). Each row's secondary line (`"NHS A · 0.4 km"`) is formatted HERE, so the render
+  never sees a distance. Invalid/unknown postcode → a graceful "enter a valid postcode" / "none nearby" state.
+- **Render** — `worker/src/corpus/render.ts` `buildCorpusCards` reuses `cardsBatch` + `appendDisclaimer`: a
+  summary card (count + "data as of &lt;lastUpdated&gt;"), one card per row, and a curated
+  "confirm with the official source" disclaimer — the link comes from the corpus's `labels.officialLink`
+  (real NHS link for Care, **never** generated).
 - **Honesty** — the run reports `USAGE mode:demo` (deterministic, not a degraded stub); freshness is shown in
   the render; it **signposts**, never triages/adjudicates. Real ingest + CF D1 (#13) are follow-ups.
 
