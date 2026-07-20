@@ -45,4 +45,14 @@ describe("search_opportunities tool", () => {
     expect(isValidSearchResult({ matches: [{ id: "demo-001", score: 1, whyItFits: "y" }] }, ids)).toBe(false); // no reasoning
     expect(isValidSearchResult({ reasoning: "x", matches: [{ id: "demo-001", whyItFits: "y" }] }, ids)).toBe(false); // no score
   });
+  // Untrusted model JSON: a non-object anywhere in the payload must be REJECTED, never thrown on —
+  // the caller relies on a boolean to fall back to the canned cards.
+  it("rejects a non-object result without throwing", () => {
+    expect(isValidSearchResult(null, ids)).toBe(false);
+    expect(isValidSearchResult("nope", ids)).toBe(false);
+  });
+  it("rejects a non-object match element without throwing", () => {
+    expect(isValidSearchResult({ reasoning: "x", matches: [null] }, ids)).toBe(false);
+    expect(isValidSearchResult({ reasoning: "x", matches: ["demo-001"] }, ids)).toBe(false);
+  });
 });

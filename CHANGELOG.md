@@ -16,6 +16,15 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
   model JSON could never be `null` and made their null-guards look redundant; they now narrow before
   casting (same runtime behaviour, guard preserved). Also `RegExp#exec` in `normalisePostcode` and a
   complexity split of `isSelfContainedBatch`. No behaviour change (119 tests green).
+- **Fixed: malformed model output could crash the search validator (C, plan 015)** — `isValidSearchResult`
+  threw `TypeError: Cannot read properties of null` on a `matches: [null]` payload instead of returning
+  `false`, so an untrusted model response could fault the run rather than fall back to the canned cards.
+  Root cause was a *circular* cast: `value as Partial<T>` asserts the very field types the validator
+  exists to verify, so the type-checker believed the elements could never be null and no guard was
+  written. Both validators now narrow to `Record<string, unknown>` before reading — every property is
+  `unknown`, so each `typeof` check does real work — and each `matches` element is object-guarded.
+  `shared/` also no longer inherits the worker's ESLint relaxations (`no-non-null-assertion`,
+  `no-confusing-void-expression`): the security boundary is now a strict superset (121 tests green).
 
 ## [1.1.0] - 2026-07-19
 
