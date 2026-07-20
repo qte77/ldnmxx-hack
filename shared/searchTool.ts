@@ -46,16 +46,23 @@ export const SEARCH_OPPORTUNITIES_TOOL = {
 // Structural guard: reasoning + a NON-EMPTY matches array whose every id is in the candidate set (rejects
 // invented ids), each with a numeric score + a whyItFits string. An empty/invalid result falls back to the
 // canned pre-scored cards (never worse than today).
+// Narrow to unknown[], not the any[] Array.isArray infers (which would defeat the type-safety lints).
+const isArray = (v: unknown): v is unknown[] => Array.isArray(v);
+
 export function isValidSearchResult(value: unknown, allowedIds: readonly string[]): value is SearchResult {
-  // Reject non-objects (incl. null) FIRST so the cast below is honest — see assessTool.ts.
+  // Narrow to a plain object, then read every property as `unknown` — see assessTool.ts for why
+  // casting to Partial<SearchResult> here would be circular.
   if (typeof value !== "object" || value === null) return false;
-  const v = value as Partial<SearchResult>;
-  if (typeof v.reasoning !== "string" || !Array.isArray(v.matches) || v.matches.length === 0) {
+  const v = value as Record<string, unknown>;
+  if (typeof v.reasoning !== "string" || !isArray(v.matches) || v.matches.length === 0) {
     return false;
   }
   const allowed = new Set(allowedIds);
   return v.matches.every((m) => {
-    const mm = m as Partial<OpportunityMatch>;
+    // Each element is untrusted too: a null/primitive here used to throw on `.id` rather than
+    // reject, because the Partial<OpportunityMatch> cast asserted it could never be null.
+    if (typeof m !== "object" || m === null) return false;
+    const mm = m as Record<string, unknown>;
     return (
       typeof mm.id === "string" &&
       allowed.has(mm.id) &&

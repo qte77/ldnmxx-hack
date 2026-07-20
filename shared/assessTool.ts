@@ -30,19 +30,24 @@ export interface AssessResult {
   unlock: string[];
 }
 
+// Narrow to unknown[], not the any[] Array.isArray infers (which would defeat the type-safety lints).
+// Same pattern as worker/src/usecases.ts.
+const isArray = (v: unknown): v is unknown[] => Array.isArray(v);
+
 // Structural guard: reasoning + a known stage + a string[] of unlock steps. Reject anything else so the
 // caller falls back to the canned stage text (never worse than today).
 export function isValidAssessResult(value: unknown): value is AssessResult {
-  // Reject non-objects (incl. null) FIRST so the cast below is honest — casting straight to
-  // Partial<AssessResult> would tell the type-checker the value can't be null and silently
-  // strip this guard, even though the input is untrusted parsed model JSON.
+  // Narrow to a plain object, then read every property as `unknown`. Casting straight to
+  // Partial<AssessResult> would assert the very field types this function exists to VERIFY —
+  // circular, and it convinces the type-checker the runtime guards are redundant when the input
+  // is untrusted parsed model JSON.
   if (typeof value !== "object" || value === null) return false;
-  const v = value as Partial<AssessResult>;
+  const v = value as Record<string, unknown>;
   return (
     typeof v.reasoning === "string" &&
     typeof v.stage === "string" &&
     (STAGES as readonly string[]).includes(v.stage) &&
-    Array.isArray(v.unlock) &&
+    isArray(v.unlock) &&
     v.unlock.every((u) => typeof u === "string")
   );
 }
