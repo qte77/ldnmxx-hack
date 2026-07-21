@@ -43,6 +43,17 @@ const USECASES = [
     civic: true,
   },
   {
+    id: "sort-my-scam-check",
+    label: "Sort My Scam Check",
+    headline: "Check a firm before you trust it",
+    blurb: "Enter a firm name or its FCA reference (FRN) to see its register status — a flag to investigate, never a verdict. Always confirm on the FCA register.",
+    placeholder: "Firm name or FCA reference (FRN)",
+    example: "Thames Capital Partners",
+    cta: "Check this firm",
+    switchLabel: "Check a firm",
+    civic: true,
+  },
+  {
     id: "founders-copilot",
     label: "Founder's Copilot",
     headline: "Match grants to your idea",

@@ -1,5 +1,5 @@
 ---
-title: "Handoff 015 — C+W1+W3 shipped, H hardening 2/5; resume at W2 (Scam) or H3/H4 (taxonomy+retry)"
+title: "Handoff 015 — C+W1+W2+W3 shipped, H hardening 2/5; resume at W6/D1+W4 (real data) or H3/H4"
 type: handoff
 updated: 2026-07-21
 pairs_with: docs/plans/015-civic-usecase-expansion.md
@@ -26,6 +26,14 @@ unreleased work).
 
 ## Progress (2026-07-21)
 
+- ☑ **W2 · Sort My Scam Check (#74)** — #140. A **match-shape** usecase: a new `query_scam` exec + a
+  dedicated `scam` render mode (engine seam unchanged — no `playStage`/`runUsecase`/`renderBatch` edits;
+  the frozen geo `CorpusRecord` is untouched). Own `worker/src/scam/*` module reusing the geo-agnostic
+  `CorpusRow` + shared card primitives; **all honest copy is derived in reviewed code, never authored in
+  data** (so a data slip can't introduce a verdict). The clone flag is **deterministic** — it only
+  annotates look-alikes *among the search's own results* (shared name stem + differing FCA status), never
+  a fuzzy dataset-wide guess. Synthetic + **fictional** firms; curated FCA-register link; `mode:demo`.
+  Strict module-TDD (19 scam tests). e2e `flows.json` now covers scam (manifest field `postcode`→`query`).
 - ☑ **W3 · Sort My Wander (#73)** — #138. The register-only proof of W1: a nearest-N corpus usecase
   with **zero engine TS** (data + registry entry + usecase JSON + UI entry). Corpus is synthetic
   `data/wander/*.sample.json` (heritage + green space), curated Historic England official link. The
@@ -62,23 +70,26 @@ unreleased work).
 
 ## Queue & order
 
-~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ · ~~`W3` Wander (#73)~~ ☑ (#138) → **`W2` Scam (#74) ← START HERE**
-→ `W6`/D1 foundation + `W4` real Care corpus (#13) · `W5` ingest cron (#10).
+~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ · ~~`W3` Wander (#73)~~ ☑ (#138) · ~~`W2` Scam (#74)~~ ☑ (#140) →
+**`W6`/D1 foundation + `W4` real Care corpus (#13) ← START HERE** · `W5` ingest cron (#10).
 
 **W3 before W2** (swapped from the original order): Wander is nearest-N, so it is genuinely register-only
 and proves W1 end-to-end with zero engine TS. Scam is a *match* shape and needs one new `query_scam` exec,
 so it is no longer the cheaper of the two.
 
-## Resume — two ready options (both fully scoped)
+## Resume — two ready options
 
-- **W2 · Sort My Scam Check (#74)** — the civic next step. NOT register-only: Scam is a *match* shape,
-  so it needs one new `query_scam` exec + a `scam` corpus (Companies House / FCA), surfaced as a
-  flag-to-investigate, never a verdict. See the W2 workstream + add-a-usecase recipe in the plan.
+- **W6/D1 + W4 · real data foundation (#13)** — the decided data architecture: the request path reads an
+  in-house CF **D1** store; sources are fetched **out-of-band** on a cron + explicit trigger, with
+  migrations + one SQL view per corpus projecting onto the frozen `CorpusRecord`. W6/D1 precedes/merges
+  with W5 (a cron can't write a build-time JSON import). **Do H5 (#128 `asOf` date validation) BEFORE W4**
+  — it is a trust claim. See the W4/W5/W6 workstreams in the plan.
 - **H3/H4 · taxonomy + bounded retry (#134/#135)** — one PR, model-chain robustness; the entire design
   (polyfetch reuse, transient set, where it lands, test plan) is pre-written in the **plan's "H3/H4
   design" block** — implement straight from there, no re-derivation.
 
-Both are independent. ~~W3 Wander~~ ☑ shipped (#138) — the register-only proof of W1.
+Both are independent. ~~W3 Wander~~ ☑ (#138, register-only) · ~~W2 Scam~~ ☑ (#140, match-shape) — the two
+civic usecases 015 set out to add are now in.
 
 ## Register-only corpus recipe (shipped as W3 #138; the pattern for future nearest-N usecases)
 
