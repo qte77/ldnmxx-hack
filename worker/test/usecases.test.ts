@@ -62,6 +62,35 @@ describe("usecases guard", () => {
     expect(() => assertUsecaseDef(corpusDef("nope"))).toThrow(/query_corpus/);
     expect(() => assertUsecaseDef(corpusDef())).toThrow(/query_corpus/);
   });
+
+  // Strict schema at load (adopting azure-doc-workflows' extra="forbid", their ADR-0012): a misspelled
+  // OPTIONAL key would otherwise be silently dropped — e.g. "exex" leaves exec undefined, so the stage
+  // quietly plays canned events instead of running its query. Reject unknown keys instead.
+  it("rejects an unknown top-level key", () => {
+    expect(() => assertUsecaseDef({ ...validDef, mode: "founders" })).toThrow(/unknown/);
+    expect(() => assertUsecaseDef({ ...validDef, output: {} })).toThrow(/unknown/);
+  });
+
+  it("rejects an unknown stage key (the silent-typo case)", () => {
+    const withStrayKey = {
+      id: "x",
+      title: "X",
+      render: { mode: "founders" },
+      stages: [{ name: "plan", kind: "plan", events: [], exex: "assess_stage" }],
+    };
+    expect(() => assertUsecaseDef(withStrayKey)).toThrow(/unknown/);
+  });
+
+  it("still accepts a def that uses every allowed key", () => {
+    expect(() =>
+      assertUsecaseDef({
+        id: "x",
+        title: "X",
+        render: { mode: "corpus" },
+        stages: [{ name: "query", kind: "tool", exec: "query_corpus", corpus: "care", events: [] }],
+      })
+    ).not.toThrow();
+  });
 });
 
 // The one new-capability test: an arbitrary usecase def drives the engine end-to-end with zero code

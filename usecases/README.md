@@ -19,6 +19,12 @@ have to agree on a non-empty `id` + ordered, non-empty `stages[].name`; everythi
 `assertUsecaseDef`. `worker/test/usecases.contract.test.ts` validates every file here against the
 vendored schema (`worker/test/fixtures/contract/`, synced via `protocols/scripts/sync.sh`).
 
+`assertUsecaseDef` is **strict**: it rejects **unknown keys** at load (envelope `{id, title, render,
+stages}`, stage `{name, kind, events, exec, corpus}`), so a misspelled optional field fails loudly
+instead of being silently ignored. This is the TS engine's own strictness (adopting
+`azure-doc-workflows`' pydantic `extra="forbid"`); the *shared* `workflow-definition/v1` schema stays
+`additionalProperties:true` so cross-engine extras still pass — our usecases only carry TS fields.
+
 Schema (guarded at load):
 
 ```jsonc

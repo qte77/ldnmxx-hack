@@ -64,6 +64,10 @@ a query fn". This ADR is kept as the historical record — where the two differ,
   against the registry keys at load time, so that drift is caught at startup. The `RENDER_MODES`/
   `STAGE_EXECS` constants remain a second source of truth.
 - Query fns now return a `Promise`, so the W4 D1-backed source is a drop-in with no seam change.
+- **Strict load (#133):** `assertUsecaseDef` now also rejects **unknown keys** (adopting
+  `azure-doc-workflows`' `extra="forbid"`, their ADR-0012), so a misspelled optional field fails at
+  load rather than being silently ignored. This is the TS engine's own strictness only — the *shared*
+  `workflow-definition/v1` schema stays `additionalProperties:true` so cross-engine extras still pass.
 
 ## Consequences
 

@@ -6,6 +6,13 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Plan 015 — civic usecase expansion + real data
 
+- **Engine: strict usecase schema at load (#133)** — `assertUsecaseDef` now rejects **unknown keys**
+  (envelope `{id, title, render, stages}`, stage `{name, kind, events, exec, corpus}`), so a misspelled
+  optional field — e.g. `exex` — fails loudly at load instead of being silently dropped (which would
+  quietly play canned events instead of running the query). Adopts `azure-doc-workflows`' pydantic
+  `extra="forbid"` (their ADR-0012) as a *pattern*, reimplemented in idiomatic TS with no dependency; the
+  shared `workflow-definition/v1` schema stays `additionalProperties:true` so cross-engine extras pass.
+  134 tests green.
 - **Chain: dropped the GitHub Models tier (#127)** — the third keyless free provider
   (`models.github.ai`, `openai/gpt-4o-mini`) **retires 2026-07-30**, after which it would 404 and cost a
   guaranteed-fail round-trip on every keyless run before falling through. Removed `githubModelsProvider`,
