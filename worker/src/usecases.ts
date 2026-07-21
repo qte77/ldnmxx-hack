@@ -17,13 +17,13 @@ export interface AgentEvent {
 // dispatched by the workflows.ts registry in runUsecase: MODEL execs (assess_stage/search_opportunities)
 // run a forced tool on the keyless free-chain — any miss falls back to the canned events; QUERY execs
 // (fetch_care_services) run a deterministic corpus query regardless of whether a model provider exists.
-export type StageExec = "assess_stage" | "search_opportunities" | "query_corpus" | "query_scam";
-export const STAGE_EXECS: StageExec[] = [
-  "assess_stage",
-  "search_opportunities",
-  "query_corpus",
-  "query_scam",
-];
+// Single source of truth: the union type is DERIVED from this array (`as const`), so the two can no
+// longer drift — the old hand-maintained union + parallel array was ADR-0001's known "two sources of
+// truth" minus (#129). The workflows.ts `registry.query` is a Partial<Record<StageExec, QueryFn>>
+// (the MODEL execs assess_stage/search_opportunities run in runStageModel, not the registry), and tsc
+// locks that registry to this union.
+export const STAGE_EXECS = ["assess_stage", "search_opportunities", "query_corpus", "query_scam"] as const;
+export type StageExec = (typeof STAGE_EXECS)[number];
 
 export interface StageDef {
   name: string;
@@ -34,7 +34,10 @@ export interface StageDef {
   // exec, unused by the others — validated at load time so a typo fails loudly at startup.
   corpus?: string;
 }
-export type RenderMode = "founders" | "route" | "corpus" | "scam";
+// Same single-source pattern as STAGE_EXECS: the union is derived from this array, and tsc locks the
+// workflows.ts `registry.render` (a total Record<RenderMode, RenderFn>) to it.
+export const RENDER_MODES = ["founders", "route", "corpus", "scam"] as const;
+export type RenderMode = (typeof RENDER_MODES)[number];
 export interface RenderDef {
   mode: RenderMode;
 }
@@ -44,8 +47,6 @@ export interface UsecaseDef {
   render: RenderDef;
   stages: StageDef[];
 }
-
-const RENDER_MODES: RenderMode[] = ["founders", "route", "corpus", "scam"];
 
 // Allow-lists for the strict load guard below. Keep in sync with UsecaseDef / StageDef.
 const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages"];
