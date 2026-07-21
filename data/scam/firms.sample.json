@@ -1,0 +1,42 @@
+[
+  {
+    "id": "thames-llp",
+    "name": "Thames Capital Partners LLP",
+    "frn": "210987",
+    "chNumber": "OC345678",
+    "fcaStatus": "authorised",
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "thames-ltd",
+    "name": "Thames Capital Partners Ltd",
+    "frn": null,
+    "chNumber": "12876543",
+    "fcaStatus": "not-on-register",
+    "lastUpdated": "2026-05-20"
+  },
+  {
+    "id": "brixton-mutual",
+    "name": "Brixton Mutual Savings plc",
+    "frn": "308812",
+    "chNumber": "09112233",
+    "fcaStatus": "no-longer-authorised",
+    "lastUpdated": "2026-05-10"
+  },
+  {
+    "id": "camden-bridge",
+    "name": "Camden Bridge Advisers Ltd",
+    "frn": "455201",
+    "chNumber": "10233445",
+    "fcaStatus": "authorised",
+    "lastUpdated": "2026-06-10"
+  },
+  {
+    "id": "meridian-wealth",
+    "name": "Meridian Wealth UK",
+    "frn": null,
+    "chNumber": "13990011",
+    "fcaStatus": "not-on-register",
+    "lastUpdated": "2026-05-15"
+  }
+]

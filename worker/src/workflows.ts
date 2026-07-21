@@ -2,6 +2,8 @@ import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/
 import { buildCorpusCards } from "./corpus/render";
 import { queryCorpus } from "./corpus/query";
 import type { CorpusQuery } from "./corpus/contract";
+import { buildScamCards } from "./scam/render";
+import { queryScam, type ScamQuery } from "./scam/query";
 import type { RenderMode, StageExec } from "./usecases";
 
 // The general engine's workflow registry: dispatch tables keyed by a usecase's render `mode` and its
@@ -32,8 +34,10 @@ export const registry: {
     founders: () => withIncorporate(buildOpportunityCards()),
     route: () => buildRouteCards(),
     corpus: (data) => buildCorpusCards(data as CorpusQuery),
+    scam: (data) => buildScamCards(data as ScamQuery),
   },
   query: {
     query_corpus: (input) => queryCorpus(input),
+    query_scam: (input) => queryScam(input),
   },
 };

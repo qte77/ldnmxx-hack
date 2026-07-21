@@ -2,6 +2,7 @@ import foundersJson from "../../usecases/founders-copilot.json";
 import onitJson from "../../usecases/on-it.json";
 import sortMyCareJson from "../../usecases/sort-my-care.json";
 import sortMyWanderJson from "../../usecases/sort-my-wander.json";
+import sortMyScamJson from "../../usecases/sort-my-scam-check.json";
 import { corpusIds } from "./corpus/registry";
 
 // A usecase is pure data: the plan/tool stage choreography (played verbatim over SSE) plus a render
@@ -16,8 +17,13 @@ export interface AgentEvent {
 // dispatched by the workflows.ts registry in runUsecase: MODEL execs (assess_stage/search_opportunities)
 // run a forced tool on the keyless free-chain — any miss falls back to the canned events; QUERY execs
 // (fetch_care_services) run a deterministic corpus query regardless of whether a model provider exists.
-export type StageExec = "assess_stage" | "search_opportunities" | "query_corpus";
-export const STAGE_EXECS: StageExec[] = ["assess_stage", "search_opportunities", "query_corpus"];
+export type StageExec = "assess_stage" | "search_opportunities" | "query_corpus" | "query_scam";
+export const STAGE_EXECS: StageExec[] = [
+  "assess_stage",
+  "search_opportunities",
+  "query_corpus",
+  "query_scam",
+];
 
 export interface StageDef {
   name: string;
@@ -28,7 +34,7 @@ export interface StageDef {
   // exec, unused by the others — validated at load time so a typo fails loudly at startup.
   corpus?: string;
 }
-export type RenderMode = "founders" | "route" | "corpus";
+export type RenderMode = "founders" | "route" | "corpus" | "scam";
 export interface RenderDef {
   mode: RenderMode;
 }
@@ -39,7 +45,7 @@ export interface UsecaseDef {
   stages: StageDef[];
 }
 
-const RENDER_MODES: RenderMode[] = ["founders", "route", "corpus"];
+const RENDER_MODES: RenderMode[] = ["founders", "route", "corpus", "scam"];
 
 // Allow-lists for the strict load guard below. Keep in sync with UsecaseDef / StageDef.
 const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages"];
@@ -138,6 +144,7 @@ const registry: Record<string, UsecaseDef> = {
   "on-it": load(onitJson),
   "sort-my-care": load(sortMyCareJson),
   "sort-my-wander": load(sortMyWanderJson),
+  "sort-my-scam-check": load(sortMyScamJson),
 };
 
 export const usecaseIds: string[] = Object.keys(registry);

@@ -69,16 +69,17 @@ def load_flows():
 FLOWS = load_flows()
 
 
-def run_corpus_flow(page, out, tag, flow, postcode, cta, markers, shot_n):
-    """Type a REAL postcode, run one deterministic corpus flow, and assert its cards rendered.
+def run_corpus_flow(page, out, tag, flow, query, cta, markers, shot_n):
+    """Type a REAL query (a postcode, or a firm name for the scam flow), run one deterministic flow,
+    and assert its cards rendered.
 
-    Load-bearing: clicking the CTA with an empty input only ever produces the "enter a valid
-    postcode" state, so without typing + asserting, a completely broken query_corpus/corpus-render
-    would still pass this sweep. Needs the Worker (`make dev`, or a deployed target) — a vite-only
-    run serves the landing page and will correctly fail here.
+    Load-bearing: clicking the CTA with an empty input only ever produces the "enter a valid …"
+    state, so without typing + asserting, a completely broken query exec / render would still pass
+    this sweep. Needs the Worker (`make dev`, or a deployed target) — a vite-only run serves the
+    landing page and will correctly fail here.
     """
     try:
-        page.fill("#civic-query", postcode)
+        page.fill("#civic-query", query)
     except Exception as e:
         print(f"    !! {flow} fill: {e}")
         return False
@@ -94,9 +95,9 @@ def run_corpus_flow(page, out, tag, flow, postcode, cta, markers, shot_n):
         return False
     missing = [m for m in markers if m not in body]
     if missing:
-        print(f"    !! {flow} did not render corpus cards; missing={missing}")
+        print(f"    !! {flow} did not render its cards; missing={missing}")
         return False
-    print(f"    {flow}: corpus cards rendered for {postcode}")
+    print(f"    {flow}: cards rendered for {query!r}")
     return True
 
 
@@ -119,7 +120,7 @@ def sweep(page, out, tag):
         if "cta" not in f:
             continue  # non-corpus peek — no deterministic corpus assertion
         rendered = run_corpus_flow(
-            page, out, tag, f["name"], f["postcode"], f["cta"], tuple(f["markers"]), f"run-{f['name']}"
+            page, out, tag, f["name"], f["query"], f["cta"], tuple(f["markers"]), f"run-{f['name']}"
         )
         ok = ok and rendered
     return ok

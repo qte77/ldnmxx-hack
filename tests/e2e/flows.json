@@ -1,5 +1,5 @@
 {
-  "_comment": "Civic flows the e2e sweep drives, kept as DATA so adding a workflow is a manifest edit, not a change to ui_sweep.py. Each entry: `switchLabel` = the progressive-disclosure button to reach it. A corpus flow adds `postcode` + `cta` + `markers` and is run + asserted; an entry without a `cta` is a switch-and-screenshot peek (e.g. the On It route). Each corpus flow's markers include its own summary line, so flows sharing one surface can't false-pass off a stale render.",
+  "_comment": "Civic flows the e2e sweep drives, kept as DATA so adding a workflow is a manifest edit, not a change to ui_sweep.py. Each entry: `switchLabel` = the progressive-disclosure button to reach it. A run+asserted flow adds `query` (the text typed into #civic-query) + `cta` + `markers`; an entry without a `cta` is a switch-and-screenshot peek (e.g. the On It route). Each run flow's markers include its own summary line, so flows sharing one surface can't false-pass off a stale render.",
   "flows": [
     {
       "name": "onit",
@@ -8,7 +8,7 @@
     {
       "name": "care",
       "switchLabel": "Care services near you",
-      "postcode": "SW9 9SL",
+      "query": "SW9 9SL",
       "cta": "Find care services",
       "markers": [
         "Nearest public-service signposts",
@@ -20,12 +20,24 @@
     {
       "name": "wander",
       "switchLabel": "Places to wander",
-      "postcode": "SW9 9SL",
+      "query": "SW9 9SL",
       "cta": "Find places to wander",
       "markers": [
         "Free places to wander near you",
         "near SW9 9SL",
         "data as of",
+        "Always confirm with the official source"
+      ]
+    },
+    {
+      "name": "scam",
+      "switchLabel": "Check a firm",
+      "query": "Thames Capital Partners",
+      "cta": "Check this firm",
+      "markers": [
+        "Register records matching your search",
+        "Thames Capital Partners",
+        "Check the FCA Financial Services Register",
         "Always confirm with the official source"
       ]
     }

@@ -1,0 +1,24 @@
+{
+  "id": "sort-my-scam-check",
+  "title": "Sort My Scam Check",
+  "render": { "mode": "scam" },
+  "stages": [
+    {
+      "name": "plan",
+      "kind": "plan",
+      "events": [
+        { "type": "STEP_STARTED", "text": "read the firm name" },
+        { "type": "TEXT_MESSAGE_CONTENT", "text": "Checking the firm against the FCA register…" }
+      ]
+    },
+    {
+      "name": "query",
+      "kind": "tool",
+      "exec": "query_scam",
+      "events": [
+        { "type": "TOOL_CALL_START", "text": "check_fca_register" },
+        { "type": "TOOL_CALL_END", "text": "check_fca_register" }
+      ]
+    }
+  ]
+}
