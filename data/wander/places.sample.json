@@ -88,5 +88,25 @@
     "lat": 51.5208,
     "lng": -0.1528,
     "lastUpdated": "2026-05-25"
+  },
+  {
+    "id": "st-augustines-tower",
+    "name": "St Augustine's Tower",
+    "authority": "Historic England",
+    "why": "Hackney's oldest building — a Grade I listed medieval church tower; free on open days, check the official listing.",
+    "officialUrl": "https://historicengland.org.uk/listing/the-list/",
+    "lat": 51.5455,
+    "lng": -0.0555,
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "london-fields",
+    "name": "London Fields",
+    "authority": "Hackney Council",
+    "why": "A free park with tree-lined avenues and a lido; open daily — confirm access on the official source.",
+    "officialUrl": "https://osdatahub.os.uk/downloads/open/OpenGreenspace",
+    "lat": 51.5410,
+    "lng": -0.0600,
+    "lastUpdated": "2026-05-20"
   }
 ]

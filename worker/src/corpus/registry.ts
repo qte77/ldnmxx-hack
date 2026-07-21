@@ -31,9 +31,9 @@ const corpora: Record<string, CorpusDef> = {
       summaryLine: "Nearest public-service signposts",
       // Curated + verified, NEVER generated.
       officialLink: { text: "Search official NHS services", url: "https://www.nhs.uk/service-search" },
-      emptyInvalidHint: "Try a London postcode like SW9 9SL.",
+      emptyInvalidHint: "Try a London postcode like E8 3GT.",
       emptyUnknownHint:
-        "We don't have sample data for that postcode yet — try SW9 9SL, E1 6AN or N1 9GU.",
+        "We don't have sample data for that postcode yet — try E8 3GT, SW9 9SL or N1 9GU.",
     },
   },
   wander: {
@@ -50,9 +50,9 @@ const corpora: Record<string, CorpusDef> = {
         text: "Historic England — The List",
         url: "https://historicengland.org.uk/listing/the-list/",
       },
-      emptyInvalidHint: "Try a London postcode like SW9 9SL.",
+      emptyInvalidHint: "Try a London postcode like E8 3GT.",
       emptyUnknownHint:
-        "We don't have sample data for that postcode yet — try SW9 9SL, E1 6AN or N1 9GU.",
+        "We don't have sample data for that postcode yet — try E8 3GT, SW9 9SL or N1 9GU.",
     },
   },
 };
