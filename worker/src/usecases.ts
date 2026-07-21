@@ -40,8 +40,24 @@ export interface UsecaseDef {
 
 const RENDER_MODES: RenderMode[] = ["founders", "route", "corpus"];
 
+// Allow-lists for the strict load guard below. Keep in sync with UsecaseDef / StageDef.
+const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages"];
+const STAGE_KEYS: readonly string[] = ["name", "kind", "events", "exec", "corpus"];
+
 // Narrow to unknown[] (not the any[] that Array.isArray infers, which would defeat the type-safety lints).
 const isArray = (v: unknown): v is unknown[] => Array.isArray(v);
+
+// Reject unknown keys so a misspelled OPTIONAL field (e.g. `exex` — which would otherwise leave `exec`
+// undefined and silently play canned events instead of running the query) fails loudly at load. This is
+// the TS engine's OWN strictness — adopting azure-doc-workflows' pydantic extra="forbid" (their ADR-0012).
+// The SHARED workflow-definition/v1 schema stays additionalProperties:true so cross-engine extras pass;
+// our own usecases only ever carry TS fields, so forbidding unknown keys here can't reject a valid one.
+function assertNoUnknownKeys(id: string, label: string, obj: object, allowed: readonly string[]): void {
+  const unknown = Object.keys(obj).filter((k) => !allowed.includes(k));
+  if (unknown.length > 0) {
+    throw new Error(`usecase ${id}: unknown ${label} key(s): ${unknown.join(", ")}`);
+  }
+}
 
 // Contract core: every stage needs a non-empty name (played verbatim over SSE).
 function assertStageNames(id: string, stages: unknown[]): void {
@@ -68,6 +84,7 @@ function assertStageCorpus(id: string, exec: unknown, corpus: unknown): void {
 function assertStageShapes(id: string, stages: unknown[]): void {
   for (const s of stages) {
     const stage = s as { kind?: unknown; events?: unknown; exec?: unknown; corpus?: unknown };
+    assertNoUnknownKeys(id, "stage", s as object, STAGE_KEYS);
     if (typeof stage.kind !== "string" || !isArray(stage.events)) {
       throw new Error(`usecase ${id}: every stage needs kind and an events array`);
     }
@@ -98,6 +115,7 @@ export function assertUsecaseDef(x: unknown): asserts x is UsecaseDef {
     throw new Error("usecase: id must be a non-empty string");
   }
   const id = d.id;
+  assertNoUnknownKeys(id, "top-level", d, USECASE_KEYS);
   if (!isArray(d.stages) || d.stages.length === 0) {
     throw new Error(`usecase ${id}: stages must be a non-empty array`);
   }
