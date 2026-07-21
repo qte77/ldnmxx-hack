@@ -5,6 +5,8 @@ import {
   isValidBatch,
   callRenderModel,
   callModelTool,
+  describeModelStatus,
+  retryAfterMs,
   type ORResponse,
 } from "../src/agent/model";
 
@@ -128,5 +130,66 @@ describe("callModelTool (generic forced-tool core)", () => {
   it("returns null when fetch throws (network/timeout)", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("boom")));
     expect(await callModelTool({ ...base, tool: echoTool, toolName: "echo", extract, validate })).toBeNull();
+  });
+});
+
+describe("callModelTool — transient retry + status taxonomy (H3/H4)", () => {
+  const base = { apiKey: "k", model: "m", baseURL: "https://x/v1", system: "s", user: "u", retryBackoffMs: 0 };
+  const extract = (d: ORResponse): { text?: unknown } | null => extractToolArgs(d, "echo");
+  const validate = (v: { text?: unknown }): boolean => typeof v.text === "string";
+  const spec = { tool: echoTool, toolName: "echo", extract, validate };
+
+  it("retries once on a transient status, then succeeds", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, headers: new Headers() })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(echoResponse({ text: "hi" })) });
+    vi.stubGlobal("fetch", fetchMock);
+    const r = await callModelTool({ ...base, ...spec });
+    expect(r?.value).toEqual({ text: "hi" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("fails fast on a fatal status (no retry)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 401, headers: new Headers() });
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await callModelTool({ ...base, ...spec })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives up after one retry when a transient status persists", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500, headers: new Headers() });
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await callModelTool({ ...base, ...spec })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does NOT retry a thrown fetch (network / aborted timeout)", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error("aborted"));
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await callModelTool({ ...base, ...spec })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("describeModelStatus", () => {
+  it("labels transient + fatal statuses for one concise warn", () => {
+    expect(describeModelStatus(429)).toBe("rate-limited");
+    expect(describeModelStatus(401)).toBe("auth");
+    expect(describeModelStatus(407)).toBe("auth");
+    expect(describeModelStatus(404)).toBe("gone");
+    expect(describeModelStatus(410)).toBe("gone");
+    expect(describeModelStatus(451)).toBe("legal");
+    expect(describeModelStatus(503)).toBe("server");
+    expect(describeModelStatus(418)).toBe("http");
+  });
+});
+
+describe("retryAfterMs", () => {
+  it("parses delta-seconds, caps at 60s, ignores junk", () => {
+    expect(retryAfterMs("5")).toBe(5000);
+    expect(retryAfterMs("120")).toBe(60000);
+    expect(retryAfterMs(null)).toBeNull();
+    expect(retryAfterMs("soon")).toBeNull();
   });
 });
