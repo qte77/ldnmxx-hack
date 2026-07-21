@@ -27,7 +27,7 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 |---|---|---|
 | W1 | Engine: general query stage + workflow manifest (#80) — make a new corpus usecase register-only | ☑ shipped (#125) |
 | W2 | Sort My Scam Check (#74) — clone-firm fraud **flag** (Companies House / FCA), never a verdict | ☐ to ship |
-| W3 | Sort My Wander (#73) — free/obscure heritage discovery (Historic England / OSM / Wikidata) | ☐ to ship |
+| W3 | Sort My Wander (#73) — free/obscure heritage discovery (Historic England / OSM / Wikidata) | ☑ shipped (#138) |
 | W4 | Real Care corpus (#13) — replace synthetic `data/care/*` with an ingested NHS directory + freshness | ☐ to ship |
 | W5 | Ingest cron (#10) — scheduled re-seed (CF Cron Trigger); pairs with the e2e Tier-3 monitor | ☐ to ship |
 | W6 | Data store (#13) — CF **D1** as the FOUNDATION for W4/W5 (no longer "only if forced") | ☐ to ship |
@@ -139,7 +139,7 @@ the corpus id. `workflows.ts` registry: `render.corpus` + `query.query_corpus`; 
 
 ## Order · conventions · verification
 
-- **Order (revised):** ~~C~~ ☑ → ~~W1~~ ☑ → **W3 Wander** → W2 Scam → W6/D1 foundation + W4/W5. Two
+- **Order (revised):** ~~C~~ ☑ → ~~W1~~ ☑ → ~~W3 Wander~~ ☑ (#138) → **W2 Scam** → W6/D1 foundation + W4/W5. Two
   changes from the original: **W3 before W2** (Wander is nearest-N and therefore genuinely register-only,
   so it proves W1 with zero engine TS; Scam is a *match* shape needing one new `query_scam` exec), and
   **W6/D1 is no longer "only if forced"** — the decided data architecture makes it the foundation W4/W5
