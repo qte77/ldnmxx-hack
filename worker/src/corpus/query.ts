@@ -1,5 +1,6 @@
 import { normalisePostcode } from "../../../shared/sanitize";
 import { nearestN } from "../geo";
+import { oldestIsoDate } from "../dates";
 import type { CorpusQuery, CorpusRow } from "./contract";
 import { getCorpus, type CorpusDef } from "./registry";
 
@@ -24,8 +25,9 @@ export function queryCorpusDef(def: CorpusDef, prompt: string, n = 3): CorpusQue
     why: r.why,
     officialUrl: r.officialUrl,
   }));
-  // Oldest lastUpdated = the conservative freshness to advertise across the shown rows.
-  const asOf = nearest.map((r) => r.lastUpdated).sort()[0] ?? null;
+  // Oldest lastUpdated = the conservative freshness to advertise across the shown rows. Validated ISO
+  // (dates.ts) so a malformed date can never become a falsely-early "data as of" (#128).
+  const asOf = oldestIsoDate(nearest.map((r) => r.lastUpdated));
   return { query: postcode, rows, asOf, labels };
 }
 

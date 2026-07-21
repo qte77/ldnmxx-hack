@@ -1,4 +1,5 @@
 import type { CorpusLabels, CorpusRow } from "../corpus/contract";
+import { oldestIsoDate } from "../dates";
 import type { ScamRecord } from "./registry";
 import { scamFirms, scamLabels } from "./registry";
 
@@ -101,7 +102,7 @@ export function queryScamDef(
       officialUrl: labels.officialLink.url,
     };
   });
-  const asOf = matched.map((r) => r.lastUpdated).sort()[0] ?? null;
+  const asOf = oldestIsoDate(matched.map((r) => r.lastUpdated));
   return { query, rows, asOf, labels, cloneCaution: cloneCaution(matched) };
 }
 
