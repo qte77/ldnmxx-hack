@@ -1,0 +1,25 @@
+{
+  "id": "sort-my-wander",
+  "title": "Sort My Wander",
+  "render": { "mode": "corpus" },
+  "stages": [
+    {
+      "name": "plan",
+      "kind": "plan",
+      "events": [
+        { "type": "STEP_STARTED", "text": "read your postcode" },
+        { "type": "TEXT_MESSAGE_CONTENT", "text": "Finding free places to wander near you…" }
+      ]
+    },
+    {
+      "name": "query",
+      "kind": "tool",
+      "exec": "query_corpus",
+      "corpus": "wander",
+      "events": [
+        { "type": "TOOL_CALL_START", "text": "fetch_wander_places" },
+        { "type": "TOOL_CALL_END", "text": "fetch_wander_places" }
+      ]
+    }
+  ]
+}

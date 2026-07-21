@@ -1,6 +1,7 @@
 import foundersJson from "../../usecases/founders-copilot.json";
 import onitJson from "../../usecases/on-it.json";
 import sortMyCareJson from "../../usecases/sort-my-care.json";
+import sortMyWanderJson from "../../usecases/sort-my-wander.json";
 import { corpusIds } from "./corpus/registry";
 
 // A usecase is pure data: the plan/tool stage choreography (played verbatim over SSE) plus a render
@@ -136,6 +137,7 @@ const registry: Record<string, UsecaseDef> = {
   "founders-copilot": load(foundersJson),
   "on-it": load(onitJson),
   "sort-my-care": load(sortMyCareJson),
+  "sort-my-wander": load(sortMyWanderJson),
 };
 
 export const usecaseIds: string[] = Object.keys(registry);

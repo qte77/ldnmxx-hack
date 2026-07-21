@@ -9,6 +9,8 @@
 // the labels stay here either way.
 import servicesJson from "../../../data/care/services.sample.json";
 import postcodesJson from "../../../data/care/postcodes.sample.json";
+import wanderPlacesJson from "../../../data/wander/places.sample.json";
+import wanderPostcodesJson from "../../../data/wander/postcodes.sample.json";
 import type { CorpusLabels, CorpusRecord } from "./contract";
 import type { Coords } from "../geo";
 
@@ -29,6 +31,25 @@ const corpora: Record<string, CorpusDef> = {
       summaryLine: "Nearest public-service signposts",
       // Curated + verified, NEVER generated.
       officialLink: { text: "Search official NHS services", url: "https://www.nhs.uk/service-search" },
+      emptyInvalidHint: "Try a London postcode like SW9 9SL.",
+      emptyUnknownHint:
+        "We don't have sample data for that postcode yet — try SW9 9SL, E1 6AN or N1 9GU.",
+    },
+  },
+  wander: {
+    // Uncast, like `care` above: the bundled JSON is structurally checked against CorpusRecord/Coords,
+    // so a malformed sample row is a compile error rather than a silently-asserted shape.
+    records: wanderPlacesJson,
+    postcodes: wanderPostcodesJson,
+    labels: {
+      noun: "place",
+      summaryLine: "Free places to wander near you",
+      // Curated + verified, NEVER generated: Historic England's statutory List is an authoritative,
+      // keyless register the user can verify each place against — signpost, not adjudicator.
+      officialLink: {
+        text: "Historic England — The List",
+        url: "https://historicengland.org.uk/listing/the-list/",
+      },
       emptyInvalidHint: "Try a London postcode like SW9 9SL.",
       emptyUnknownHint:
         "We don't have sample data for that postcode yet — try SW9 9SL, E1 6AN or N1 9GU.",

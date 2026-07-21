@@ -32,6 +32,17 @@ const USECASES = [
     civic: true,
   },
   {
+    id: "sort-my-wander",
+    label: "Sort My Wander",
+    headline: "Find free places to wander near you",
+    blurb: "Enter a London postcode to see free heritage sites and green spaces nearby, each with a link to its official source.",
+    placeholder: "Your London postcode, e.g. SW9 9SL",
+    example: "SW9 9SL",
+    cta: "Find places to wander",
+    switchLabel: "Places to wander",
+    civic: true,
+  },
+  {
     id: "founders-copilot",
     label: "Founder's Copilot",
     headline: "Match grants to your idea",
