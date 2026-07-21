@@ -1,5 +1,5 @@
 ---
-title: "Handoff 015 — C+W1 shipped, H hardening 2/5; resume at W3 (civic) or H3/H4 (taxonomy+retry)"
+title: "Handoff 015 — C+W1+W3 shipped, H hardening 2/5; resume at W2 (Scam) or H3/H4 (taxonomy+retry)"
 type: handoff
 updated: 2026-07-21
 pairs_with: docs/plans/015-civic-usecase-expansion.md
@@ -24,8 +24,15 @@ Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5
 `v1.1.0` tag is now pushed — it points at the release commit `8286890`, NOT `main`, which carries
 unreleased work).
 
-## Progress (2026-07-20)
+## Progress (2026-07-21)
 
+- ☑ **W3 · Sort My Wander (#73)** — #138. The register-only proof of W1: a nearest-N corpus usecase
+  with **zero engine TS** (data + registry entry + usecase JSON + UI entry). Corpus is synthetic
+  `data/wander/*.sample.json` (heritage + green space), curated Historic England official link. The
+  e2e sweep is now **data-driven** — civic flows live in `tests/e2e/flows.json` and the sweep runs +
+  **asserts** every corpus flow (Care + Wander), so adding a workflow to the sweep is a manifest edit,
+  not a test-source change. Verified: worker+ui tsc/lint/tests green (135+22); live browser render is
+  the user's CF-gated env.
 - ☑ **C · `shared/*.ts` lint** — #123 + #124 (issue #122). Root `eslint.config.js` was required (ESLint 10
   refuses files above its config dir); fixing the findings surfaced a real bug (`isValidSearchResult`
   threw on `matches: [null]`) from a circular `as Partial<T>` cast. See `AGENT_LEARNINGS.md`.
@@ -55,7 +62,7 @@ unreleased work).
 
 ## Queue & order
 
-~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ → **`W3` Wander (#73) ← START HERE** · `W2` Scam (#74)
+~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ · ~~`W3` Wander (#73)~~ ☑ (#138) → **`W2` Scam (#74) ← START HERE**
 → `W6`/D1 foundation + `W4` real Care corpus (#13) · `W5` ingest cron (#10).
 
 **W3 before W2** (swapped from the original order): Wander is nearest-N, so it is genuinely register-only
@@ -64,18 +71,20 @@ so it is no longer the cheaper of the two.
 
 ## Resume — two ready options (both fully scoped)
 
-- **W3 · Sort My Wander (#73)** — the civic next step ("go ahead with 015"); the register-only proof of
-  W1, all-keyless sources, zero engine TS. Recipe below.
+- **W2 · Sort My Scam Check (#74)** — the civic next step. NOT register-only: Scam is a *match* shape,
+  so it needs one new `query_scam` exec + a `scam` corpus (Companies House / FCA), surfaced as a
+  flag-to-investigate, never a verdict. See the W2 workstream + add-a-usecase recipe in the plan.
 - **H3/H4 · taxonomy + bounded retry (#134/#135)** — one PR, model-chain robustness; the entire design
   (polyfetch reuse, transient set, where it lands, test plan) is pre-written in the **plan's "H3/H4
   design" block** — implement straight from there, no re-derivation.
 
-Both are independent. Pick either; W3 is the recommended civic-theme continuation.
+Both are independent. ~~W3 Wander~~ ☑ shipped (#138) — the register-only proof of W1.
 
-## First actions — resume at W3 (Sort My Wander, #73)
+## Register-only corpus recipe (shipped as W3 #138; the pattern for future nearest-N usecases)
 
 **The add-a-usecase recipe below CHANGED in W1.** Do NOT add a render mode or query exec — that is
-exactly what #80 removed. A nearest-N corpus usecase is now register-only:
+exactly what #80 removed. A nearest-N corpus usecase is register-only (this is exactly what W3 did —
+`data/wander/*` + one `registry.ts` entry + `usecases/sort-my-wander.json` + one UI entry):
 
 1. **Corpus** — `data/wander/{places,postcodes}.sample.json` matching `CorpusRecord`
    (`id/name/authority/why/officialUrl/lastUpdated` + `lat/lng`). Keyless sources: Historic England NHLE,

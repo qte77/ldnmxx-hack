@@ -1,0 +1,92 @@
+[
+  {
+    "id": "st-matthews-brixton",
+    "name": "St Matthew's Church, Brixton",
+    "authority": "Historic England",
+    "why": "A Grade II* listed Greek-Revival church on Brixton Hill; free to look around — check opening times on the official listing.",
+    "officialUrl": "https://historicengland.org.uk/listing/the-list/",
+    "lat": 51.4608,
+    "lng": -0.1143,
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "brockwell-park",
+    "name": "Brockwell Park",
+    "authority": "Lambeth Council",
+    "why": "A free 50-hectare park with a walled garden and city views; open daily — confirm access on the official source.",
+    "officialUrl": "https://osdatahub.os.uk/downloads/open/OpenGreenspace",
+    "lat": 51.4530,
+    "lng": -0.1055,
+    "lastUpdated": "2026-05-20"
+  },
+  {
+    "id": "geraldine-harmsworth-park",
+    "name": "Geraldine Mary Harmsworth Park",
+    "authority": "Southwark Council",
+    "why": "A free public park around the former Bethlem site, open daily; check access on the official source.",
+    "officialUrl": "https://osdatahub.os.uk/downloads/open/OpenGreenspace",
+    "lat": 51.4955,
+    "lng": -0.1085,
+    "lastUpdated": "2026-05-28"
+  },
+  {
+    "id": "crossbones-garden",
+    "name": "Crossbones Garden",
+    "authority": "Southwark Council",
+    "why": "A free memorial garden on a historic Southwark burial ground; open on set days — confirm hours on the official source.",
+    "officialUrl": "https://osdatahub.os.uk/downloads/open/OpenGreenspace",
+    "lat": 51.5028,
+    "lng": -0.0918,
+    "lastUpdated": "2026-04-30"
+  },
+  {
+    "id": "wiltons-music-hall",
+    "name": "Wilton's Music Hall",
+    "authority": "Historic England",
+    "why": "The world's oldest surviving grand music hall; Grade II* listed and free to view — check opening times on the official listing.",
+    "officialUrl": "https://historicengland.org.uk/listing/the-list/",
+    "lat": 51.5098,
+    "lng": -0.0668,
+    "lastUpdated": "2026-06-05"
+  },
+  {
+    "id": "tower-hamlets-cemetery-park",
+    "name": "Tower Hamlets Cemetery Park",
+    "authority": "Tower Hamlets Council",
+    "why": "A free woodland cemetery and local nature reserve; open daily — confirm access on the official source.",
+    "officialUrl": "https://osdatahub.os.uk/downloads/open/OpenGreenspace",
+    "lat": 51.5178,
+    "lng": -0.0335,
+    "lastUpdated": "2026-05-15"
+  },
+  {
+    "id": "new-river-walk",
+    "name": "New River Walk",
+    "authority": "Islington Council",
+    "why": "A free linear waterside walk following the historic New River; open access — confirm on the official source.",
+    "officialUrl": "https://osdatahub.os.uk/downloads/open/OpenGreenspace",
+    "lat": 51.5398,
+    "lng": -0.0975,
+    "lastUpdated": "2026-06-10"
+  },
+  {
+    "id": "st-james-piccadilly",
+    "name": "St James's Church, Piccadilly",
+    "authority": "Historic England",
+    "why": "A Grade I listed Wren church with a free-to-enter courtyard; check opening times on the official listing.",
+    "officialUrl": "https://historicengland.org.uk/listing/the-list/",
+    "lat": 51.5085,
+    "lng": -0.1372,
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "paddington-street-gardens",
+    "name": "Paddington Street Gardens",
+    "authority": "City of Westminster",
+    "why": "A free former burial-ground garden in Marylebone; open daily — confirm access on the official source.",
+    "officialUrl": "https://osdatahub.os.uk/downloads/open/OpenGreenspace",
+    "lat": 51.5208,
+    "lng": -0.1528,
+    "lastUpdated": "2026-05-25"
+  }
+]
