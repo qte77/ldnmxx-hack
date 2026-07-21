@@ -75,5 +75,25 @@
     "lat": 51.5360,
     "lng": -0.1050,
     "lastUpdated": "2026-05-28"
+  },
+  {
+    "id": "gp-hackney",
+    "name": "Well Street Group Practice",
+    "authority": "NHS North East London ICB",
+    "why": "Register with a local GP for appointments, prescriptions and referrals.",
+    "officialUrl": "https://www.nhs.uk/nhs-services/gps/",
+    "lat": 51.5410,
+    "lng": -0.0500,
+    "lastUpdated": "2026-06-01"
+  },
+  {
+    "id": "pharmacy-dalston",
+    "name": "Dalston Community Pharmacy",
+    "authority": "NHS England",
+    "why": "Free advice and treatment for minor illnesses without a GP appointment (Pharmacy First).",
+    "officialUrl": "https://www.nhs.uk/nhs-services/pharmacies/",
+    "lat": 51.5460,
+    "lng": -0.0755,
+    "lastUpdated": "2026-05-28"
   }
 ]
