@@ -31,7 +31,61 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 | W4 | Real Care corpus (#13) — replace synthetic `data/care/*` with an ingested NHS directory + freshness | ☐ to ship |
 | W5 | Ingest cron (#10) — scheduled re-seed (CF Cron Trigger); pairs with the e2e Tier-3 monitor | ☐ to ship |
 | W6 | Data store (#13) — CF **D1** as the FOUNDATION for W4/W5 (no longer "only if forced") | ☐ to ship |
-| C | **014 carry-over** (small; do first / in parallel) — see below | ☐ to ship |
+| C | **014 carry-over** (small; do first / in parallel) — see below | 🟡 shared-lint + tag done; S5/axe/runs.jsonl open |
+| H | **Engine hardening & cross-stack alignment** (a distinct theme, folded in — see below) | 🟡 in progress (2/5) |
+
+## Workstream H — engine hardening & cross-stack alignment
+
+A distinct theme from the civic W-stream (which broadens usecases + real data): H hardens the *engine
+itself* and aligns it with the sibling `qte77/azure-doc-workflows` (Python) — **patterns, never code; the
+shared `workflow-definition/v1` contract is the only shared artifact.** Folded into 015 (not a separate
+plan) while 015 is open. Independent small PRs, each its own issue.
+
+| H | Item | Status |
+|---|---|---|
+| H1 | Drop the GitHub Models free tier (#127) — retired 2026-07-30 | ☑ shipped (#132) |
+| H2 | Strict usecase schema — reject unknown keys at load (#133), adopt azure `extra="forbid"` | ☑ shipped (#136) |
+| H3 | Transient-vs-fatal model-error taxonomy (#134) — align azure `core/errors`; **reuse `polyfetch-scrape`'s typed taxonomy** | ☐ to ship |
+| H4 | One bounded retry on transient errors (#135) — align azure `core/providers` + `polyfetch retry.py`; lands in `callModelTool` (covers keyed + free), transient set `{429,500,502,503,504}` | ☐ to ship (with H3, one PR) |
+| H5 | Validate the `asOf` date format (#128) — a trust claim; fix **before W4** ingest exists | ☐ to ship |
+| H6 | Derive `RENDER_MODES`/`STAGE_EXECS` from registry keys (#129) — closes ADR-0001's known "two sources of truth" minus | ☐ to ship |
+| H7 | e2e: assert On It + record video in both orientations (#130) | ☐ to ship |
+
+**Estate alignment (cross-repo; the "share the contract" half):** `qte77/qte77#162` (hub tracker,
+updated), `qte77/azure-doc-workflows#288` (reciprocal: commit their contract test + back-ref adopted
+patterns), `qte77/protocols#2` (evolve the contract: standardize/mark deferred fields; document
+local-strict consumers). These are the sibling repos' work — informational here.
+
+**H3/H4 design (pre-scoped from `qte77/polyfetch-scrape` `errors.py`/`retry.py` — reuse this, don't
+re-derive):** one PR closing both. Land the retry in **`worker/src/agent/model.ts` `callModelTool`**
+(not just `openRouterFreeProvider`) — that's where the HTTP status lives, and it covers the BYOK keyed
+path (`callRenderModel`) too. Keep `callModelTool`'s `… | null` return contract unchanged (callers rely
+on null = fallback); add the retry INTERNALLY.
+
+- **Transient set (retry):** `{429, 500, 502, 503, 504}`. **Fatal (fail fast, one concise warn):**
+  everything else — notably 401/407 (auth), 404/410 (gone), 451 (legal).
+- **Policy:** `maxAttempts = 2` (one retry — the Worker render has a 20 s abort budget + the free tier
+  walks ≤6 models, so keep it small), backoff `≈ 0.25 s · 2^attempt`, honor a `Retry-After` header capped
+  at 60 s. Retry ONLY on transient HTTP status; the `catch` (network throw / AbortSignal timeout) returns
+  null with NO retry (must not retry an abort). Respect `opts.signal` between attempts.
+- **H3 taxonomy:** a `describeModelStatus(status) → label` helper ("auth"/"gone"/"legal"/"rate-limited"/
+  "server"/"http") replacing the generic `console.warn("model fallback: HTTP", status)`.
+- **Testable:** add an optional `retryBackoffMs` to the `ModelCall` opts (default ≈250; tests pass 0) so
+  the suite doesn't sleep. Test-first in `model.test.ts`: transient status retries-then-succeeds; fatal
+  status fails fast (no retry); abort is not retried. Existing mocks return `{ok:false}` with no `status`
+  → not transient → no retry, so they stay green.
+
+## Source Map — W1 delta (the map below predates #125; apply these renames)
+
+`worker/src/care/*` was **deleted** and replaced by `worker/src/corpus/*`:
+`registry.ts` (corpus id → records/postcodes/labels + `corpusIds`), `query.ts` (`queryCorpus` async +
+`queryCorpusDef`), `render.ts` (`buildCorpusCards`), `contract.ts` (`CorpusRecord`/`CorpusRow`/
+`CorpusLabels`/`CorpusQuery` — **frozen**; W4 ingest + the D1 view project onto it). Unions in
+`usecases.ts`: `RenderMode = founders|route|corpus`, `StageExec = …|query_corpus` (drop `care`/
+`fetch_care_services`); `StageDef.corpus?`; `assertUsecaseDef` now rejects unknown keys (#133) + validates
+the corpus id. `workflows.ts` registry: `render.corpus` + `query.query_corpus`; `QueryFn` returns a
+`Promise`. `a2ui/cards.ts` `appendDisclaimer(batch, link)` (link now per-corpus). Free chain in
+`agent/providers.ts` is two tiers now (Workers AI → OpenRouter :free; GitHub Models dropped, #127).
 
 ## Workstreams
 

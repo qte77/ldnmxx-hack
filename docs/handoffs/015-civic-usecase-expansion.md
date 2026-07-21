@@ -1,7 +1,7 @@
 ---
-title: "Handoff 015 — in progress: C (shared lint) + W1 (engine register-only) shipped; W2/W3/W4/W5 next"
+title: "Handoff 015 — C+W1 shipped, H hardening 2/5; resume at W3 (civic) or H3/H4 (taxonomy+retry)"
 type: handoff
-updated: 2026-07-20
+updated: 2026-07-21
 pairs_with: docs/plans/015-civic-usecase-expansion.md
 ---
 
@@ -42,7 +42,16 @@ unreleased work).
 - ☑ **Deployed + verified live** — Pages + Worker on `sortmy.london`; the corpus seam renders real rows
   (`3 services near SW9 9SL · data as of 2026-06-01`) on all 5 configs, 0 console errors, 0 model-host hits.
 - ☑ **`v1.1.0` tag pushed** (on `8286890`, the release commit).
-- Remaining C: S5 knobs (each its own PR), axe-core in the sweep, `runs.jsonl` manifest.
+- ☑ **Workstream H (engine hardening & cross-stack alignment) — folded into the 015 plan.** H1 dropped the
+  GitHub Models tier (#127/#132, it retired 2026-07-30); H2 strict usecase schema — reject unknown keys at
+  load (#133/#136), adopting azure `extra="forbid"`. **H3/H4 (transient-vs-fatal taxonomy + one bounded
+  retry) are next and FULLY PRE-SCOPED in the plan's "H3/H4 design" block** (reuse `polyfetch-scrape`
+  `errors.py`/`retry.py`; lands in `callModelTool`; transient set `{429,500,502,503,504}`). H5 `asOf` date
+  validation (#128, do before W4), H6 registry-derived unions (#129), H7 e2e On It+video (#130).
+- ☑ **Estate contract alignment (cross-repo):** `qte77/qte77#162` updated, `azure-doc-workflows#288` +
+  `protocols#2` filed — the "share the contract" half; sibling repos' work, not this repo's flow.
+- Remaining C (original carry-over, still open): S5 knobs (each its own PR), axe-core in the sweep,
+  `runs.jsonl` manifest.
 
 ## Queue & order
 
@@ -52,6 +61,16 @@ unreleased work).
 **W3 before W2** (swapped from the original order): Wander is nearest-N, so it is genuinely register-only
 and proves W1 end-to-end with zero engine TS. Scam is a *match* shape and needs one new `query_scam` exec,
 so it is no longer the cheaper of the two.
+
+## Resume — two ready options (both fully scoped)
+
+- **W3 · Sort My Wander (#73)** — the civic next step ("go ahead with 015"); the register-only proof of
+  W1, all-keyless sources, zero engine TS. Recipe below.
+- **H3/H4 · taxonomy + bounded retry (#134/#135)** — one PR, model-chain robustness; the entire design
+  (polyfetch reuse, transient set, where it lands, test plan) is pre-written in the **plan's "H3/H4
+  design" block** — implement straight from there, no re-derivation.
+
+Both are independent. Pick either; W3 is the recommended civic-theme continuation.
 
 ## First actions — resume at W3 (Sort My Wander, #73)
 
