@@ -1,5 +1,5 @@
 ---
-title: "Handoff 015 — C+W1+W2+W3+H+W6 shipped (v1.2.0 released); W4 deferred → #161; resume at user gates (deploy/TRUD/D1) then W5"
+title: "Handoff 015 — v1.2.0 LIVE+verified · D1 provisioned (empty, fail-safe) · W5·B1 monitor live; ALL remaining work blocked on #161 (TRUD, user-deferred)"
 type: handoff
 updated: 2026-07-22
 pairs_with: docs/plans/015-civic-usecase-expansion.md
@@ -23,6 +23,26 @@ Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5
 (S5 strictness, shared lint, axe-core, e2e Tier-2 manifest; **v1.1.0 shipped** #120 and the
 `v1.1.0` tag is now pushed — it points at the release commit `8286890`, NOT `main`, which carries
 unreleased work).
+
+## Progress (2026-07-22 · session close — deployed, D1 live, monitor live)
+
+- ☑ **v1.2.0 DEPLOYED + verified** — `make deploy` (Pages + Worker), then the sweep: **PASS**, 0
+  model-host, **axe 0 critical / 0 serious** (first live pass of the `serious` gate incl. #154),
+  flagship 5/5 viewports (`runs.jsonl` #170).
+- **A1 (TRUD account) DEFERRED by user — no ETA** (recorded on #161). Blocks W5·B2/B3 + W4.
+- ☑ **A2 · prod D1 COMPLETE (#13 closed)** — DB `sortmy_london_corpus` (`cc6bb743…`) created,
+  migration applied (5 statements), `DB` binding live on the deployed Worker; Pages config kept
+  **D1-free** (Worker is the sole data access, ADR 0002 — a dashboard-added block was removed).
+  Provisioning surfaced a real gap: an **empty-but-healthy gazetteer** was a legit miss, so an
+  unseeded store would have answered every postcode with an empty state. Fixed test-first (#171):
+  `d1Source.origin` probes the gazetteer on a miss — EMPTY ⇒ throw ⇒ the bundled fallback. Verified
+  LIVE against the empty store: sweep **PASS**, flagship 5/5 via the fallback (#172).
+- ☑ **W5·B1 · Tier-3 uptime monitor SHIPPED** (#173) — `.github/workflows/tier3-monitor.yml`: every
+  6h + `workflow_dispatch`, credential-free, runs the sweep against live `sortmy.london`; FAIL ⇒ red
+  run + artifact bundle + a deduped alert issue. First dispatched run: **success** (29966125343).
+- **Open issues now:** #10 (W5·B2/B3, blocked) · #113 (this tracker) · #150 (jsx-a11y, upstream) ·
+  #161 (TRUD, deferred — carries the licence follow-ups + lawyer checklist) · #168 (upstream watch:
+  sharp/TS-7/zod-4). #13, #69, #5 closed this session.
 
 ## Progress (2026-07-22 · later session — W6 shipped, v1.2.0 released)
 
@@ -117,9 +137,9 @@ unreleased work).
 
 ## Queue & order
 
-~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ · ~~`W3` Wander (#73)~~ ☑ (#138) · ~~`W2` Scam (#74)~~ ☑ (#140) ·
-~~`W6`/D1 foundation~~ ☑ (#162, v1.2.0) → **user gates (deploy · TRUD #161 · D1 provisioning) → `W5`
-hybrid cron (#10) ← START HERE**; `W4` real corpus then lands via #161.
+~~`C`~~ ☑ · ~~`W1`~~ ☑ · ~~`W3`~~ ☑ · ~~`W2`~~ ☑ · ~~`W6`/D1~~ ☑ (#162) · ~~deploy~~ ☑ (v1.2.0 live) ·
+~~D1 provisioning~~ ☑ (#13 closed) · ~~`W5`·B1 monitor~~ ☑ (#173) → **EVERYTHING remaining (W5·B2/B3
+and W4) is blocked on #161 (TRUD, user-deferred) ← the ONLY gate.**
 
 **W3 before W2** (swapped from the original order): Wander is nearest-N, so it is genuinely register-only
 and proves W1 end-to-end with zero engine TS. Scam is a *match* shape and needs one new `query_scam` exec,
@@ -127,14 +147,17 @@ so it is no longer the cheaper of the two.
 
 ## Resume — next up
 
-1. **User gates (in order):** `make deploy` (the whole **v1.2.0** stack is live-pending — then run the
-   sweep, expect 0 critical/serious) · **NHS ODS TRUD account** (#161 — verify the per-item licence is
-   OGL at subscribe time) · **provision prod D1** (#13: `wrangler d1 create sortmy-corpus` +
-   `wrangler d1 migrations apply DB --remote`, then uncomment the `[[d1_databases]]` binding).
-2. **W5 · hybrid cron (#10)** — the only remaining build item: a scheduled GH-Action ingester →
-   release asset (no CF creds in CI) → CF Cron `scheduled()` pulls into D1 (shadow → validate → swap,
-   stamps `corpus_meta`) + the Tier-3 sweep monitor.
-3. **W4 real corpus** then lands via **#161** (ODS ingester + gazetteer + OGL attribution labels).
+**One gate, then a straight line.** The live site self-monitors every 6h (tier3-monitor.yml); the D1
+store is live, empty, and fail-safe. Nothing is buildable until:
+
+1. **#161 · NHS ODS TRUD account (user)** — register, subscribe to the ODS release, **verify the
+   per-item licence is OGL on the accept screen**, take the API key (→ a GitHub Actions secret).
+2. Then, in order: **W5·B2** ingester Action (`ingest/seed.py`: ODS ZIP/CSV → `CorpusRecord`,
+   test-first parsers; geocode via postcodes.io → the D1 `postcodes` gazetteer; publish as a release
+   asset — no CF creds in CI) → **W5·B3** CF Cron `scheduled()` (pull asset → shadow → validate
+   row-count → atomic view swap → stamp `corpus_meta`) → **W4 verified live** (freshness-recency
+   assert in the sweep; OGL attribution strings in the corpus labels). That completes plan 015 →
+   mint handoff 016.
 
 ~~W3 Wander~~ ☑ (#138, register-only) · ~~W2 Scam~~ ☑ (#140, match-shape) — the two civic usecases 015
 set out to add are now in. ~~H3/H4 taxonomy + retry~~ ☑ (#141) — the H-stream (H1–H7) is now fully shipped,
