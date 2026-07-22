@@ -1,7 +1,8 @@
 # worker/ — Cloudflare Worker (`ldnmxx-hack-worker`)
 
-The middleware. `POST /api/run?usecase=founders-copilot|on-it|sort-my-care` → `runUsecase`
-(plan→tool→render) → SSE (AG-UI events → A2UI batch), plus `POST /api/trace` (browser span forwarder).
+The middleware. `POST /api/run?usecase=founders-copilot|on-it|sort-my-care|sort-my-wander|sort-my-scam-check`
+→ `runUsecase` (plan→tool→render) → SSE (AG-UI events → A2UI batch), plus `POST /api/trace` (browser span
+forwarder).
 Self-contained (`wrangler.toml`, `package.json`, `tsconfig`); tests in `worker/test/`. Secrets are Worker
 secrets only.
 
@@ -13,12 +14,17 @@ secrets only.
 OTLP export when `ARIZE_API_KEY`+`ARIZE_SPACE_ID` are set).
 
 **General engine.** `src/workflows.ts` is the registry — render `mode` → card builder, deterministic
-query `exec` → corpus query. Adding a **corpus workflow** is register + a JSON; `runUsecase`/`renderBatch`
-never change (open/closed). Flagship: **Sort My Care** (`src/care/*`, `usecases/sort-my-care.json`) — a
-model-free + fetch-free postcode → nearest-NHS signpost over a **synthetic** corpus (`data/care/*.json`;
-real ingest + CF D1 are follow-ups). It reports honestly as deterministic (`USAGE mode:demo`) and shows the
-corpus freshness + a curated "confirm with the official source" disclaimer in the render. No new env or CLI
-switch — the only new surface is `?usecase=sort-my-care` (postcode passed as the run `prompt`).
+query `exec` → corpus query. Adding a **corpus workflow** (nearest-N, e.g. **Sort My Care**/**Sort My
+Wander**) is register + a JSON; `runUsecase`/`renderBatch` never change (open/closed). **Sort My Scam
+Check** is a **match**-shape workflow instead (firm name/FRN lookup, not nearest-N) — it lives in its own
+`src/scam/{registry,query,render}.ts` module behind a dedicated `scam` render mode + `query_scam` exec,
+never a verdict, always a signpost to the FCA register. Flagship: **Sort My Care** (`src/corpus/*`,
+`usecases/sort-my-care.json`) — a model-free + fetch-free postcode → nearest-NHS signpost over a
+**synthetic** corpus (`data/care/*.json`; real ingest + CF D1 are follow-ups). It reports honestly as
+deterministic (`USAGE mode:demo`) and shows the corpus freshness + a curated "confirm with the official
+source" disclaimer in the render. `src/dates.ts` validates the `asOf` freshness date (oldest valid ISO
+date only), and `src/agent/model.ts`'s `callModelTool` retries once on a transient HTTP status before
+falling back. No new env or CLI switch beyond `?usecase=<id>` (postcode/query passed as the run `prompt`).
 
 **Run:** `npm run dev` (or `make dev-worker`); tests via `npm run test` (plain-vitest `worker.fetch()`);
 lint via `npm run lint` (strictTypeChecked, matching `ui/`).

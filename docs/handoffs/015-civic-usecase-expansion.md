@@ -1,7 +1,7 @@
 ---
-title: "Handoff 015 — C+W1+W2+W3 shipped, H hardening 2/5; resume at W6/D1+W4 (real data) or H3/H4"
+title: "Handoff 015 — C+W1+W2+W3 shipped, H hardening 5/5 (all shipped); resume at W6/D1+W4 (real data)"
 type: handoff
-updated: 2026-07-21
+updated: 2026-07-22
 pairs_with: docs/plans/015-civic-usecase-expansion.md
 ---
 
@@ -24,7 +24,7 @@ Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5
 `v1.1.0` tag is now pushed — it points at the release commit `8286890`, NOT `main`, which carries
 unreleased work).
 
-## Progress (2026-07-21)
+## Progress (2026-07-22)
 
 - ☑ **W2 · Sort My Scam Check (#74)** — #140. A **match-shape** usecase: a new `query_scam` exec + a
   dedicated `scam` render mode (engine seam unchanged — no `playStage`/`runUsecase`/`renderBatch` edits;
@@ -57,12 +57,14 @@ unreleased work).
 - ☑ **Deployed + verified live** — Pages + Worker on `sortmy.london`; the corpus seam renders real rows
   (`3 services near SW9 9SL · data as of 2026-06-01`) on all 5 configs, 0 console errors, 0 model-host hits.
 - ☑ **`v1.1.0` tag pushed** (on `8286890`, the release commit).
-- ☑ **Workstream H (engine hardening & cross-stack alignment) — folded into the 015 plan.** H1 dropped the
-  GitHub Models tier (#127/#132, it retired 2026-07-30); H2 strict usecase schema — reject unknown keys at
-  load (#133/#136), adopting azure `extra="forbid"`. **H3/H4 (transient-vs-fatal taxonomy + one bounded
-  retry) are next and FULLY PRE-SCOPED in the plan's "H3/H4 design" block** (reuse `polyfetch-scrape`
-  `errors.py`/`retry.py`; lands in `callModelTool`; transient set `{429,500,502,503,504}`). H5 `asOf` date
-  validation (#128, do before W4), H6 registry-derived unions (#129), H7 e2e On It+video (#130).
+- ☑ **Workstream H (engine hardening & cross-stack alignment) — FULLY SHIPPED (5/5), folded into the 015
+  plan.** H1 dropped the GitHub Models tier (#127/#132, it retired 2026-07-30); H2 strict usecase schema —
+  reject unknown keys at load (#133/#136), adopting azure `extra="forbid"`. H3/H4 transient-vs-fatal
+  model-error taxonomy + one bounded retry (#141) — `callModelTool` retries once on `{429,500,502,503,504}`,
+  fails fast on the rest (401/407/404/410/451). H5 `asOf` date validation (#142) — `worker/src/dates.ts`
+  advertises only the oldest VALID ISO date. H6 registry-derived `RENDER_MODES`/`STAGE_EXECS` unions (#143)
+  — `tsc`-locked, not just test-locked. H7 e2e On It assert + video both orientations (#144).
+- ☑ **H-stream complete** — all five H items (H1–H7) are shipped; no H work remains open in 015.
 - ☑ **Estate contract alignment (cross-repo):** `qte77/qte77#162` updated, `azure-doc-workflows#288` +
   `protocols#2` filed — the "share the contract" half; sibling repos' work, not this repo's flow.
 - Remaining C (original carry-over, still open): S5 knobs (each its own PR), axe-core in the sweep,
@@ -77,19 +79,17 @@ unreleased work).
 and proves W1 end-to-end with zero engine TS. Scam is a *match* shape and needs one new `query_scam` exec,
 so it is no longer the cheaper of the two.
 
-## Resume — two ready options
+## Resume — next up
 
 - **W6/D1 + W4 · real data foundation (#13)** — the decided data architecture: the request path reads an
   in-house CF **D1** store; sources are fetched **out-of-band** on a cron + explicit trigger, with
   migrations + one SQL view per corpus projecting onto the frozen `CorpusRecord`. W6/D1 precedes/merges
-  with W5 (a cron can't write a build-time JSON import). **Do H5 (#128 `asOf` date validation) BEFORE W4**
-  — it is a trust claim. See the W4/W5/W6 workstreams in the plan.
-- **H3/H4 · taxonomy + bounded retry (#134/#135)** — one PR, model-chain robustness; the entire design
-  (polyfetch reuse, transient set, where it lands, test plan) is pre-written in the **plan's "H3/H4
-  design" block** — implement straight from there, no re-derivation.
+  with W5 (a cron can't write a build-time JSON import). H5 (#128/#142 `asOf` date validation) is already
+  done, so W4's freshness claim is safe. See the W4/W5/W6 workstreams in the plan.
 
-Both are independent. ~~W3 Wander~~ ☑ (#138, register-only) · ~~W2 Scam~~ ☑ (#140, match-shape) — the two
-civic usecases 015 set out to add are now in.
+~~W3 Wander~~ ☑ (#138, register-only) · ~~W2 Scam~~ ☑ (#140, match-shape) — the two civic usecases 015
+set out to add are now in. ~~H3/H4 taxonomy + retry~~ ☑ (#141) — the H-stream (H1–H7) is now fully shipped,
+so W6/D1+W4 is the only open thread in 015.
 
 ## Register-only corpus recipe (shipped as W3 #138; the pattern for future nearest-N usecases)
 
@@ -145,20 +145,14 @@ exactly what #80 removed. A nearest-N corpus usecase is register-only (this is e
 - **Deploy = Pages-only for UI changes**: `wrangler pages deploy ui/dist --project-name sortmy-london
   --branch main`. Worker-route re-assert wants Zone→Workers-Routes→Edit (else benign code 10000).
 
-## Backlog from the 015 review (not blocking W3)
+## Backlog from the 015 review — #127–#130 now all shipped
 
-Dated / trust-critical first:
-
-- **#127 · GitHub Models tier retires 2026-07-30** — delete the third free-chain tier before it becomes a
-  guaranteed-fail round-trip. Time-boxed.
-- **#128 · `asOf` freshness depends on an unvalidated date format** — `lastUpdated.sort()[0]` is only
-  chronological because the samples are ISO `YYYY-MM-DD`. W4's real ingest could silently break the
-  "data as of …" trust claim. Fix at the ingest boundary **before** W4 exists.
-- **#129 · derive `RENDER_MODES`/`STAGE_EXECS` from the registry keys** — closes ADR 0001's known
-  "two sources of truth" minus, which W1 only half-fixed (corpus ids are validated; the mode/exec
-  constants are still hand-maintained).
-- **#130 · e2e: assert On It + record video in both orientations** — On It has the same unasserted hole
-  #126 just fixed for Care; video is currently desktop-only.
+- ☑ **#127 · GitHub Models tier retires 2026-07-30** — dropped (#132, H1).
+- ☑ **#128 · `asOf` freshness depends on an unvalidated date format** — validated at the ingest boundary
+  via `worker/src/dates.ts` (#142, H5), ahead of W4.
+- ☑ **#129 · derive `RENDER_MODES`/`STAGE_EXECS` from the registry keys** — closes ADR 0001's known
+  "two sources of truth" minus (#143, H6).
+- ☑ **#130 · e2e: assert On It + record video in both orientations** — done (#144, H7).
 
 Lower value: `docs/submission.md` is a stale v1.0.0 deck (references `runStages`/KV/`UsecaseInspector` —
 none exist) and holds the only roadmap content; dead `category` field in the care corpus; reserved-unread

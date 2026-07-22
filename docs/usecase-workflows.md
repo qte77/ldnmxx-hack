@@ -13,7 +13,7 @@ One endpoint: `POST /run?usecase=<id>`. Render = **built-in A2UI cards** (AG Gri
 {
   "id": "founders-copilot",
   "title": "Founder's Copilot",
-  "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned) | "corpus" (generic deterministic corpus query)
+  "render": { "mode": "founders" },        // "founders" (model + stub fallback) | "route" (canned) | "corpus" (generic deterministic corpus query) | "scam" (deterministic firm-lookup match)
   "stages": [
     { "name": "plan", "kind": "plan", "events": [
       { "type": "STEP_STARTED", "text": "understand the idea" },

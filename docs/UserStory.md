@@ -1,8 +1,9 @@
 # User stories
 
 The users the one engine serves (distilled from the sibling `ldnmxx` briefs): the two hackathon demos
-(Founder's Copilot, On It), the shipped civic pilot **Sort My Care**, and **Benefits Copilot**, the v1
-productization target (plans 010/011, proposed).
+(Founder's Copilot, On It), the four shipped civic flows — **Sort My Care** (flagship), **On It**
+(step-free routes), **Sort My Wander** (free heritage + green space), **Sort My Scam Check** (clone-firm
+flag) — and **Benefits Copilot**, the v1 productization target (plans 010/011, proposed).
 
 ## Founder's Copilot — the early-stage London founder *(Build London)*
 
@@ -79,6 +80,39 @@ don't pretend to be a diagnosis or a booking."*
 **Joy:** enter a postcode → the nearest public services appear as cards with distance, a plain-language
 "why", the **official** page to confirm, a "data as of …" freshness line, and a clear "signpost, not advice"
 disclaimer. Deterministic (no model, no live fetch) so it's fast and can't hallucinate a service.
+
+## Sort My Wander — the Londoner who wants a free thing to do nearby *(shipped)*
+
+**Who:** any Londoner (or visitor) with an hour spare who wants somewhere free and nearby worth a walk —
+not another paid attraction, not a generic "things to do" list.
+
+**Pain:** free, obscure heritage sites and green spaces are invisible to apps because no one earns a
+commission on a blue plaque — the real listings (Historic England, OSM, Wikidata) are scattered and
+easy to miss.
+
+**Job:** *"Show me a free, nearby place worth a walk — with the real listing, not marketing copy."*
+
+**Joy:** enter a postcode → nearby heritage sites and green spaces appear as cards with distance, a
+plain-language "why", the curated **Historic England** listing to confirm, a "data as of …" freshness
+line, and the same "signpost, not advice" disclaimer. Deterministic and **register-only** on the corpus
+engine (same seam as Sort My Care — proof the engine generalises).
+
+## Sort My Scam Check — the Londoner checking a firm before they trust it *(shipped)*
+
+**Who:** a Londoner asked to trust or pay a firm they don't recognise — approached about an investment,
+or just cautious before handing over money or details.
+
+**Pain:** clone firms copy a real, authorised firm's name and FCA reference number; checking the FCA
+register or Companies House takes know-how most people don't have — and a tool that renders a confident
+"safe"/green-check would be worse than nothing.
+
+**Job:** *"Tell me what the register actually says about this firm — and never pretend that's a
+clearance."*
+
+**Joy:** enter a firm name or its FCA reference (FRN) → its register status appears as a card (authorised
+/ no longer authorised / not on the register) with a plain-language "why", a deterministic note if a
+look-alike appears among the same search's results, and a mandatory link to **verify on the FCA
+register** — a **flag to investigate, never a green check** or a verdict.
 
 ## Why one engine
 

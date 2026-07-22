@@ -6,7 +6,8 @@
 > dev console lives behind a **dev mode** (`?dev=1` or `Ctrl+K`).
 
 **[▶ sortmy.london](https://sortmy.london)** · one engine, many London workflows — Sort My Care (NHS
-wayfinder), a founder-funding copilot, step-free routing · Londonmaxxing 003.
+wayfinder), Sort My Wander (free heritage + green space), Sort My Scam Check (clone-firm flag), a
+founder-funding copilot, step-free routing · Londonmaxxing 003.
 
 > The **product** is a civic wayfinder (a signpost to official services, never advice — always confirm at
 > the official source): a **task-first, progressive-disclosure landing** with **Sort My Care** as the
@@ -56,12 +57,17 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
 - **Civic pilot — Sort My Care:** a **deterministic** postcode → nearest-NHS-services signpost — model-free
   and fetch-free, with honest "data as of …" freshness and a "confirm with the official source" disclaimer.
   Proof that a new corpus workflow is register + a JSON, not an engine edit. `?usecase=sort-my-care`.
+- **Civic — Sort My Wander:** the same deterministic corpus signpost over free heritage sites + green
+  spaces near a postcode — register-only, curated Historic England link. `?usecase=sort-my-wander`.
+- **Civic — Sort My Scam Check:** a firm name/FCA-reference **flag**, never a verdict — register status +
+  a deterministic clone look-alike note, signposting to the FCA register. `?usecase=sort-my-scam-check`.
 - Keyless demo path; secrets stay Worker-only *(stack rationale below)*.
 
 **URL parameters** (all optional): `?usecase=<id>` selects the workflow (`founders-copilot` · `on-it` ·
-`sort-my-care`); `?theme=light|dark` forces the theme (else system); `?dev=1` reveals the AG-UI/A2UI dev
-console + ⚙ Key panel (also `Ctrl+K` / `Ctrl+I`; persisted in `localStorage`); `?demo=1` forces the
-Worker's deterministic path. No secret is ever read from the URL or inlined into the SPA bundle.
+`sort-my-care` · `sort-my-wander` · `sort-my-scam-check`); `?theme=light|dark` forces the theme (else
+system); `?dev=1` reveals the AG-UI/A2UI dev console + ⚙ Key panel (also `Ctrl+K` / `Ctrl+I`; persisted in
+`localStorage`); `?demo=1` forces the Worker's deterministic path. No secret is ever read from the URL or
+inlined into the SPA bundle.
 
 <details>
 <summary>Screenshot — Founder's Copilot</summary>
@@ -93,14 +99,18 @@ A step-free London route — same engine, one `usecase` away.
 make help    # all targets
 make dev     # worker (:8787) + ui (:5173) locally, keyless
 make test    # ui + worker tests
+make deploy  # build the SPA + deploy the Worker to Cloudflare
+make bump    # stamp a version across ui/worker + the README badge
+make demo    # boot both, then open localhost:5173 (prod: sortmy.london)
 ```
 
 Toggle the two example workflows in the UI; `cd worker && npm run tail` shows one Arize span per stage.
 **Demo:** <https://sortmy.london> — SPA on **Cloudflare Pages**, Worker API same-origin at `/api/*`
 ([deploy](docs/deploy-cloudflare.md)). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
 
-**Switches:** `?usecase=founders-copilot|on-it|sort-my-care` picks the workflow (`sort-my-care` is
-deterministic — model-free + fetch-free) · a **Demo⇄Live toggle** in the header
+**Switches:** `?usecase=founders-copilot|on-it|sort-my-care|sort-my-wander|sort-my-scam-check` picks the
+workflow (`sort-my-care`/`sort-my-wander`/`sort-my-scam-check` are deterministic — model-free + fetch-free)
+· a **Demo⇄Live toggle** in the header
 (or `?demo=1`) forces the keyless deterministic stub even with a model key set — the events header then
 shows an honest chip (`LIVE · <model> · ~N tok` / `DEMO · deterministic` / `STUB · fell back`) · `?theme=light|dark`
 overrides the theme · BYOK sends `Authorization: Bearer <key>` to the Worker instead of its server-side key.

@@ -32,7 +32,7 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 | W5 | Ingest cron (#10) — scheduled re-seed (CF Cron Trigger); pairs with the e2e Tier-3 monitor | ☐ to ship |
 | W6 | Data store (#13) — CF **D1** as the FOUNDATION for W4/W5 (no longer "only if forced") | ☐ to ship |
 | C | **014 carry-over** (small; do first / in parallel) — see below | 🟡 shared-lint + tag done; S5/axe/runs.jsonl open |
-| H | **Engine hardening & cross-stack alignment** (a distinct theme, folded in — see below) | 🟡 in progress (2/5) |
+| H | **Engine hardening & cross-stack alignment** (a distinct theme, folded in — see below) | ☑ shipped (5/5) |
 
 ## Workstream H — engine hardening & cross-stack alignment
 
@@ -45,11 +45,11 @@ plan) while 015 is open. Independent small PRs, each its own issue.
 |---|---|---|
 | H1 | Drop the GitHub Models free tier (#127) — retired 2026-07-30 | ☑ shipped (#132) |
 | H2 | Strict usecase schema — reject unknown keys at load (#133), adopt azure `extra="forbid"` | ☑ shipped (#136) |
-| H3 | Transient-vs-fatal model-error taxonomy (#134) — align azure `core/errors`; **reuse `polyfetch-scrape`'s typed taxonomy** | ☐ to ship |
-| H4 | One bounded retry on transient errors (#135) — align azure `core/providers` + `polyfetch retry.py`; lands in `callModelTool` (covers keyed + free), transient set `{429,500,502,503,504}` | ☐ to ship (with H3, one PR) |
-| H5 | Validate the `asOf` date format (#128) — a trust claim; fix **before W4** ingest exists | ☐ to ship |
-| H6 | Derive `RENDER_MODES`/`STAGE_EXECS` from registry keys (#129) — closes ADR-0001's known "two sources of truth" minus | ☐ to ship |
-| H7 | e2e: assert On It + record video in both orientations (#130) | ☐ to ship |
+| H3 | Transient-vs-fatal model-error taxonomy (#134) — align azure `core/errors`; **reuse `polyfetch-scrape`'s typed taxonomy** | ☑ shipped (#141) |
+| H4 | One bounded retry on transient errors (#135) — align azure `core/providers` + `polyfetch retry.py`; lands in `callModelTool` (covers keyed + free), transient set `{429,500,502,503,504}` | ☑ shipped (#141) |
+| H5 | Validate the `asOf` date format (#128) — a trust claim; fix **before W4** ingest exists | ☑ shipped (#142) |
+| H6 | Derive `RENDER_MODES`/`STAGE_EXECS` from registry keys (#129) — closes ADR-0001's known "two sources of truth" minus | ☑ shipped (#143) |
+| H7 | e2e: assert On It + record video in both orientations (#130) | ☑ shipped (#144) |
 
 **Estate alignment (cross-repo; the "share the contract" half):** `qte77/qte77#162` (hub tracker,
 updated), `qte77/azure-doc-workflows#288` (reciprocal: commit their contract test + back-ref adopted
@@ -144,10 +144,9 @@ the corpus id. `workflows.ts` registry: `render.corpus` + `query.query_corpus`; 
   so it proves W1 with zero engine TS; Scam is a *match* shape needing one new `query_scam` exec), and
   **W6/D1 is no longer "only if forced"** — the decided data architecture makes it the foundation W4/W5
   build on (see below). Each usecase adds its e2e sweep label + screenshots.
-- **Review backlog (not blocking W3):** #127 GitHub Models tier retires 2026-07-30 · #128 `asOf` freshness
-  depends on an unvalidated date format (fix before W4 — it is a trust claim) · #129 derive
-  `RENDER_MODES`/`STAGE_EXECS` from registry keys (closes ADR 0001's known minus) · #130 e2e assert On It
-  and record video in both orientations.
+- **Review backlog — now all shipped:** #127 GitHub Models tier retired (#132) · #128 `asOf` freshness
+  date format validated (#142) · #129 `RENDER_MODES`/`STAGE_EXECS` derived from registry keys, closing ADR
+  0001's known minus (#143) · #130 e2e asserts On It and records video in both orientations (#144).
 - **Conventions (hard, unchanged from 014):** branch-per-topic → Conventional Commits → CI-gated PR →
   squash-merge `--admin` **only on green** → **prune**. `env -u GH_TOKEN -u GITHUB_TOKEN` · noreply ·
   `--no-gpg-sign` (rebase: `-c commit.gpgsign=false`) · SHA-pin Actions · **strict module-TDD** (tests first
