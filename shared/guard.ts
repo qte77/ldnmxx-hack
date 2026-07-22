@@ -28,7 +28,7 @@ const PATTERNS: { re: RegExp; reason: string }[] = [
   },
   { re: /\b(?:system|developer)\s+prompt\b/i, reason: "prompt-exfiltration attempt" },
   {
-    re: /\b(?:reveal|show|print|repeat|reproduce)\b[^.\n]{0,30}\b(?:system|initial|original|above|your)\s+(?:prompt|instruction|rule)s?/i,
+    re: /\b(?:reveal|show|print|repeat|reproduce)\b[^.\n]{1,30}\b(?:system|initial|original|above|your)\s+(?:prompt|instruction|rule)s?/i,
     reason: "prompt-exfiltration attempt",
   },
   { re: /\byou\s+are\s+now\b/i, reason: "role-override attempt" },

@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import regexp from "eslint-plugin-regexp";
 import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
 import tseslint from "typescript-eslint";
@@ -32,8 +33,11 @@ export default tseslint.config(
       js.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
+      regexp.configs["flat/recommended"],
     ],
     files: ["**/*.{ts,tsx}"],
+    // Fail on a stale/unnecessary `eslint-disable` so the reviewed disables stay honest.
+    linterOptions: { reportUnusedDisableDirectives: "error" },
     languageOptions: {
       ecmaVersion: 2022,
       globals: { ...globals.browser, ...globals.node },

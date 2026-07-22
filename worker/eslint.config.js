@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import regexp from "eslint-plugin-regexp";
 import security from "eslint-plugin-security";
 import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
@@ -35,8 +36,11 @@ export default tseslint.config(
       ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
       security.configs.recommended,
+      regexp.configs["flat/recommended"],
     ],
     files: ["**/*.ts"],
+    // Fail on a stale/unnecessary `eslint-disable` (so the reviewed exceptions we add stay honest).
+    linterOptions: { reportUnusedDisableDirectives: "error" },
     languageOptions: {
       ecmaVersion: 2022,
       globals: { ...globals.node },
