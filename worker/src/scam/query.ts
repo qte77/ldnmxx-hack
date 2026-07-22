@@ -56,7 +56,7 @@ function statusWhy(status: string): string {
 function nameStem(name: string): string {
   return name
     .toLowerCase()
-    .replaceAll(/\b(ltd|limited|llp|llc|plc|lp|group|holdings|uk|inc|co)\b/g, "")
+    .replaceAll(/\b(?:ltd|limited|llp|llc|plc|lp|group|holdings|uk|inc|co)\b/g, "")
     .replaceAll(/[^a-z0-9]+/g, " ")
     .trim();
 }
