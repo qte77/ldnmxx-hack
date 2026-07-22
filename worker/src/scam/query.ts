@@ -18,7 +18,7 @@ export interface ScamQuery {
 // Trim + collapse whitespace + cap length. This is a LOCAL match key (no external fetch, no model),
 // so it is input hygiene, not a security boundary.
 export function normaliseFirmQuery(prompt: string): string {
-  return prompt.trim().replace(/\s+/g, " ").slice(0, 100);
+  return prompt.trim().replaceAll(/\s+/g, " ").slice(0, 100);
 }
 
 // Case-insensitive substring on the name, OR an exact FRN / Companies House number. Pure + injectable,
@@ -56,8 +56,8 @@ function statusWhy(status: string): string {
 function nameStem(name: string): string {
   return name
     .toLowerCase()
-    .replace(/\b(ltd|limited|llp|llc|plc|lp|group|holdings|uk|inc|co)\b/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
+    .replaceAll(/\b(ltd|limited|llp|llc|plc|lp|group|holdings|uk|inc|co)\b/g, "")
+    .replaceAll(/[^a-z0-9]+/g, " ")
     .trim();
 }
 

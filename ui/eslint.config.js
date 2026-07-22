@@ -3,7 +3,27 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import sonarjs from "eslint-plugin-sonarjs";
+import unicorn from "eslint-plugin-unicorn";
 import tseslint from "typescript-eslint";
+
+// A CURATED unicorn subset (mirrors worker/eslint.config.js): high-signal, auto-fixable, low-noise
+// modernisation rules only — NOT the ~100-rule recommended set. Opinionated/churny rules are excluded.
+const UNICORN_RULES = {
+  "unicorn/prefer-node-protocol": "error",
+  "unicorn/prefer-string-slice": "error",
+  "unicorn/prefer-string-starts-ends-with": "error",
+  "unicorn/prefer-string-replace-all": "error",
+  "unicorn/prefer-array-some": "error",
+  "unicorn/prefer-array-find": "error",
+  "unicorn/prefer-array-flat-map": "error",
+  "unicorn/prefer-includes": "error",
+  "unicorn/prefer-number-properties": "error",
+  "unicorn/prefer-optional-catch-binding": "error",
+  "unicorn/prefer-date-now": "error",
+  "unicorn/no-instanceof-array": "error",
+  "unicorn/no-useless-spread": "error",
+  "unicorn/throw-new-error": "error",
+};
 
 export default tseslint.config(
   { ignores: ["dist", "coverage", "node_modules"] },
@@ -26,8 +46,10 @@ export default tseslint.config(
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       sonarjs,
+      unicorn,
     },
     rules: {
+      ...UNICORN_RULES,
       ...reactHooks.configs.recommended.rules,
       // React-Compiler advisory rules (react-hooks v7): keep as warnings — they flag
       // intentional latest-ref / recursive-timer patterns in the tested replay engine.
