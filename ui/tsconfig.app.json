@@ -14,6 +14,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noUncheckedSideEffectImports": true,
+    "noPropertyAccessFromIndexSignature": true,
     "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

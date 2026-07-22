@@ -28,7 +28,7 @@ function collectComponentIds(comp: unknown, ids: Set<string>, refs: string[]): v
   if (typeof c.id === "string") ids.add(c.id);
   if (!c.component) return;
   const props = Object.values(c.component)[0];
-  const card = c.component.Card;
+  const card = c.component["Card"];
   if (card && typeof card.child === "string") refs.push(card.child);
   const list = props?.children?.explicitList;
   if (!Array.isArray(list)) return;

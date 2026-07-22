@@ -54,21 +54,21 @@ export function isValidSearchResult(value: unknown, allowedIds: readonly string[
   // casting to Partial<SearchResult> here would be circular.
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
-  if (typeof v.reasoning !== "string" || !isArray(v.matches) || v.matches.length === 0) {
+  if (typeof v["reasoning"] !== "string" || !isArray(v["matches"]) || v["matches"].length === 0) {
     return false;
   }
   const allowed = new Set(allowedIds);
-  return v.matches.every((m) => {
+  return v["matches"].every((m) => {
     // Each element is untrusted too: a null/primitive here used to throw on `.id` rather than
     // reject, because the Partial<OpportunityMatch> cast asserted it could never be null.
     if (typeof m !== "object" || m === null) return false;
     const mm = m as Record<string, unknown>;
     return (
-      typeof mm.id === "string" &&
-      allowed.has(mm.id) &&
-      typeof mm.score === "number" &&
-      typeof mm.whyItFits === "string" &&
-      (mm.stageFit === undefined || typeof mm.stageFit === "string")
+      typeof mm["id"] === "string" &&
+      allowed.has(mm["id"]) &&
+      typeof mm["score"] === "number" &&
+      typeof mm["whyItFits"] === "string" &&
+      (mm["stageFit"] === undefined || typeof mm["stageFit"] === "string")
     );
   });
 }

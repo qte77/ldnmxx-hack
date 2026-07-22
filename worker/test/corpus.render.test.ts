@@ -21,12 +21,12 @@ function assertSelfContained(batch: Batch[]): void {
   const ids = new Set(update.components.map((c) => c.id));
   expect(ids.has(begin.root)).toBe(true);
   for (const comp of update.components) {
-    const card = comp.component.Card;
+    const card = comp.component["Card"];
     if (card) {
       expect(typeof card.child).toBe("string");
       if (card.child) expect(ids.has(card.child)).toBe(true);
     }
-    const list = comp.component.Column?.children?.explicitList;
+    const list = comp.component["Column"]?.children?.explicitList;
     if (Array.isArray(list)) for (const id of list) expect(ids.has(id)).toBe(true);
   }
 }
@@ -34,7 +34,7 @@ function assertSelfContained(batch: Batch[]): void {
 function rootList(batch: Batch[]): string[] {
   const update = batch.find((m) => m.surfaceUpdate)?.surfaceUpdate;
   const root = update?.components.find((c) => c.id === "root");
-  return root?.component.Column?.children?.explicitList ?? [];
+  return root?.component["Column"]?.children?.explicitList ?? [];
 }
 
 const labels: CorpusLabels = {

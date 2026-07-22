@@ -388,7 +388,7 @@ export async function runUsecase(
   // Deterministic workflows (route, care, …) are honestly "demo" — nothing degraded; only founders, which
   // asked for a model and got none, is "stub".
   const deterministic = def.render.mode !== "founders";
-  const mode: UsageEvent["mode"] = meta ? "live" : runAttrs.demo === true || deterministic ? "demo" : "stub";
+  const mode: UsageEvent["mode"] = meta ? "live" : runAttrs["demo"] === true || deterministic ? "demo" : "stub";
   const usageEvent: UsageEvent = { type: "USAGE", mode, ...usage };
   if (meta) {
     usageEvent.model = meta.model;
