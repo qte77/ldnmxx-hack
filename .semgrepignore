@@ -1,0 +1,4 @@
+# Vendored third-party libraries — scanned upstream, not our code. Excluding them keeps the CI
+# `semgrep scan --error` gate on OUR source (the security-audit/owasp rules would otherwise fire on
+# a minified lib's internal DOM usage, e.g. axe-core's injected WCAG scanner).
+tests/e2e/vendor/

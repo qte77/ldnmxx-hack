@@ -67,8 +67,22 @@ unreleased work).
 - ☑ **H-stream complete** — all five H items (H1–H7) are shipped; no H work remains open in 015.
 - ☑ **Estate contract alignment (cross-repo):** `qte77/qte77#162` updated, `azure-doc-workflows#288` +
   `protocols#2` filed — the "share the contract" half; sibling repos' work, not this repo's flow.
-- Remaining C (original carry-over, still open): S5 knobs (each its own PR), axe-core in the sweep,
-  `runs.jsonl` manifest.
+- ☑ **C · S5 deepest strictness — 4/5 shipped, 1 deferred; axe-core + `runs.jsonl` shipped.**
+  `verbatimModuleSyntax` (#146) · `noPropertyAccessFromIndexSignature` (#147, 60-site bracket-notation
+  fix) · `eslint-plugin-security` (worker+shared, #148, `detect-object-injection` off + 2 reviewed
+  `detect-unsafe-regex` exceptions in `guard.ts`) · curated `eslint-plugin-unicorn` (worker+ui, #152)
+  are all merged; `eslint-plugin-jsx-a11y` (#150) is **DEFERRED** — its latest release peers ESLint
+  `^3`–`^9`, incompatible with this repo's ESLint 10, and `legacy-peer-deps` would undermine the same
+  strictness. The e2e sweep now injects a **self-hosted, vendored** `axe-core`
+  (`tests/e2e/vendor/axe.min.js`, past the CSP via `page.evaluate`) for a WCAG 2 A/AA scan — gates on
+  `critical`, reports `serious`+ — which already caught 1 real serious issue (card official-link
+  contrast 4.42 < 4.5, a11y issue #154). A committed `tests/e2e/runs.jsonl` also now carries per-run
+  history across sessions. **The C carry-over is essentially complete.**
+- Remaining C: nothing blocking — `eslint-plugin-jsx-a11y` (#150) stays deferred pending upstream
+  ESLint 10 support. Queued follow-on hardening (not yet built, approved): `ruff` (Python lint for
+  `ingest/` + `tests/e2e/*.py`), `actionlint` (CI workflow linting), ESLint
+  `reportUnusedDisableDirectives` + `eslint-plugin-regexp`, and a11y-strict (fix #154's contrast, gate
+  axe on `serious`, run axe on a mobile viewport).
 
 ## Queue & order
 
