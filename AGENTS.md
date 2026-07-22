@@ -6,7 +6,8 @@ Operating rules for agents (single source of truth; `CLAUDE.md` points here).
 
 Modular **AG-UI/A2UI** hackathon app on a **Cloudflare Worker** (Londonmaxxing 003, Sat 4 Jul 2026).
 - Build plan + source map: `docs/plans/001-build-plan.md`
-- Resume point: latest `docs/handoffs/NNN-*.md` · Design: `docs/design.md` · Demo: `docs/demo-script.md`
+- Resume point: latest `docs/handoffs/NNN-*.md` · Design: `docs/design.md` · Obsolete-but-historical
+  docs: `docs/archive/`
 - **This repo (`ldnmxx-hack`) is the SSOT** — the sibling `qte77/ldnmxx` is read-only **archival
   deep-reference** only (do not edit it or treat it as canonical).
 - Architecture: `docs/architecture.md` · Use cases: `docs/usecase-workflows.md` · Glossary

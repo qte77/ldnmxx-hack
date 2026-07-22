@@ -6,6 +6,11 @@ updated: 2026-07-04
 
 # Submission — Groundwork
 
+> **ARCHIVED 2026-07-22 — historical record (Londonmaxxing 003 submission deck, 2026-07-04), no
+> longer maintained.** References v1.0.0-era internals (`runStages`, KV, `UsecaseInspector`) that no
+> longer exist. Current state: `README.md` + `docs/architecture.md` + ADR 0002; roadmap: plan 015
+> (`docs/plans/015-*.md`, tracker #113).
+
 Prefilled deck. **Star = Track B (Groundwork, the founder copilot).** Track A ("On It") is the live proof of
 the **modular workflow engine**. `[confirm]` = decide before submitting.
 

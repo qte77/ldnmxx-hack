@@ -1,5 +1,9 @@
 # Demo script — 60 seconds (the north star)
 
+> **ARCHIVED 2026-07-22 — historical record (Londonmaxxing 003 stage script), no longer
+> maintained.** The hackathon (2026-07-04) is past and the script references the since-removed
+> catalog view. The live product is the civic wayfinder on `sortmy.london` (see `README.md`).
+
 Build only what this script needs (the YAGNI filter). This doc splits what's **performable today**
 (shipped, keyless) from what's still **planned** (post-hackathon) — don't conflate the two on stage.
 
