@@ -12,10 +12,17 @@ export interface GuardResult {
 
 const PATTERNS: { re: RegExp; reason: string }[] = [
   {
+    // Reviewed ReDoS-safe: the only repetition is independent `\s+` runs and `?`-bounded optional
+    // literal groups — no unbounded NESTED quantifier, so no catastrophic backtracking. safe-regex
+    // (detect-unsafe-regex) flags the nominal star-height conservatively; keep the rule on for future
+    // patterns and exempt this reviewed one.
+    // eslint-disable-next-line security/detect-unsafe-regex
     re: /ignore\s+(?:all\s+|any\s+|the\s+)?(?:previous|prior|earlier|above)\s+(?:instruction|prompt|message|rule|direction)s?/i,
     reason: "instruction-override attempt",
   },
   {
+    // Reviewed ReDoS-safe — same shape as above (bounded optionals + independent `\s+`).
+    // eslint-disable-next-line security/detect-unsafe-regex
     re: /disregard\s+(?:all\s+|the\s+|any\s+)?(?:previous|prior|earlier|above|system)/i,
     reason: "instruction-override attempt",
   },
