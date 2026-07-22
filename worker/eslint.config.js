@@ -26,6 +26,15 @@ const UNICORN_RULES = {
   "unicorn/throw-new-error": "error",
 };
 
+// eslint-plugin-security ships its rules at "warn" (advisory only) — they'd never FAIL a lint run.
+// Escalate them ALL to "error" so the meaningful ones (unsafe-regex, non-literal-fs/require/eval,
+// child-process, timing-attack, …) actually GATE CI on the request path + security boundary. Derived
+// from the recommended set so a future plugin rule is enforced automatically; the two noisy ones are
+// turned back off below (object-injection globally; non-literal-fs on tests).
+const SECURITY_ERRORS = Object.fromEntries(
+  Object.keys(security.configs.recommended.rules ?? {}).map((rule) => [rule, "error"])
+);
+
 // Worker/shared lint — mirrors ui/eslint.config.js (strictTypeChecked + stylisticTypeChecked +
 // sonarjs) but node-only, no React. These are the security-critical request-path files.
 export default tseslint.config(
@@ -52,6 +61,7 @@ export default tseslint.config(
     plugins: { sonarjs, unicorn },
     rules: {
       ...UNICORN_RULES,
+      ...SECURITY_ERRORS,
       // Provably-safe indexed access uses guarded `!` (the noUncheckedIndexedAccess pass).
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-confusing-void-expression": "off",
