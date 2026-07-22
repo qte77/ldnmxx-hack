@@ -25,7 +25,8 @@ registered, not wired into the core, and honestly reported as `USAGE mode:demo`.
 entry with no engine TS: the query pre-formats each row's display line (so the render is shape-agnostic),
 and the load-guard rejects an unregistered `corpus` id at startup. The query seam is **source-driven**
 (W6 #162, ADR [`0002`](adr/0002-real-data-store.md)): a corpus flagged with a `d1View` reads the CF **D1**
-store when the binding is bound, the bundled JSON stays the offline/outage fallback, and serving from the
+store when the binding is bound, the bundled JSON stays the fallback (unbound, FAILING, or **not yet
+seeded** — an empty gazetteer degrades rather than answering empty, #171), and serving from the
 store is **licence-gated** (`data/sources.json` `redistribute_ok`).
 
 **Match-shaped workflows** are a fifth shape, shipped by **Sort My Scam Check** (#140): a firm name/FCA
@@ -62,9 +63,9 @@ user input → SPA useAgentSSE ──POST /api/run?usecase=<id>──▶ Worker 
         → A2UI surface (built-in Column/Card render)  +  EventStream (live log)
 
   PLANNED, out of band (ingest/ unbuilt — deferred to #161): ingest/seed.py → polyfetch → NHS ODS
-  (TRUD bulk, OGL) → CF D1 (schema + one view per corpus in worker/migrations/; ADR 0002). Today the
-  live data source is the committed data/{demo,care,wander}/*.json; the D1 binding ships commented
-  out until provisioning.
+  (TRUD bulk, OGL) → CF D1 (schema + one view per corpus in worker/migrations/; ADR 0002). The D1
+  store is provisioned + bound but EMPTY until #161 seeds it, so today the live data source is the
+  committed data/{demo,care,wander}/*.json via the not-yet-seeded fail-safe (#171).
 ```
 
 Open data sources available for future workflows are cataloged (machine-readable) in
@@ -112,8 +113,9 @@ sets the next run's `?demo=1` intent; the chip reports what the last run actuall
   0.0.57 · vitest 4 + jsdom.
 - **Worker:** Wrangler 4 (compat ≈ 2026-06-24) · raw `fetch` → OpenRouter directly (CF **AI Gateway** is
   read via `env.AI_GATEWAY_URL` but not yet configured in prod, #29) · no KV — the corpus store is CF
-  **D1** behind a `CorpusSource` seam (ADR 0002; binding commented out until provisioned, so the bundled
-  JSON serves and remains the fallback) · injectable **Arize** emitter (console default, key-gated).
+  **D1** behind a `CorpusSource` seam (ADR 0002; **provisioned + bound, EMPTY until #161 seeds it** —
+  the bundled JSON serves via the not-yet-seeded fail-safe, #171) · injectable **Arize** emitter
+  (console default, key-gated).
 - **Ingest:** Python/uv + **polyfetch** (3-tier httpx→curl_cffi→Patchright) — **PLANNED**, not built yet.
 - **No Docker, no devcontainer** — serverless; the ingest's Chromium is a CI step, not a shipped image.
 

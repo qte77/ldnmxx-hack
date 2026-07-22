@@ -4,6 +4,19 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-07-22
+
+### Plan 015 — real-data operations (post-1.2.0)
+
+- **D1 provisioned + live (A2; #13 closed)** — DB `sortmy_london_corpus` created, schema applied, the
+  `DB` binding on the deployed Worker; the Pages config stays D1-free (the Worker is the sole data
+  access, ADR 0002). **Empty-store fail-safe (#171):** an unseeded gazetteer now degrades to the
+  bundled sample (miss → seed-probe → throw into the existing fallback), verified LIVE against the
+  empty store (sweep PASS, flagship 5/5 viewports).
+- **Tier-3 uptime monitor (W5·B1, #173)** — a scheduled (6-hourly + dispatch) credential-free Action
+  sweeps live `sortmy.london`; FAIL ⇒ red run + artifact bundle + a deduped alert issue. First
+  dispatched run green. W5·B2/B3 (ingester + cron re-seed) and W4 stay blocked on #161 (TRUD).
+
 ## [1.2.0] — 2026-07-22
 
 ### Plan 015 — civic usecase expansion + real data
