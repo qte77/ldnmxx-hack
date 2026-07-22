@@ -180,12 +180,12 @@ def axe_source():
     return _AXE_SRC
 
 
-def run_axe(page):
+def run_axe(page, name):
     """Inject vendored axe-core and run a WCAG 2 A/AA scan on the current page. Injected via
     page.evaluate (CDP main-world eval) so the page's strict script-src CSP doesn't block it — the same
     reason `add_script_tag` would fail here. Returns (critical_count, serious_count) and writes the full
-    violations list to results/<label>/axe-desktop.json for triage. The sweep GATES on `critical`
-    (keeps it a usable green/red signal); `serious`+ are reported loudly + tracked, not gated."""
+    violations list to results/<label>/axe-<config>.json for triage. The sweep GATES on `critical` +
+    `serious` (WCAG AA); anything below (moderate/minor) is not gated."""
     try:
         page.evaluate(axe_source())  # defines window.axe (not subject to page CSP)
         results = page.evaluate(
@@ -199,14 +199,14 @@ def run_axe(page):
     critical = [v for v in violations if v.get("impact") == "critical"]
     serious = [v for v in violations if v.get("impact") == "serious"]
     try:
-        with open(f"{OUT}/axe-desktop.json", "w") as fh:
+        with open(f"{OUT}/axe-{name}.json", "w") as fh:
             json.dump(violations, fh, indent=2)
     except Exception as e:
         print(f"    axe write: {e}")
     for v in critical + serious:
-        print(f"      axe {v.get('impact')}: {v.get('id')} x{len(v.get('nodes', []))} — {v.get('help')}")
+        print(f"      !! axe {v.get('impact')}: {v.get('id')} x{len(v.get('nodes', []))} — {v.get('help')}")
     print(f"    axe(wcag2a/aa): {len(violations)} violations — "
-          f"{len(critical)} critical (gated), {len(serious)} serious (reported)")
+          f"{len(critical)} critical + {len(serious)} serious (all gated)")
     return len(critical), len(serious)
 
 
@@ -252,7 +252,8 @@ def run_config(pw, name, kw, video):
     axe_crit, axe_ser = 0, 0
     if name == "desktop":
         snapshot_a11y(page)
-        axe_crit, axe_ser = run_axe(page)  # WCAG scan once, on the content-rich desktop state
+    if name in ("desktop", "mobile-portrait"):  # WCAG scan on both orientations of the content-rich state
+        axe_crit, axe_ser = run_axe(page, name)
     mh, unf = summarize(cons, net)
     close_context(context, browser, page, video)
     return mh, unf, flows_ok, axe_crit, axe_ser
@@ -271,17 +272,14 @@ def report(model_hits, unf, broken, a11y_crit, a11y_ser):
     if broken:
         print(f"FAIL: a corpus flow (flows.json) did not render on: {', '.join(broken)}.")
         ok = False
-    if a11y_crit:
-        print(f"FAIL: axe-core found {a11y_crit} CRITICAL WCAG 2 A/AA violation(s) on desktop "
-              f"(see results/{LABEL}/axe-desktop.json).")
+    if a11y_crit or a11y_ser:
+        print(f"FAIL: axe-core found {a11y_crit} critical + {a11y_ser} serious WCAG 2 A/AA "
+              f"violation(s) across desktop+mobile (see results/{LABEL}/axe-<config>.json).")
         ok = False
-    if a11y_ser:
-        print(f"NOTE: axe-core found {a11y_ser} serious WCAG violation(s) — reported, not gated "
-              f"(see results/{LABEL}/axe-desktop.json).")
     if not ok:
         return 1
     print("PASS: no browser→model-host request, no openrouter/401 console line, every corpus flow "
-          "rendered, and 0 CRITICAL axe violations.")
+          "rendered, and 0 critical/serious axe violations across desktop + mobile.")
     return 0
 
 
