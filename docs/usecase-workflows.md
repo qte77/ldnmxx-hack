@@ -203,4 +203,4 @@ Target design, not a status report — see shipped/planned tags above. Honest to
 
 **Strategy:** On It carries idea-validation; Founder's Copilot carries the UX joy. Pitch the primary
 workflow → one-click swap to the other = the single move that covers all four criteria (once the planned
-work above lands). See `submission.md`.
+work above lands). See `archive/submission.md` (archived).

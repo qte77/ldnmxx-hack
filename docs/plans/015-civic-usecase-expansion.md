@@ -2,7 +2,7 @@
 title: "Plan 015 — civic usecase expansion + real data (fast-follow to 014)"
 type: plan
 updated: 2026-07-22
-status: "proposed — not started"
+status: "in progress — W6 shipped (#162, v1.2.0); W4 deferred → #161; W5 remains"
 refs: ["#113 (015 tracker)", "#80 query-stage/manifest", "#74 Scam", "#73 Wander", "#13 real Care corpus", "#10 ingest cron", "014 plan/handoff (predecessor, shipped+live)"]
 ---
 
@@ -28,9 +28,9 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 | W1 | Engine: general query stage + workflow manifest (#80) — make a new corpus usecase register-only | ☑ shipped (#125) |
 | W2 | Sort My Scam Check (#74) — clone-firm fraud **flag** (Companies House / FCA), never a verdict | ☑ shipped (#140) |
 | W3 | Sort My Wander (#73) — free/obscure heritage discovery (Historic England / OSM / Wikidata) | ☑ shipped (#138) |
-| W4 | Real Care corpus (#13) — replace synthetic `data/care/*` with an ingested NHS directory + freshness | ☐ to ship |
-| W5 | Ingest cron (#10) — scheduled re-seed (CF Cron Trigger); pairs with the e2e Tier-3 monitor | ☐ to ship |
-| W6 | Data store (#13) — CF **D1** as the FOUNDATION for W4/W5 (no longer "only if forced") | ☐ to ship |
+| W4 | Real Care corpus (#13) — replace synthetic `data/care/*` with an ingested NHS directory + freshness | ☐ **DEFERRED → #161** (source pivoted to **NHS ODS/TRUD** — the live Service Search API forbids caching; licence-gated via `redistribute_ok`) |
+| W5 | Ingest cron (#10) — scheduled re-seed (CF Cron Trigger); pairs with the e2e Tier-3 monitor | ☐ to ship (design decided: **hybrid** — GH-Action ingester → release asset → CF cron → D1; see #10) |
+| W6 | Data store (#13) — CF **D1** as the FOUNDATION for W4/W5 (no longer "only if forced") | ☑ shipped (#162, **v1.2.0** — `CorpusSource` seam + migrations + ADR 0002; binding pending provisioning) |
 | C | **014 carry-over** (small; do first / in parallel) — see below | ☑ shipped (S5 4/5 + jsx-a11y deferred #150; axe-core + runs.jsonl shipped) |
 | H | **Engine hardening & cross-stack alignment** (a distinct theme, folded in — see below) | ☑ shipped (5/5) |
 

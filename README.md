@@ -138,7 +138,8 @@ agent built in a day joins what incumbents can't, and swaps between both from on
 - [Architecture](docs/architecture.md) · [User stories](docs/UserStory.md) ·
   [Use-case workflows](docs/usecase-workflows.md) · [Glossary](docs/glossary.md) ·
   [Data sources](data/sources.json) · [Usecase catalog](data/usecase-catalog.json) ·
-  [Submission](docs/submission.md) · [Design](docs/design.md) · [Demo script](docs/demo-script.md)
+  [Design](docs/design.md) · archived (historical): [submission](docs/archive/submission.md),
+  [demo script](docs/archive/demo-script.md)
 - Reuse base: [`qte77/agenthud-agui-a2ui`](https://github.com/qte77/agenthud-agui-a2ui) · fetcher:
   [`qte77/polyfetch-scrape`](https://github.com/qte77/polyfetch-scrape)
 

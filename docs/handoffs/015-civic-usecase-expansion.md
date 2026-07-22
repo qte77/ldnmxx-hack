@@ -1,5 +1,5 @@
 ---
-title: "Handoff 015 — C+W1+W2+W3 shipped, H hardening 5/5 (all shipped); resume at W6/D1+W4 (real data)"
+title: "Handoff 015 — C+W1+W2+W3+H+W6 shipped (v1.2.0 released); W4 deferred → #161; resume at user gates (deploy/TRUD/D1) then W5"
 type: handoff
 updated: 2026-07-22
 pairs_with: docs/plans/015-civic-usecase-expansion.md
@@ -23,6 +23,32 @@ Care corpus with a real ingested NHS directory plus a scheduled re-seed (**W4/W5
 (S5 strictness, shared lint, axe-core, e2e Tier-2 manifest; **v1.1.0 shipped** #120 and the
 `v1.1.0` tag is now pushed — it points at the release commit `8286890`, NOT `main`, which carries
 unreleased work).
+
+## Progress (2026-07-22 · later session — W6 shipped, v1.2.0 released)
+
+- ☑ **W6 · D1 read-through corpus store (#13)** — PR #162: `CorpusSource` seam (`corpus/source.ts` —
+  bundled default/fallback + `d1Source` over one SQL view per corpus), pure `corpusRows` core,
+  `CorpusDef.d1View` (care → `care_signposts`), `env.DB → ModelCtx → QueryCtx` threading (interpreter
+  stays closed), `worker/migrations/0001_corpus_store.sql` (+ `postcodes` gazetteer + `corpus_meta`).
+  The `[[d1_databases]]` binding ships **commented out** until provisioning — unbound/failed D1 serves
+  the bundled sample, so an outage can never break Care. Strict TDD: 5 new mocked-D1 tests, 171 green.
+- ☑ **Licensing (ADR 0002)** — serving from our own store is REDISTRIBUTION → licence-gated:
+  `license`/`redistribute_ok`/`redistribute_note` on the 11 audited sources in `data/sources.json`.
+  Verdicts: **NHS live DoS/Service Search forbids caching → W4 pivots to `nhs-ods` (OGL bulk via
+  TRUD)**; **FCA proprietary → live/link-only** (confirms shipped W2); OSM = ODbL share-alike
+  conditional; the rest OGL-storable with attribution. Med-confidence follow-ups tracked in #161.
+- ☑ **Deps/security** — dependabot batch cleared (#149/#151/#108, regenerated #164/#165); ignore rules
+  encode the deliberate TS-6 + zod-3 pins (#163); transitive **sharp → 0.35.3 via npm override**
+  (#166, `wrangler dev --local` boot-smoked). Upstream watch: #168.
+- ☑ **v1.2.0 RELEASED** — changelog rolled, README/architecture synced (dropped GitHub-Models from
+  the free chain; D1 seam + NHS-ODS ingest replace the KV framing; zod-3 pin), versions stamped
+  (#167); annotated tag on `1e63374` + a GitHub Release. **NOT deployed** — `make deploy` publishes
+  the whole 1.2.0 stack (incl. the #154 a11y fix + H3–H6).
+- ☑ **Docs** — `docs/glossary.md` (+ AGENTS pointer) · `docs/archive/` (submission + demo-script
+  archived with banners; links fixed) · `ingest/README` (KV → NHS-ODS→D1 + the polyfetch env-borrow
+  CLI + its 3xx caveat, polyfetch#188).
+- ☑ **Issues groomed** — #113 ticked; #13/#10 rewritten (KV-era → D1/hybrid); #69 + #5 closed with
+  rationale; NEW **#161** (W4 deferred: TRUD account + licence follow-ups) · **#168** (upstream watch).
 
 ## Progress (2026-07-22)
 
@@ -91,8 +117,9 @@ unreleased work).
 
 ## Queue & order
 
-~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ · ~~`W3` Wander (#73)~~ ☑ (#138) · ~~`W2` Scam (#74)~~ ☑ (#140) →
-**`W6`/D1 foundation + `W4` real Care corpus (#13) ← START HERE** · `W5` ingest cron (#10).
+~~`C` carry-over~~ ☑ · ~~`W1` engine (#80)~~ ☑ · ~~`W3` Wander (#73)~~ ☑ (#138) · ~~`W2` Scam (#74)~~ ☑ (#140) ·
+~~`W6`/D1 foundation~~ ☑ (#162, v1.2.0) → **user gates (deploy · TRUD #161 · D1 provisioning) → `W5`
+hybrid cron (#10) ← START HERE**; `W4` real corpus then lands via #161.
 
 **W3 before W2** (swapped from the original order): Wander is nearest-N, so it is genuinely register-only
 and proves W1 end-to-end with zero engine TS. Scam is a *match* shape and needs one new `query_scam` exec,
@@ -100,11 +127,14 @@ so it is no longer the cheaper of the two.
 
 ## Resume — next up
 
-- **W6/D1 + W4 · real data foundation (#13)** — the decided data architecture: the request path reads an
-  in-house CF **D1** store; sources are fetched **out-of-band** on a cron + explicit trigger, with
-  migrations + one SQL view per corpus projecting onto the frozen `CorpusRecord`. W6/D1 precedes/merges
-  with W5 (a cron can't write a build-time JSON import). H5 (#128/#142 `asOf` date validation) is already
-  done, so W4's freshness claim is safe. See the W4/W5/W6 workstreams in the plan.
+1. **User gates (in order):** `make deploy` (the whole **v1.2.0** stack is live-pending — then run the
+   sweep, expect 0 critical/serious) · **NHS ODS TRUD account** (#161 — verify the per-item licence is
+   OGL at subscribe time) · **provision prod D1** (#13: `wrangler d1 create sortmy-corpus` +
+   `wrangler d1 migrations apply DB --remote`, then uncomment the `[[d1_databases]]` binding).
+2. **W5 · hybrid cron (#10)** — the only remaining build item: a scheduled GH-Action ingester →
+   release asset (no CF creds in CI) → CF Cron `scheduled()` pulls into D1 (shadow → validate → swap,
+   stamps `corpus_meta`) + the Tier-3 sweep monitor.
+3. **W4 real corpus** then lands via **#161** (ODS ingester + gazetteer + OGL attribution labels).
 
 ~~W3 Wander~~ ☑ (#138, register-only) · ~~W2 Scam~~ ☑ (#140, match-shape) — the two civic usecases 015
 set out to add are now in. ~~H3/H4 taxonomy + retry~~ ☑ (#141) — the H-stream (H1–H7) is now fully shipped,
