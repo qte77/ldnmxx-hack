@@ -77,6 +77,15 @@ jobs:
       - run: pip install --quiet ruff==0.15.22 # pinned; lints tests/e2e/*.py (+ ingest/ when W4 lands)
       - run: ruff check
 
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      # Pinned official installer (tag v1.7.7 + version arg both fixed) rather than a third-party action,
+      # so nothing new needs allow-listing under the repo's selected+sha-pinned Actions policy.
+      - run: bash <(curl -sSf https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+      - run: ./actionlint -color
+
   dependency-review:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
