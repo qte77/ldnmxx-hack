@@ -2,7 +2,28 @@ import js from "@eslint/js";
 import globals from "globals";
 import security from "eslint-plugin-security";
 import sonarjs from "eslint-plugin-sonarjs";
+import unicorn from "eslint-plugin-unicorn";
 import tseslint from "typescript-eslint";
+
+// A CURATED unicorn subset (not the ~100-rule recommended set): high-signal, auto-fixable, low-noise
+// modernisation rules only. The opinionated/churny ones (no-null, prevent-abbreviations, no-array-reduce,
+// filename-case, no-array-for-each, …) are deliberately excluded.
+const UNICORN_RULES = {
+  "unicorn/prefer-node-protocol": "error",
+  "unicorn/prefer-string-slice": "error",
+  "unicorn/prefer-string-starts-ends-with": "error",
+  "unicorn/prefer-string-replace-all": "error",
+  "unicorn/prefer-array-some": "error",
+  "unicorn/prefer-array-find": "error",
+  "unicorn/prefer-array-flat-map": "error",
+  "unicorn/prefer-includes": "error",
+  "unicorn/prefer-number-properties": "error",
+  "unicorn/prefer-optional-catch-binding": "error",
+  "unicorn/prefer-date-now": "error",
+  "unicorn/no-instanceof-array": "error",
+  "unicorn/no-useless-spread": "error",
+  "unicorn/throw-new-error": "error",
+};
 
 // Worker/shared lint — mirrors ui/eslint.config.js (strictTypeChecked + stylisticTypeChecked +
 // sonarjs) but node-only, no React. These are the security-critical request-path files.
@@ -24,8 +45,9 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: { sonarjs },
+    plugins: { sonarjs, unicorn },
     rules: {
+      ...UNICORN_RULES,
       // Provably-safe indexed access uses guarded `!` (the noUncheckedIndexedAccess pass).
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-confusing-void-expression": "off",
