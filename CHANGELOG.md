@@ -4,8 +4,19 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-07-22
+
 ### Plan 015 — civic usecase expansion + real data
 
+- **Security/deps: vulnerability batch cleared** — `fast-uri` 3.1.4 (high, worker) + `dompurify`
+  3.4.12 (low, ui) via dependabot; transitive **`sharp` → 0.35.3 by npm override** (high,
+  GHSA-f88m-g3jw-g9cj — miniflare still pins 0.34.5 upstream; drop the override when it ships ≥0.35;
+  verified by a `wrangler dev --local` boot smoke). Dependabot now carries **ignore rules for the
+  deliberate TS-6 and zod-3 pins** (the grouped bump failed on exactly that ERESOLVE:
+  typescript-eslint vs TS 7); sonarjs 4.2 + typescript-eslint 8.64 landed cleanly after (#163–#166).
+- **Docs: README/architecture synced to the shipped state** — the free chain no longer lists the
+  dropped GitHub Models tier; architecture reflects the shipped CorpusSource/D1 seam (ADR 0002), the
+  NHS-ODS→D1 ingest plan (#161), and the deliberate zod-3 pin.
 - **Engine: W6 — D1 read-through corpus store behind a `CorpusSource` seam (#13)** — `queryCorpus` now
   selects its data source: a corpus flagged with a `d1View` reads the CF **D1** store (one SQL VIEW per
   corpus = the frozen `CorpusRecord` contract in SQL; `worker/migrations/0001`) when `env.DB` is bound,
