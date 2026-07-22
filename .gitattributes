@@ -1,0 +1,4 @@
+# Vendored third-party libraries — self-hosted so the e2e sweep never loads them from an external
+# server (mirrors the app's strict no-external-resources CSP). Marked vendored so GitHub excludes them
+# from language stats and diffs.
+tests/e2e/vendor/** linguist-vendored -diff

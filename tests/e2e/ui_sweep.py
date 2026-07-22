@@ -166,6 +166,49 @@ def snapshot_a11y(page):
         print(f"    a11y: {e}")
 
 
+_AXE_SRC = None
+
+
+def axe_source():
+    """The VENDORED axe-core (tests/e2e/vendor/axe.min.js) — self-hosted so the sweep never loads a lib
+    from an external server, mirroring the app's strict no-external-resources CSP."""
+    global _AXE_SRC
+    if _AXE_SRC is None:
+        with open(os.path.join(os.path.dirname(__file__), "vendor", "axe.min.js"), encoding="utf-8") as fh:
+            _AXE_SRC = fh.read()
+    return _AXE_SRC
+
+
+def run_axe(page):
+    """Inject vendored axe-core and run a WCAG 2 A/AA scan on the current page. Injected via
+    page.evaluate (CDP main-world eval) so the page's strict script-src CSP doesn't block it — the same
+    reason `add_script_tag` would fail here. Returns (critical_count, serious_count) and writes the full
+    violations list to results/<label>/axe-desktop.json for triage. The sweep GATES on `critical`
+    (keeps it a usable green/red signal); `serious`+ are reported loudly + tracked, not gated."""
+    try:
+        page.evaluate(axe_source())  # defines window.axe (not subject to page CSP)
+        results = page.evaluate(
+            "async () => await window.axe.run(document, "
+            "{runOnly: {type: 'tag', values: ['wcag2a', 'wcag2aa']}, resultTypes: ['violations']})"
+        )
+    except Exception as e:
+        print(f"    axe: {e}")
+        return 0, 0
+    violations = results.get("violations", [])
+    critical = [v for v in violations if v.get("impact") == "critical"]
+    serious = [v for v in violations if v.get("impact") == "serious"]
+    try:
+        with open(f"{OUT}/axe-desktop.json", "w") as fh:
+            json.dump(violations, fh, indent=2)
+    except Exception as e:
+        print(f"    axe write: {e}")
+    for v in critical + serious:
+        print(f"      axe {v.get('impact')}: {v.get('id')} x{len(v.get('nodes', []))} — {v.get('help')}")
+    print(f"    axe(wcag2a/aa): {len(violations)} violations — "
+          f"{len(critical)} critical (gated), {len(serious)} serious (reported)")
+    return len(critical), len(serious)
+
+
 def summarize(cons, net):
     """Print the per-config console/network summary; return (model_host_hits, openrouter/401 lines)."""
     errs = [c for c in cons if c[0] in ("error", "pageerror")]
@@ -205,14 +248,16 @@ def run_config(pw, name, kw, video):
     load(page)
     print(f"    title={page.title()!r} viewport={page.viewport_size}")
     flows_ok = sweep(page, OUT, name)
+    axe_crit, axe_ser = 0, 0
     if name == "desktop":
         snapshot_a11y(page)
+        axe_crit, axe_ser = run_axe(page)  # WCAG scan once, on the content-rich desktop state
     mh, unf = summarize(cons, net)
     close_context(context, browser, page, video)
-    return mh, unf, flows_ok
+    return mh, unf, flows_ok, axe_crit, axe_ser
 
 
-def report(model_hits, unf, broken):
+def report(model_hits, unf, broken, a11y_crit, a11y_ser):
     ok = True
     if model_hits or unf:
         print(f"FAIL: browser contacted a model host ({len(model_hits)}) / "
@@ -225,31 +270,41 @@ def report(model_hits, unf, broken):
     if broken:
         print(f"FAIL: a corpus flow (flows.json) did not render on: {', '.join(broken)}.")
         ok = False
+    if a11y_crit:
+        print(f"FAIL: axe-core found {a11y_crit} CRITICAL WCAG 2 A/AA violation(s) on desktop "
+              f"(see results/{LABEL}/axe-desktop.json).")
+        ok = False
+    if a11y_ser:
+        print(f"NOTE: axe-core found {a11y_ser} serious WCAG violation(s) — reported, not gated "
+              f"(see results/{LABEL}/axe-desktop.json).")
     if not ok:
         return 1
-    print("PASS: no browser→model-host request, no openrouter/401 console line, and every corpus "
-          "flow rendered on every config.")
+    print("PASS: no browser→model-host request, no openrouter/401 console line, every corpus flow "
+          "rendered, and 0 CRITICAL axe violations.")
     return 0
 
 
 def main():
     print(f"TARGET={TARGET}  LABEL={LABEL}  OUT={OUT}")
-    model_hits, unf, broken = [], [], []
+    model_hits, unf, broken, a11y_crit, a11y_ser = [], [], [], 0, 0
     with sync_playwright() as pw:
         for name, kw, video in CONFIGS:
-            mh, u, flows_ok = run_config(pw, name, kw, video)
+            mh, u, flows_ok, axe_crit, axe_ser = run_config(pw, name, kw, video)
             model_hits += mh
             unf += u
+            a11y_crit += axe_crit
+            a11y_ser += axe_ser
             if not flows_ok:
                 broken.append(name)
     print(f"\nARTIFACTS: {OUT}")
     print("=" * 60)
-    rc = report(model_hits, unf, broken)
-    write_summary(rc, model_hits, unf, broken)
+    rc = report(model_hits, unf, broken, a11y_crit, a11y_ser)
+    write_summary(rc, model_hits, unf, broken, a11y_crit, a11y_ser)
+    append_run_manifest(rc, model_hits, unf, broken, a11y_crit, a11y_ser)
     return rc
 
 
-def write_summary(rc, model_hits, unf, broken):
+def write_summary(rc, model_hits, unf, broken, a11y_crit, a11y_ser):
     """Machine-readable verdict at results/<label>/summary.json — the cross-session handoff artifact
     (a next session reads this instead of re-parsing stdout, and it can carry an in-flight run's state)."""
     summary = {
@@ -259,6 +314,8 @@ def write_summary(rc, model_hits, unf, broken):
         "verdict": "PASS" if rc == 0 else "FAIL",
         "model_host_hits": len(model_hits),
         "openrouter_or_401_lines": len(unf),
+        "axe_critical": a11y_crit,
+        "axe_serious": a11y_ser,
         "configs": [c[0] for c in CONFIGS],
         "flagship_rendered": [c[0] for c in CONFIGS if c[0] not in broken],
         "flagship_broken": broken,
@@ -266,6 +323,31 @@ def write_summary(rc, model_hits, unf, broken):
     with open(os.path.join(OUT, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     print(f"SUMMARY: {os.path.join(OUT, 'summary.json')} -> {summary['verdict']}")
+
+
+def append_run_manifest(rc, model_hits, unf, broken, a11y_crit, a11y_ser):
+    """Append this run to tests/e2e/runs.jsonl — a COMMITTED, append-only cross-session resume manifest
+    (one compact JSON object per line). summary.json holds the full per-run verdict in the gitignored
+    results/; this is the durable log a later session reads to see run history + resume an in-flight
+    sweep. Committed deliberately (git only records it when you `git add` it), so runs don't churn."""
+    record = {
+        "ran_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "target": TARGET,
+        "label": LABEL,
+        "verdict": "PASS" if rc == 0 else "FAIL",
+        "model_host_hits": len(model_hits),
+        "openrouter_or_401_lines": len(unf),
+        "axe_critical": a11y_crit,
+        "axe_serious": a11y_ser,
+        "flows_broken": broken,
+    }
+    path = os.path.join(os.path.dirname(__file__), "runs.jsonl")
+    try:
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record) + "\n")
+        print(f"MANIFEST: appended run to {path}")
+    except Exception as e:
+        print(f"    manifest: {e}")
 
 
 if __name__ == "__main__":
