@@ -27,3 +27,14 @@ simple = { limit = 20, period = 60 }
 # Cloudflare Workers AI — the first (free, keyless) render provider → binding `AI` (env.AI).
 [ai]
 binding = "AI"
+
+# CF D1 — the read-through corpus store (W6 #13, ADR 0002). UNCOMMENT after provisioning (user-run,
+# creds-gated):  npx wrangler d1 create sortmy-corpus   → paste the database_id below, then
+#                npx wrangler d1 migrations apply DB --remote
+# The Worker treats the binding as OPTIONAL: unbound → the bundled sample corpora serve (and any D1
+# failure falls back to them), so deploys stay green while this block is commented out.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "sortmy-corpus"
+# database_id = "<set-by-provisioning>"
+# migrations_dir = "migrations"

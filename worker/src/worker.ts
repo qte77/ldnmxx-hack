@@ -28,6 +28,7 @@ export interface Env {
   PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
   RATE_LIMITER?: RateLimit; // per-IP limiter (wrangler [[ratelimits]]); absent in tests → skipped
   AI?: Ai; // Cloudflare Workers AI binding (first keyless free provider); absent → skipped
+  DB?: D1Database; // CF D1 corpus store (W6, ADR 0002); absent → bundled sample corpora serve
   WORKERS_AI_MODEL?: string; // override the default Workers AI model id
   OPENROUTER_FREE_MODEL?: string; // override the OpenRouter :free model (single)
   OPENROUTER_FREE_MODELS?: string; // override the OpenRouter :free fallback list (comma-separated)
@@ -39,6 +40,7 @@ interface ModelCtx {
   baseURL: string;
   prompt: string;
   providers: Provider[]; // keyless free chain (empty when keyed or forcing the stub)
+  db?: D1Database | undefined; // D1 corpus store, carried to deterministic query stages (W6)
 }
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
@@ -212,6 +214,7 @@ async function resolveRun(
     baseURL: firstNonEmpty(env.AI_GATEWAY_URL, OPENROUTER_BASE),
     prompt,
     providers,
+    db: env.DB,
   };
   const runAttrs = {
     usecase: def.id,
@@ -330,10 +333,10 @@ async function playStage(
   const t0 = Date.now();
   const queryFn = stage.exec ? registry.query[stage.exec] : undefined;
   if (queryFn) {
-    // Deterministic query stage (model-free, fetch-free): compute render data over the bundled corpus, then
-    // narrate via the canned events regardless of whether a model provider exists. Awaited so a
-    // D1-backed corpus source can slot in at W4 without changing this dispatch.
-    const queryData = await queryFn({ prompt: ctx.prompt, corpus: stage.corpus });
+    // Deterministic query stage (model-free, hot-path-fetch-free): compute render data over the corpus
+    // source — bundled, or the D1 store when bound (W6, ADR 0002) — then narrate via the canned events
+    // regardless of whether a model provider exists.
+    const queryData = await queryFn({ prompt: ctx.prompt, corpus: stage.corpus }, { db: ctx.db });
     await playCanned(stage, write, paceMs);
     emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
     return { queryData };

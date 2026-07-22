@@ -1,6 +1,7 @@
 import { buildOpportunityCards, buildRouteCards, withIncorporate } from "./a2ui/cards";
 import { buildCorpusCards } from "./corpus/render";
 import { queryCorpus } from "./corpus/query";
+import type { QueryCtx } from "./corpus/source";
 import type { CorpusQuery } from "./corpus/contract";
 import { buildScamCards } from "./scam/render";
 import { queryScam, type ScamQuery } from "./scam/query";
@@ -23,7 +24,8 @@ export interface QueryInput {
   // Which registered corpus a query_corpus stage reads; carried on the stage def (usecases.ts).
   corpus?: string | undefined;
 }
-export type QueryFn = (input: QueryInput) => Promise<unknown>;
+// ctx carries the optional D1 binding (W6, ADR 0002); bundled-only corpora simply ignore it.
+export type QueryFn = (input: QueryInput, ctx?: QueryCtx) => Promise<unknown>;
 export type RenderFn = (data?: unknown) => unknown[];
 
 export const registry: {
@@ -37,7 +39,7 @@ export const registry: {
     scam: (data) => buildScamCards(data as ScamQuery),
   },
   query: {
-    query_corpus: (input) => queryCorpus(input),
+    query_corpus: (input, ctx) => queryCorpus(input, ctx),
     query_scam: (input) => queryScam(input),
   },
 };
