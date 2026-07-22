@@ -33,8 +33,8 @@ os.makedirs(OUT, exist_ok=True)
 MODEL_HOSTS = ("openrouter.ai", "api.openai.com", "generativelanguage", "api.anthropic.com")
 
 CONFIGS = [  # (name, context_kwargs, record_video)
-    ("desktop", {"viewport": {"width": 1440, "height": 900}}, True),
-    ("mobile-portrait", {"device": "iPhone 13"}, False),
+    ("desktop", {"viewport": {"width": 1440, "height": 900}}, True),  # video: LANDSCAPE
+    ("mobile-portrait", {"device": "iPhone 13"}, True),  # video: PORTRAIT (both orientations, #130)
     ("mobile-landscape", {"device": "iPhone 13 landscape"}, False),
     ("tablet-portrait", {"device": "iPad (gen 7)"}, False),
     ("tablet-landscape", {"device": "iPad (gen 7) landscape"}, False),

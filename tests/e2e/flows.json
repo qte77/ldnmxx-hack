@@ -3,7 +3,14 @@
   "flows": [
     {
       "name": "onit",
-      "switchLabel": "Step-free journeys"
+      "switchLabel": "Step-free journeys",
+      "query": "step-free from E8 3GT to Westminster",
+      "cta": "Find a step-free route",
+      "markers": [
+        "Overground to Highbury & Islington",
+        "Victoria line to Victoria",
+        "Step-free"
+      ]
     },
     {
       "name": "care",
