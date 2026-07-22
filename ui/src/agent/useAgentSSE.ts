@@ -83,7 +83,7 @@ export function toStatus(event: AgentEvent): RunStatus {
 
 function buildHeaders(byok?: Byok): Record<string, string> {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  if (byok?.apiKey) headers.authorization = `Bearer ${byok.apiKey}`;
+  if (byok?.apiKey) headers["authorization"] = `Bearer ${byok.apiKey}`;
   return headers;
 }
 

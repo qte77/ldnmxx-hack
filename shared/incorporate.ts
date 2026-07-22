@@ -44,7 +44,7 @@ export function appendIncorporate(batch: unknown[]): unknown[] {
   const update = msgs.find((m) => m.surfaceUpdate)?.surfaceUpdate;
   if (!update || !Array.isArray(update.components)) return batch;
   const root = update.components.find((c) => c.id === "root");
-  const col = root?.component.Column as { children?: { explicitList?: string[] } } | undefined;
+  const col = root?.component["Column"] as { children?: { explicitList?: string[] } } | undefined;
   const list = col?.children?.explicitList;
   if (!Array.isArray(list)) return batch;
   const { cardId, components } = incorporateComponents();

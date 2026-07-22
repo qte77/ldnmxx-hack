@@ -17,7 +17,7 @@ function otlpSpans(payload: unknown): Record<string, unknown>[] {
   return rs[0]!.scopeSpans[0]!.spans;
 }
 function kindOf(span: Record<string, unknown>): string | undefined {
-  const attrs = span.attributes as { key: string; value: { stringValue?: string } }[];
+  const attrs = span["attributes"] as { key: string; value: { stringValue?: string } }[];
   return attrs.find((a) => a.key === "openinference.span.kind")?.value.stringValue;
 }
 
@@ -27,35 +27,35 @@ describe("spansToOtlp", () => {
   it("maps spans to one OTLP trace with per-span ids sharing a trace id", () => {
     const out = otlpSpans(spansToOtlp(spans, arizeEnv));
     expect(out).toHaveLength(3);
-    const traceIds = new Set(out.map((s) => s.traceId));
+    const traceIds = new Set(out.map((s) => s["traceId"]));
     expect(traceIds.size).toBe(1);
-    expect(String(out[0]!.traceId)).toMatch(/^[0-9a-f]{32}$/);
-    for (const s of out) expect(String(s.spanId)).toMatch(/^[0-9a-f]{16}$/);
+    expect(String(out[0]!["traceId"])).toMatch(/^[0-9a-f]{32}$/);
+    for (const s of out) expect(String(s["spanId"])).toMatch(/^[0-9a-f]{16}$/);
   });
 
   it("parents non-root spans under the run span", () => {
     const out = otlpSpans(spansToOtlp(spans, arizeEnv));
-    const run = out.find((s) => s.name === "run");
-    expect(run?.parentSpanId).toBeUndefined();
-    for (const s of out.filter((x) => x.name !== "run")) {
-      expect(s.parentSpanId).toBe(run?.spanId);
+    const run = out.find((s) => s["name"] === "run");
+    expect(run?.["parentSpanId"]).toBeUndefined();
+    for (const s of out.filter((x) => x["name"] !== "run")) {
+      expect(s["parentSpanId"]).toBe(run?.["spanId"]);
     }
   });
 
   it("assigns OpenInference span kinds (run→CHAIN, tool→TOOL, model→LLM)", () => {
     const out = otlpSpans(spansToOtlp(spans, arizeEnv));
-    expect(kindOf(out.find((s) => s.name === "run")!)).toBe("CHAIN");
-    expect(kindOf(out.find((s) => s.name === "tool:search_opportunities")!)).toBe("TOOL");
-    expect(kindOf(out.find((s) => s.name === "model:workers-ai")!)).toBe("LLM");
+    expect(kindOf(out.find((s) => s["name"] === "run")!)).toBe("CHAIN");
+    expect(kindOf(out.find((s) => s["name"] === "tool:search_opportunities")!)).toBe("TOOL");
+    expect(kindOf(out.find((s) => s["name"] === "model:workers-ai")!)).toBe("LLM");
   });
 
   it("carries span attrs as typed OTLP values and end≥start nanos", () => {
     const out = otlpSpans(spansToOtlp(spans, arizeEnv));
-    const model = out.find((s) => s.name === "model:workers-ai")!;
-    const attrs = model.attributes as { key: string; value: Record<string, unknown> }[];
-    expect(attrs.find((a) => a.key === "model")?.value.stringValue).toBe("@cf/x");
-    expect(attrs.find((a) => a.key === "totalTokens")?.value.intValue).toBe("42");
-    expect(BigInt(String(model.endTimeUnixNano))).toBeGreaterThanOrEqual(BigInt(String(model.startTimeUnixNano)));
+    const model = out.find((s) => s["name"] === "model:workers-ai")!;
+    const attrs = model["attributes"] as { key: string; value: Record<string, unknown> }[];
+    expect(attrs.find((a) => a.key === "model")?.value["stringValue"]).toBe("@cf/x");
+    expect(attrs.find((a) => a.key === "totalTokens")?.value["intValue"]).toBe("42");
+    expect(BigInt(String(model["endTimeUnixNano"]))).toBeGreaterThanOrEqual(BigInt(String(model["startTimeUnixNano"])));
   });
 });
 

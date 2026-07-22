@@ -38,7 +38,7 @@ export const A2UIComponentSchema = z
   })
   .refine(
     (comp) => {
-      const card = comp.component.Card;
+      const card = comp.component["Card"];
       return card === undefined || CardPropsSchema.safeParse(card).success;
     },
     { message: "Card requires a single `child` (a component id string), not `children`" }
@@ -75,13 +75,13 @@ function extractChildIds(component: Record<string, unknown>): string[] {
   if (props === null || typeof props !== "object") return [];
   const p = props as Record<string, unknown>;
   const ids: string[] = [];
-  if (typeof p.child === "string") ids.push(p.child); // Card, Button
-  const explicit = (p.children as { explicitList?: unknown } | undefined)?.explicitList;
+  if (typeof p["child"] === "string") ids.push(p["child"]); // Card, Button
+  const explicit = (p["children"] as { explicitList?: unknown } | undefined)?.explicitList;
   if (Array.isArray(explicit)) {
     for (const id of explicit) if (typeof id === "string") ids.push(id); // Row, Column, List
   }
-  if (Array.isArray(p.tabItems)) {
-    for (const item of p.tabItems) {
+  if (Array.isArray(p["tabItems"])) {
+    for (const item of p["tabItems"]) {
       const child = (item as { child?: unknown } | undefined)?.child;
       if (typeof child === "string") ids.push(child); // Tabs
     }

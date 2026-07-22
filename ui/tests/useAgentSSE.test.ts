@@ -162,7 +162,7 @@ describe("runWorkerPath — the only browser transport", () => {
     expect(seen[0]?.url).toContain("/api/run?usecase=founders-copilot");
     expect(seen[0]?.url).not.toMatch(/openrouter|api\.openai|googleapis|anthropic/i);
     const headers = seen[0]?.init?.headers as Record<string, string>;
-    expect(headers.authorization).toBe("Bearer sk-secret-key"); // key → Worker, resolved server-side
+    expect(headers["authorization"]).toBe("Bearer sk-secret-key"); // key → Worker, resolved server-side
     expect(events.at(-1)?.type).toBe("RUN_FINISHED");
   });
 
@@ -178,6 +178,6 @@ describe("runWorkerPath — the only browser transport", () => {
       new AbortController().signal
     );
     const headers = seen[0]?.init?.headers as Record<string, string>;
-    expect(headers.authorization).toBeUndefined();
+    expect(headers["authorization"]).toBeUndefined();
   });
 });

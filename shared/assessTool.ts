@@ -44,10 +44,10 @@ export function isValidAssessResult(value: unknown): value is AssessResult {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   return (
-    typeof v.reasoning === "string" &&
-    typeof v.stage === "string" &&
-    (STAGES as readonly string[]).includes(v.stage) &&
-    isArray(v.unlock) &&
-    v.unlock.every((u) => typeof u === "string")
+    typeof v["reasoning"] === "string" &&
+    typeof v["stage"] === "string" &&
+    (STAGES as readonly string[]).includes(v["stage"]) &&
+    isArray(v["unlock"]) &&
+    v["unlock"].every((u) => typeof u === "string")
   );
 }

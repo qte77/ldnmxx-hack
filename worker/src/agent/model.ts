@@ -51,7 +51,7 @@ export function extractToolArgs(data: ORResponse, toolName: string): Record<stri
 // Pull the render_ui batch (its `messages` array) out of a tool-call response. Null if absent/malformed.
 export function extractBatch(data: ORResponse): unknown[] | null {
   const args = extractToolArgs(data, "render_ui");
-  return args && Array.isArray(args.messages) ? (args.messages as unknown[]) : null;
+  return args && Array.isArray(args["messages"]) ? (args["messages"] as unknown[]) : null;
 }
 
 // Structural self-containment guard, extracted to dependency-free shared/renderTool so both the Worker

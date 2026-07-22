@@ -33,8 +33,8 @@ const msToNano = (ms: number): string => `${String(Math.round(ms))}000000`;
 // OpenInference span kind: the run chain → CHAIN, a model render → LLM, a tool stage → TOOL, else CHAIN.
 function openInferenceKind(s: Span): string {
   if (s.name.startsWith("model:")) return "LLM";
-  if (s.attrs?.kind === "tool") return "TOOL";
-  if (s.attrs?.kind === "render") return "LLM";
+  if (s.attrs?.["kind"] === "tool") return "TOOL";
+  if (s.attrs?.["kind"] === "render") return "LLM";
   return "CHAIN";
 }
 
@@ -56,7 +56,7 @@ export function spansToOtlp(spans: Span[], env: TraceEnv): unknown {
     const spanId = hexId(8);
     const isRoot = s.name === "run";
     if (isRoot) rootSpanId = spanId;
-    const latencyMs = typeof s.attrs?.latencyMs === "number" ? s.attrs.latencyMs : 0;
+    const latencyMs = typeof s.attrs?.["latencyMs"] === "number" ? s.attrs["latencyMs"] : 0;
     return {
       traceId,
       spanId,

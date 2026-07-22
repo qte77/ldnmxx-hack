@@ -54,7 +54,7 @@ function assertSelfContained(batch: Batch[]): void {
   expect(ids.has(begin.root)).toBe(true);
   for (const comp of update.components) {
     const props = Object.values(comp.component)[0];
-    const card = comp.component.Card;
+    const card = comp.component["Card"];
     if (card) {
       expect(typeof card.child).toBe("string");
       if (card.child) expect(ids.has(card.child)).toBe(true);

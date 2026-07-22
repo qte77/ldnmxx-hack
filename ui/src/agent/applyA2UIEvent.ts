@@ -24,7 +24,7 @@ function collectFromMessage(
   types: Set<string>,
 ): number {
   let count = 0;
-  const update = msg.surfaceUpdate as
+  const update = msg["surfaceUpdate"] as
     | { components?: { component?: Record<string, unknown> }[] }
     | undefined;
   if (update?.components) {
@@ -36,7 +36,7 @@ function collectFromMessage(
       }
     }
   }
-  if (msg.beginRendering) types.add("beginRendering");
+  if (msg["beginRendering"]) types.add("beginRendering");
   return count;
 }
 
