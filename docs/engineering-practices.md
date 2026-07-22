@@ -49,8 +49,19 @@ Overriding principle: **measure and verify on the live target — not vibes, not
 - **CI is the security gate.** gitleaks + Semgrep + CodeQL + `npm audit`; every GitHub
   Action is **SHA-pinned** (repo policy: `sha_pinning_required`) with the tag in a
   trailing comment. One unpinned tag ref fails the whole workflow.
-- **ToU-gated data stays out of git.** Only synthetic fixtures are committed; scraped
-  corpora are gitignored.
+- **ToU-gated data stays out of git — and licence-gate the serving channel too.**
+  Only synthetic fixtures are committed; scraped corpora are gitignored — that guards
+  the *repository* channel. Serving ingested data from our own store (D1 → user) is a
+  distinct act of **redistribution**, gated by the source **licence**, not by
+  `.gitignore`: only sources whose licence permits it (OGL/permissive, with the required
+  attribution) may be ingested and served; `tou-gated` ("don't warehouse") stay
+  live-display / link-only. `data/sources.json` carries `license` + `redistribute_ok`
+  so the ingester enforces the gate per re-seed. See [ADR 0002](adr/0002-real-data-store.md).
+- **Read-through a store; keep the hot path fetch-free.** The request path reads CF D1
+  only; sources are fetched out-of-band on a cron + trigger, so no SSRF surface, no
+  third-party latency, and no source secret ever rides the hot path — and `asOf` is a
+  real ingest timestamp. Fits reference/directory corpora; real-time feeds need a
+  different pattern. See [ADR 0002](adr/0002-real-data-store.md).
 - **Self-hosted, vendored third-party libs — never fetch at runtime.** Test-only libs
   needed inside the page (e.g. `axe-core`) are vendored under `tests/e2e/vendor/` and
   injected via `page.evaluate` rather than fetched, mirroring the app's own

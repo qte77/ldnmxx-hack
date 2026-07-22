@@ -5,8 +5,9 @@
 // union, guard, registry-dispatch or interpreter code changes. Static imports are required because
 // the Worker bundles JSON at build time.
 //
-// W4 swaps a corpus's `records`/`postcodes` for an ingested source behind a CorpusSource interface;
-// the labels stay here either way.
+// W6 (#13, ADR 0002) landed the CorpusSource seam (source.ts): a corpus with a `d1View` reads the
+// D1 store when a database is bound; the bundled JSON stays as the fallback, and labels stay here
+// either way.
 import servicesJson from "../../../data/care/services.sample.json";
 import postcodesJson from "../../../data/care/postcodes.sample.json";
 import wanderPlacesJson from "../../../data/wander/places.sample.json";
@@ -18,10 +19,15 @@ export interface CorpusDef {
   records: CorpusRecord[];
   postcodes: Record<string, Coords>;
   labels: CorpusLabels;
+  // W6 (ADR 0002): the D1 view this corpus reads when a database is bound (worker/migrations/*).
+  // Absent ⇒ bundled-only. The bundled sample stays committed as the offline/outage fallback.
+  d1View?: string;
 }
 
 const corpora: Record<string, CorpusDef> = {
   care: {
+    // W6: reads the care_signposts D1 view when env.DB is bound; else the bundled sample below.
+    d1View: "care_signposts",
     // No cast: the bundled JSON is structurally CHECKED against CorpusRecord/Coords here, so a
     // malformed sample row is a compile error rather than a silently-asserted shape.
     records: servicesJson,

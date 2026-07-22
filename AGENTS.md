@@ -9,7 +9,8 @@ Modular **AG-UI/A2UI** hackathon app on a **Cloudflare Worker** (Londonmaxxing 0
 - Resume point: latest `docs/handoffs/NNN-*.md` · Design: `docs/design.md` · Demo: `docs/demo-script.md`
 - **This repo (`ldnmxx-hack`) is the SSOT** — the sibling `qte77/ldnmxx` is read-only **archival
   deep-reference** only (do not edit it or treat it as canonical).
-- Architecture: `docs/architecture.md` · Use cases: `docs/usecase-workflows.md`
+- Architecture: `docs/architecture.md` · Use cases: `docs/usecase-workflows.md` · Glossary
+  (abbreviations): `docs/glossary.md`
 - Engineering practices (perf/sec/ux/deploy/workflow): `docs/engineering-practices.md` ·
   recurring gotchas + fixes: `AGENT_LEARNINGS.md`
 

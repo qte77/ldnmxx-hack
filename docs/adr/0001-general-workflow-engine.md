@@ -83,6 +83,15 @@ of truth alongside the `workflows.ts` registry keys). This is now closed:
   an entry for any mode in `RENDER_MODES`, and rejects an entry for a mode that isn't. Drift between the
   mode/exec sets and the registry is now a compile error, not just a test gap.
 
+## Amendment (#13, plan 015 · W6) — the data store is now decided (see ADR 0002)
+
+Decision 4's "pre-generated JSON now → CF D1 **later**" is superseded on the store question by
+**[ADR 0002](0002-real-data-store.md)**: CF D1 is now the **foundation** (read-through, out-of-band
+ingest, one view per corpus), and ingesting a source to serve it from our store is **licence-gated
+redistribution** (`data/sources.json` gains `license`/`redistribute_ok`). Point 4's "NO live external
+fetch at request time" **stands** — D1 realises it rather than contradicting it. Where the two differ on
+the data store, ADR 0002 wins.
+
 ## Consequences
 
 - **+** New corpus workflows (Wander #73, Scam #74) are additive: register + JSON + corpus + tests. No

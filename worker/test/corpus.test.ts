@@ -65,6 +65,80 @@ describe("queryCorpusDef", () => {
   });
 });
 
+// --- W6 (#13, ADR 0002): the D1-backed corpus source ---------------------------------------------
+
+// Minimal D1 stub routed by METHOD shape, not SQL: the gazetteer lookup goes .bind().first(), the
+// view read goes .all(). The unknown-cast is test scaffolding only, never production narrowing.
+interface StubStmt {
+  bind: () => StubStmt;
+  first: () => Promise<unknown>;
+  all: () => Promise<unknown>;
+}
+
+function stubDb(opts: {
+  origin?: { lat: number; lng: number } | null;
+  rows?: unknown[];
+  fail?: boolean;
+}): D1Database {
+  const stmt: StubStmt = {
+    bind: () => stmt,
+    first: () =>
+      opts.fail ? Promise.reject(new Error("d1 down")) : Promise.resolve(opts.origin ?? null),
+    all: () =>
+      opts.fail
+        ? Promise.reject(new Error("d1 down"))
+        : Promise.resolve({ results: opts.rows ?? [] }),
+  };
+  return { prepare: () => stmt } as unknown as D1Database;
+}
+
+const d1Row = {
+  id: "d1-near",
+  name: "D1 GP",
+  authority: "NHS D1",
+  why: "register",
+  officialUrl: "https://nhs.uk/d1",
+  lastUpdated: "2026-07-01",
+  lat: 51.5,
+  lng: -0.1,
+};
+
+describe("queryCorpus over a D1 source (care carries a d1View)", () => {
+  it("reads rows from D1 when ctx.db is bound", async () => {
+    const db = stubDb({ origin: { lat: 51.5, lng: -0.1 }, rows: [d1Row] });
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db });
+    expect(q.rows.map((r) => r.id)).toEqual(["d1-near"]);
+  });
+
+  it("keeps the postcode but returns no rows when the D1 gazetteer misses", async () => {
+    const db = stubDb({ origin: null, rows: [d1Row] });
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db });
+    expect(q.query).toBe("SW9 9SL");
+    expect(q.rows).toEqual([]);
+  });
+
+  it("filters malformed D1 rows instead of throwing (frozen-contract guard)", async () => {
+    const db = stubDb({
+      origin: { lat: 51.5, lng: -0.1 },
+      rows: [{ ...d1Row, id: "d1-bad", lat: "oops" }, d1Row],
+    });
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db });
+    expect(q.rows.map((r) => r.id)).toEqual(["d1-near"]);
+  });
+
+  it("falls back to the bundled sample when D1 errors (an outage never breaks Care)", async () => {
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db: stubDb({ fail: true }) });
+    expect(q.rows.length).toBeGreaterThan(0);
+    expect(q.rows.some((r) => r.id === "d1-near")).toBe(false);
+  });
+
+  it("a corpus without a d1View ignores ctx.db (wander stays bundled)", async () => {
+    const db = stubDb({ origin: { lat: 0, lng: 0 }, rows: [d1Row] });
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "wander" }, { db });
+    expect(q.rows.some((r) => r.id === "d1-near")).toBe(false);
+  });
+});
+
 describe("queryCorpus (async seam over the registry)", () => {
   it("resolves a registered corpus by id and wires up against the bundled data", async () => {
     const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" });

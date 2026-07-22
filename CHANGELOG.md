@@ -6,6 +6,23 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Plan 015 — civic usecase expansion + real data
 
+- **Engine: W6 — D1 read-through corpus store behind a `CorpusSource` seam (#13)** — `queryCorpus` now
+  selects its data source: a corpus flagged with a `d1View` reads the CF **D1** store (one SQL VIEW per
+  corpus = the frozen `CorpusRecord` contract in SQL; `worker/migrations/0001`) when `env.DB` is bound,
+  and **any D1 failure degrades to the committed bundled sample** — an outage can never break Care.
+  Threaded via the existing ctx, so `runUsecase`/`playStage` signatures are unchanged (the interpreter
+  stays closed). Test-first: 5 new D1-source tests against a mocked `D1Database`. The
+  `[[d1_databases]]` block ships commented-out until provisioning, so deploys stay green. Real NHS ODS
+  ingest is deferred to #161.
+- **Data: licence audit → `redistribute_ok` gate in `data/sources.json` + ADR 0002** — serving
+  ingested data from our own store is REDISTRIBUTION, gated per source licence, not just the
+  git-ignore (`docs/adr/0002-real-data-store.md`). Verified 8 sources: the OGL ones are storable
+  (postcodes.io, Historic England NHLE, CQC, OS Greenspace/DataHub, FHRS, Companies House); OSM is
+  conditional (ODbL share-alike); **the NHS live DoS/Service Search API forbids caching → the Care
+  corpus pivots to NHS ODS bulk via TRUD** (new `nhs-ods` entry); FCA is proprietary → live/link-only,
+  confirming the shipped W2 Scam design.
+- **Docs: abbreviations glossary** — `docs/glossary.md`: every abbreviation used across the repo,
+  defined once, grouped, with Related-column cross-refs; linked from AGENTS.md.
 - **e2e: axe-core WCAG 2 A/AA gate, self-hosted + vendored** — the sweep now injects a **vendored**
   `axe-core` (`tests/e2e/vendor/axe.min.js`, MPL-2.0) via `page.evaluate` — past the strict CSP's
   `script-src`, since `add_script_tag` would be blocked — and runs a WCAG 2 A/AA scan on the desktop
