@@ -6,6 +6,32 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Plan 015 — civic usecase expansion + real data
 
+- **e2e: axe-core WCAG 2 A/AA gate, self-hosted + vendored** — the sweep now injects a **vendored**
+  `axe-core` (`tests/e2e/vendor/axe.min.js`, MPL-2.0) via `page.evaluate` — past the strict CSP's
+  `script-src`, since `add_script_tag` would be blocked — and runs a WCAG 2 A/AA scan on the desktop
+  config. GATES on `critical` (keeps the sweep a usable green/red signal) and REPORTS `serious`+ (loud
+  console output + `summary.json` + an `axe-desktop.json` artifact). Caught 1 real serious issue on its
+  first run — card official-link contrast 4.42 < 4.5 on the light card surface (a11y issue #154; the fix
+  is upstream in the vendored brand token, then the gate flips to `serious`). Vendored libs are
+  self-hosted (never fetched from an external server, mirroring the app's own no-external-resources CSP)
+  and excluded from CI scanners via a new `.semgrepignore`, marked vendored in `.gitattributes`.
+- **e2e: `runs.jsonl` cross-session resume manifest** — each sweep run now appends a compact JSON record
+  (target, label, verdict, model-host hits, axe counts, broken flows) to a COMMITTED
+  `tests/e2e/runs.jsonl`, alongside the existing gitignored per-run `summary.json` — a durable run-history
+  log a later session can read instead of re-parsing stdout.
+- **Lint: curated `eslint-plugin-unicorn` on worker+ui (S5, #152)** — the last of the five S5
+  deepest-strictness knobs; a curated rule subset rather than the full recommended set, to avoid churn
+  unrelated to real bugs.
+- **Deferred: `eslint-plugin-jsx-a11y` (S5, #150)** — its latest release peers ESLint `^3`–`^9`,
+  incompatible with the repo's ESLint 10; forcing it on would need `legacy-peer-deps`, undermining the
+  same dependency strictness S5 is adding. Deferred until the plugin supports ESLint 10.
+- **Lint: `eslint-plugin-security` on worker+shared (S5, #148)** — `detect-object-injection` off (too
+  noisy for this codebase's patterns) plus 2 reviewed `detect-unsafe-regex` exceptions in
+  `shared/guard.ts`.
+- **Types: `noPropertyAccessFromIndexSignature` (S5, #147)** — both tsconfigs; a 60-site
+  bracket-notation fix across worker+ui.
+- **Types: `verbatimModuleSyntax` (S5, #146)** — both tsconfigs; the first of the five S5
+  deepest-strictness knobs, each shipped as its own PR.
 - **Engine: e2e now asserts On It + records both orientations (H7, #144)** — `tests/e2e/flows.json` gives
   On It a `query`/`cta`/`markers` triple like Care/Wander/Scam, so the sweep **types the example prompt and
   asserts the route cards render** instead of clicking the CTA and asserting nothing (the same gap #126

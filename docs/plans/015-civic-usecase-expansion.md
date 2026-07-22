@@ -1,7 +1,7 @@
 ---
 title: "Plan 015 — civic usecase expansion + real data (fast-follow to 014)"
 type: plan
-updated: 2026-07-19
+updated: 2026-07-22
 status: "proposed — not started"
 refs: ["#113 (015 tracker)", "#80 query-stage/manifest", "#74 Scam", "#73 Wander", "#13 real Care corpus", "#10 ingest cron", "014 plan/handoff (predecessor, shipped+live)"]
 ---
@@ -31,7 +31,7 @@ honest deterministic-mode HUD (`USAGE mode:demo`) — never advice, triage, or a
 | W4 | Real Care corpus (#13) — replace synthetic `data/care/*` with an ingested NHS directory + freshness | ☐ to ship |
 | W5 | Ingest cron (#10) — scheduled re-seed (CF Cron Trigger); pairs with the e2e Tier-3 monitor | ☐ to ship |
 | W6 | Data store (#13) — CF **D1** as the FOUNDATION for W4/W5 (no longer "only if forced") | ☐ to ship |
-| C | **014 carry-over** (small; do first / in parallel) — see below | 🟡 shared-lint + tag done; S5/axe/runs.jsonl open |
+| C | **014 carry-over** (small; do first / in parallel) — see below | ☑ shipped (S5 4/5 + jsx-a11y deferred #150; axe-core + runs.jsonl shipped) |
 | H | **Engine hardening & cross-stack alignment** (a distinct theme, folded in — see below) | ☑ shipped (5/5) |
 
 ## Workstream H — engine hardening & cross-stack alignment
@@ -123,9 +123,14 @@ the corpus id. `workflows.ts` registry: `render.corpus` + `query.query_corpus`; 
 
 ## C — 014 carry-over (small; independent of the above)
 
-- **S5 · deepest strictness (plan 014):** `verbatimModuleSyntax` · `noPropertyAccessFromIndexSignature` (both
-  tsconfigs) · `eslint-plugin-jsx-a11y` (ui) · `eslint-plugin-security` (worker) · `eslint-plugin-unicorn`
-  (curated, both). **Each knob its own PR; expect a fix wave** like S3/S4.
+- **S5 · deepest strictness (plan 014) — 4/5 shipped, 1 deferred.** `verbatimModuleSyntax` (#146) ·
+  `noPropertyAccessFromIndexSignature` (both tsconfigs, #147, a 60-site bracket-notation fix) ·
+  `eslint-plugin-security` (worker+shared, #148, `detect-object-injection` off + 2 reviewed
+  `detect-unsafe-regex` exceptions in `guard.ts`) · curated `eslint-plugin-unicorn` (worker+ui, #152) —
+  each its own PR, all merged. `eslint-plugin-jsx-a11y` (ui) stays **DEFERRED** (#150): its latest
+  release peers ESLint `^3`–`^9`, incompatible with this repo's ESLint 10; forcing it on needs
+  `legacy-peer-deps`, undermining the same dependency strictness. Resume when the plugin supports
+  ESLint 10.
 - **`shared/*.ts` lint** — ☑ shipped (#123 + #124, issue #122). NOT the quick win assumed: ESLint 10
   refuses files above its config dir, so it needed a root `eslint.config.js` (`basePath: "shared"` +
   pinned worker tsconfig project), chained into worker's `lint`. Fixing the findings surfaced a real
@@ -133,9 +138,18 @@ the corpus id. `workflows.ts` registry: `render.corpus` + `query.query_corpus`; 
   See `AGENT_LEARNINGS.md`.
 - **Release** — v1.1.0 **shipped** (#120) and the **tag is pushed** — annotated `v1.1.0` on the release
   commit `8286890`, deliberately NOT `main` (which carries unreleased C/W1 work).
-- **axe-core in the e2e sweep** — inject axe for a concrete WCAG pass/fail (today: aria snapshot only).
-- **e2e Tier-2 handoff** — a committed `tests/e2e/runs.jsonl` manifest so an in-flight/long sweep resumes
-  across sessions (summary.json already lands per run; #116).
+- **axe-core in the e2e sweep** — ☑ shipped. A **self-hosted, vendored** `axe-core`
+  (`tests/e2e/vendor/axe.min.js`), injected via `page.evaluate` past the strict CSP; runs a WCAG 2 A/AA
+  scan on the desktop config. GATE on `critical`, REPORT `serious`+. Already caught 1 real serious
+  issue — card official-link contrast 4.42 < 4.5 on the light surface (a11y issue #154; fix + tightening
+  the gate to `serious` is queued).
+- **e2e Tier-2 handoff** — ☑ shipped. A committed `tests/e2e/runs.jsonl` manifest (one JSON line per run:
+  target, verdict, model-host hits, axe counts, broken flows) now carries run history across sessions
+  alongside the existing gitignored per-run `summary.json` (#116).
+- **Queued follow-on hardening (not yet built, user-approved):** `ruff` (Python lint for the
+  currently-unlinted `ingest/` + `tests/e2e/*.py`), `actionlint` (CI workflow linting), ESLint
+  `reportUnusedDisableDirectives` + `eslint-plugin-regexp`, and a11y-strict (fix #154's contrast, gate
+  axe on `serious`, run axe on a mobile viewport).
 
 ## Order · conventions · verification
 

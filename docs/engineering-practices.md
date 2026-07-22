@@ -1,7 +1,7 @@
 ---
 title: "Engineering practices — sortmy.london / ldnmxx-hack"
 type: reference
-updated: 2026-07-18
+updated: 2026-07-22
 ---
 
 # Engineering practices
@@ -51,6 +51,12 @@ Overriding principle: **measure and verify on the live target — not vibes, not
   trailing comment. One unpinned tag ref fails the whole workflow.
 - **ToU-gated data stays out of git.** Only synthetic fixtures are committed; scraped
   corpora are gitignored.
+- **Self-hosted, vendored third-party libs — never fetch at runtime.** Test-only libs
+  needed inside the page (e.g. `axe-core`) are vendored under `tests/e2e/vendor/` and
+  injected via `page.evaluate` rather than fetched, mirroring the app's own
+  no-external-resources CSP. Vendored code is excluded from CI scanners
+  (`.semgrepignore`) and marked `linguist-vendored` in `.gitattributes` so it doesn't
+  count as reviewable diff/stats.
 
 ## UX / Accessibility (civic)
 
@@ -62,6 +68,15 @@ Overriding principle: **measure and verify on the live target — not vibes, not
 - **WCAG AA is verified, not asserted.** sr-only `<h1>`, `aria-live` results, visible
   focus, `prefers-reduced-motion`, a keyboard-only pass, and an **axe-core** check in
   the e2e sweep — real pass/fail.
+- **axe-core gates on `critical`, reports `serious`+.** The e2e sweep injects a
+  **self-hosted, vendored** `axe-core` (`tests/e2e/vendor/axe.min.js`) via
+  `page.evaluate` — `add_script_tag` would be blocked by the page's own strict CSP —
+  and runs a WCAG 2 A/AA scan on the desktop config today (a mobile-viewport run is
+  queued). GATE on `critical` only, so the sweep stays a usable green/red signal;
+  REPORT `serious`+ loud plus into `summary.json` and an `axe-desktop.json` artifact,
+  so a real regression is visible without blocking every run on a design-system nit.
+  Already caught one: card official-link contrast 4.42 < 4.5 on the light surface
+  (#154).
 - **Gate dev chrome.** Dev tooling (event stream, key panel) sits behind `?dev` / a
   devMode flag so civic users never see it. Anti-FOUC theme init is an external,
   CSP-safe script — no inline handler.
@@ -101,3 +116,21 @@ Overriding principle: **measure and verify on the live target — not vibes, not
   always-on rule (3rd) → a skill (recurring workflow). Promote by root cause, not symptom.
 - **Identity hygiene.** noreply author, `--no-gpg-sign`, and prefix git/gh with
   `env -u GH_TOKEN -u GITHUB_TOKEN`.
+- **Deepest-strictness lint/type gates, one knob per PR.** `verbatimModuleSyntax` +
+  `noPropertyAccessFromIndexSignature` (both tsconfigs), `eslint-plugin-security`
+  (worker+shared, `detect-object-injection` off + reviewed `detect-unsafe-regex`
+  exceptions), and a **curated** `eslint-plugin-unicorn` (worker+ui) are now standing
+  CI gates — each shipped as its own small, reviewable PR rather than one big-bang
+  lint change. `eslint-plugin-jsx-a11y` stays deferred: its latest release peers
+  ESLint `^3`–`^9`, incompatible with this repo's ESLint 10, and forcing it on would
+  need `legacy-peer-deps` — which undermines the same dependency strictness the other
+  knobs add.
+- **A committed e2e run manifest carries history across sessions.** Each sweep run
+  appends a compact JSON line (target, verdict, model-host hits, axe counts, broken
+  flows) to `tests/e2e/runs.jsonl` (committed) alongside the existing gitignored
+  per-run `summary.json` — a durable log a later session reads instead of re-parsing
+  stdout or re-running the sweep to check history.
+- **Queued hardening (not yet built).** `ruff` (the currently-unlinted `ingest/` +
+  `tests/e2e/*.py`), `actionlint` (CI workflow linting), ESLint
+  `reportUnusedDisableDirectives` + `eslint-plugin-regexp`, and a11y-strict (fix
+  #154's contrast, gate axe on `serious`, run axe on a mobile viewport too).
