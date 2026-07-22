@@ -67,10 +67,11 @@ describe("queryCorpusDef", () => {
 
 // --- W6 (#13, ADR 0002): the D1-backed corpus source ---------------------------------------------
 
-// Minimal D1 stub routed by METHOD shape, not SQL: the gazetteer lookup goes .bind().first(), the
-// view read goes .all(). The unknown-cast is test scaffolding only, never production narrowing.
+// Minimal D1 stub routed by METHOD shape, not SQL: the origin lookup goes .bind().first(), the
+// seeded-probe goes .first() unbound, the view read goes .all(). The unknown-cast is test
+// scaffolding only, never production narrowing.
 interface StubStmt {
-  bind: () => StubStmt;
+  bind: () => { first: () => Promise<unknown> };
   first: () => Promise<unknown>;
   all: () => Promise<unknown>;
 }
@@ -79,15 +80,18 @@ function stubDb(opts: {
   origin?: { lat: number; lng: number } | null;
   rows?: unknown[];
   fail?: boolean;
+  gazetteerEmpty?: boolean;
 }): D1Database {
+  const down = (): Promise<never> => Promise.reject(new Error("d1 down"));
   const stmt: StubStmt = {
-    bind: () => stmt,
+    bind: () => ({
+      first: () => (opts.fail ? down() : Promise.resolve(opts.origin ?? null)),
+    }),
     first: () =>
-      opts.fail ? Promise.reject(new Error("d1 down")) : Promise.resolve(opts.origin ?? null),
-    all: () =>
       opts.fail
-        ? Promise.reject(new Error("d1 down"))
-        : Promise.resolve({ results: opts.rows ?? [] }),
+        ? down()
+        : Promise.resolve(opts.gazetteerEmpty ? null : { postcode: "probe" }),
+    all: () => (opts.fail ? down() : Promise.resolve({ results: opts.rows ?? [] })),
   };
   return { prepare: () => stmt } as unknown as D1Database;
 }
@@ -124,6 +128,13 @@ describe("queryCorpus over a D1 source (care carries a d1View)", () => {
     });
     const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db });
     expect(q.rows.map((r) => r.id)).toEqual(["d1-near"]);
+  });
+
+  it("falls back to the bundled sample when the gazetteer is EMPTY (provisioned before seeded)", async () => {
+    const db = stubDb({ origin: null, rows: [d1Row], gazetteerEmpty: true });
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db });
+    expect(q.rows.length).toBeGreaterThan(0);
+    expect(q.rows.some((r) => r.id === "d1-near")).toBe(false);
   });
 
   it("falls back to the bundled sample when D1 errors (an outage never breaks Care)", async () => {

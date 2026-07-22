@@ -28,13 +28,13 @@ simple = { limit = 20, period = 60 }
 [ai]
 binding = "AI"
 
-# CF D1 — the read-through corpus store (W6 #13, ADR 0002). UNCOMMENT after provisioning (user-run,
-# creds-gated):  npx wrangler d1 create sortmy-corpus   → paste the database_id below, then
-#                npx wrangler d1 migrations apply DB --remote
-# The Worker treats the binding as OPTIONAL: unbound → the bundled sample corpora serve (and any D1
-# failure falls back to them), so deploys stay green while this block is commented out.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "sortmy-corpus"
-# database_id = "<set-by-provisioning>"
-# migrations_dir = "migrations"
+# CF D1 — the read-through corpus store (W6 #13, ADR 0002). PROVISIONED 2026-07-22; EMPTY until the
+# W4/#161 ingest lands. Schema: npx wrangler d1 migrations apply DB --remote --config wrangler.toml
+# (always pass --config — bare wrangler walks up to the root Pages config). The Worker degrades to
+# the bundled sample corpora whenever D1 is unbound, FAILING, or NOT YET SEEDED (empty gazetteer),
+# so an empty store never breaks Care.
+[[d1_databases]]
+binding = "DB"
+database_name = "sortmy_london_corpus"
+database_id = "cc6bb743-4041-455e-bf30-b4ecd5d184c3"
+migrations_dir = "migrations"

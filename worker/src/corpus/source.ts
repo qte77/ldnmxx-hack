@@ -62,9 +62,17 @@ export function d1Source(db: D1Database, view: string): CorpusSource {
         .prepare("SELECT lat, lng FROM postcodes WHERE postcode = ?1")
         .bind(postcode)
         .first<{ lat: number; lng: number }>();
-      return row !== null && typeof row.lat === "number" && typeof row.lng === "number"
-        ? { lat: row.lat, lng: row.lng }
-        : null;
+      if (row !== null && typeof row.lat === "number" && typeof row.lng === "number") {
+        return { lat: row.lat, lng: row.lng };
+      }
+      // Distinguish a genuine miss from a NOT-YET-SEEDED store (provisioned before ingest — A2/#13
+      // lands ahead of W4/#161): an empty gazetteer must degrade to the bundled sample, not answer
+      // every postcode with an empty state. Throwing routes through queryCorpus's fallback.
+      const seeded = await db.prepare("SELECT postcode FROM postcodes LIMIT 1").first();
+      if (seeded === null) {
+        throw new Error("d1Source: postcodes gazetteer is empty — store not seeded yet");
+      }
+      return null;
     },
     records: async () => {
       const sql = VIEW_SQL[view];
