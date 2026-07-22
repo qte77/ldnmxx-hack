@@ -46,9 +46,15 @@ function isCorpusRecord(v: unknown): v is CorpusRecord {
   );
 }
 
+// Fully STATIC SQL per registered view — no runtime string-building near the database, so the
+// statement set is closed + reviewable (safe by construction, not by argument). A new corpus view
+// adds one entry here alongside its registry `d1View` and migration.
+const VIEW_SQL: Record<string, string> = {
+  care_signposts:
+    "SELECT id, name, authority, why, officialUrl, lastUpdated, lat, lng FROM care_signposts",
+};
+
 // A corpus read through its D1 view (the CorpusRecord contract in SQL — see worker/migrations).
-// `view` comes from the registry (reviewed TS, validated at load), never from user input, so
-// interpolating it into the statement is safe.
 export function d1Source(db: D1Database, view: string): CorpusSource {
   return {
     origin: async (postcode) => {
@@ -61,9 +67,11 @@ export function d1Source(db: D1Database, view: string): CorpusSource {
         : null;
     },
     records: async () => {
-      const rs = await db
-        .prepare(`SELECT id, name, authority, why, officialUrl, lastUpdated, lat, lng FROM ${view}`)
-        .all();
+      const sql = VIEW_SQL[view];
+      // An unregistered view is a programming error; the throw is caught by queryCorpus, which
+      // degrades to the bundled sample rather than a broken stream.
+      if (sql === undefined) throw new Error(`d1Source: no SQL registered for view "${view}"`);
+      const rs = await db.prepare(sql).all();
       // Widen to unknown[] first: an interface has no implicit index signature, so the type-guard
       // filter only narrows from unknown, not from D1's Record<string, unknown> rows.
       const rows: unknown[] = rs.results;
