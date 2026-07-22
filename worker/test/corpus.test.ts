@@ -69,21 +69,27 @@ describe("queryCorpusDef", () => {
 
 // Minimal D1 stub routed by METHOD shape, not SQL: the gazetteer lookup goes .bind().first(), the
 // view read goes .all(). The unknown-cast is test scaffolding only, never production narrowing.
+interface StubStmt {
+  bind: () => StubStmt;
+  first: () => Promise<unknown>;
+  all: () => Promise<unknown>;
+}
+
 function stubDb(opts: {
   origin?: { lat: number; lng: number } | null;
   rows?: unknown[];
   fail?: boolean;
 }): D1Database {
-  const stmt = (_sql: string): unknown => ({
-    bind: () => stmt(_sql),
+  const stmt: StubStmt = {
+    bind: () => stmt,
     first: () =>
       opts.fail ? Promise.reject(new Error("d1 down")) : Promise.resolve(opts.origin ?? null),
     all: () =>
       opts.fail
         ? Promise.reject(new Error("d1 down"))
         : Promise.resolve({ results: opts.rows ?? [] }),
-  });
-  return { prepare: stmt } as unknown as D1Database;
+  };
+  return { prepare: () => stmt } as unknown as D1Database;
 }
 
 const d1Row = {
