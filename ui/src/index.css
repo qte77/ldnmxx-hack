@@ -194,9 +194,21 @@ body {
  * (the incorporate how-to-pack card's verified gov.uk / Companies House links rely on this). A direct
  * colour on the anchor overrides the muted caption colour it usually sits inside. */
 .a2ui-surface a {
-  color: var(--color-primary);
+  /* a11y (#154): the brand primary (--color-primary = #7a6010) is 4.42:1 on the card surface
+   * (--color-surface #e2dec8) — just under WCAG AA 1.4.3. Deepen to #725810 (4.98:1) for LIGHT mode
+   * only, WITHOUT hand-tuning the vendored token (tokens.css); dark's #c8a858 on #242018 already
+   * passes and is restored below. Links live inside cards, so the card surface is the worst case. */
+  color: #725810;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+:root[data-theme="dark"] .a2ui-surface a {
+  color: var(--color-primary);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .a2ui-surface a {
+    color: var(--color-primary);
+  }
 }
 .a2ui-surface a:hover {
   text-decoration-thickness: 2px;

@@ -141,15 +141,17 @@ the corpus id. `workflows.ts` registry: `render.corpus` + `query.query_corpus`; 
 - **axe-core in the e2e sweep** — ☑ shipped. A **self-hosted, vendored** `axe-core`
   (`tests/e2e/vendor/axe.min.js`), injected via `page.evaluate` past the strict CSP; runs a WCAG 2 A/AA
   scan on the desktop config. GATE on `critical`, REPORT `serious`+. Already caught 1 real serious
-  issue — card official-link contrast 4.42 < 4.5 on the light surface (a11y issue #154; fix + tightening
-  the gate to `serious` is queued).
+  issue — card official-link contrast 4.42 < 4.5 on the light surface (a11y issue #154, **now FIXED**:
+  a light-mode link-colour override + the gate flipped to `serious` + axe on mobile).
 - **e2e Tier-2 handoff** — ☑ shipped. A committed `tests/e2e/runs.jsonl` manifest (one JSON line per run:
   target, verdict, model-host hits, axe counts, broken flows) now carries run history across sessions
   alongside the existing gitignored per-run `summary.json` (#116).
-- **Queued follow-on hardening (not yet built, user-approved):** `ruff` (Python lint for the
-  currently-unlinted `ingest/` + `tests/e2e/*.py`), `actionlint` (CI workflow linting), ESLint
-  `reportUnusedDisableDirectives` + `eslint-plugin-regexp`, and a11y-strict (fix #154's contrast, gate
-  axe on `serious`, run axe on a mobile viewport).
+- **Follow-on hardening — ☑ all shipped:** `ruff` + a SHA-pinned `lint-py` CI gate for the e2e Python
+  (#156) · `actionlint` on the workflows (#157) · ESLint `reportUnusedDisableDirectives` +
+  `eslint-plugin-regexp` (#158 — caught 3 real regex fixes) · **a11y-strict**: #154's contrast fixed
+  (a light-mode link-colour override to `#725810` = 4.98:1, no vendored-token edit) + the axe gate
+  flipped to `serious` + axe on the mobile-portrait viewport. **Cross-repo standardization is captured
+  as `qte77/qte77#164`** (estate strictness/lint/security baseline) — NOT started here, per direction.
 
 ## Order · conventions · verification
 

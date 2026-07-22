@@ -78,11 +78,16 @@ unreleased work).
   `critical`, reports `serious`+ — which already caught 1 real serious issue (card official-link
   contrast 4.42 < 4.5, a11y issue #154). A committed `tests/e2e/runs.jsonl` also now carries per-run
   history across sessions. **The C carry-over is essentially complete.**
-- Remaining C: nothing blocking — `eslint-plugin-jsx-a11y` (#150) stays deferred pending upstream
-  ESLint 10 support. Queued follow-on hardening (not yet built, approved): `ruff` (Python lint for
-  `ingest/` + `tests/e2e/*.py`), `actionlint` (CI workflow linting), ESLint
-  `reportUnusedDisableDirectives` + `eslint-plugin-regexp`, and a11y-strict (fix #154's contrast, gate
-  axe on `serious`, run axe on a mobile viewport).
+- ☑ **Follow-on hardening — all shipped:** `ruff` + a SHA-pinned `lint-py` CI gate for the e2e Python
+  (#156) · `actionlint` on the workflows (#157) · ESLint `reportUnusedDisableDirectives` +
+  `eslint-plugin-regexp` (#158 — caught 3 real regex fixes) · **a11y-strict**: #154's contrast fixed
+  (light-mode link override `#725810` = 4.98:1, no vendored-token edit) + the axe gate flipped to
+  `serious` + axe on the mobile-portrait viewport. Cross-repo standardization captured as
+  **`qte77/qte77#164`** (estate baseline) — NOT started here, per direction. Only
+  `eslint-plugin-jsx-a11y` (#150) stays deferred, pending upstream ESLint 10 support.
+- **Deploy pending:** the #154 contrast fix + the H3–H6 Worker internals are on `main` but NOT live —
+  a `make deploy` makes them live; then run the sweep (now gating axe on `serious`) → expect 0
+  critical/serious.
 
 ## Queue & order
 
