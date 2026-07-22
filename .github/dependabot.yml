@@ -26,6 +26,16 @@ updates:
       # bumps still flow — CI's real-renderer test guards them.
       - dependency-name: "@a2ui/react"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # typescript-eslint can't parse TS 7 yet — worker+ui stay aligned on TS 6 (AGENTS.md gotcha;
+      # #153's ui job failed exactly here: ERESOLVE typescript-eslint@8.64 vs typescript@7). Unignore
+      # when typescript-eslint supports TS 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # zod is deliberately held at ^3 to match @a2ui/react's peer range — one deduped copy, measured
+      # −17.9 KB gzip (engineering-practices · Performance). A v4 move is a deliberate migration with
+      # the renderer, not an auto-bump.
+      - dependency-name: "zod"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "npm"
     directory: "/worker"
     schedule:
@@ -41,6 +51,9 @@ updates:
     ignore:
       # wrangler@4 peer-pins @cloudflare/workers-types to ^4; the v5 major conflicts (ERESOLVE).
       - dependency-name: "@cloudflare/workers-types"
+        update-types: ["version-update:semver-major"]
+      # typescript-eslint can't parse TS 7 yet — worker+ui stay aligned on TS 6 (AGENTS.md gotcha).
+      - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
