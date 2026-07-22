@@ -21,7 +21,8 @@ record_video_dir (polyfetch's render_session has a teardown bug that drops the f
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from patchright.sync_api import sync_playwright
 
 TARGET = sys.argv[1] if len(sys.argv) > 1 else "https://sortmy.london"
@@ -310,7 +311,7 @@ def write_summary(rc, model_hits, unf, broken, a11y_crit, a11y_ser):
     summary = {
         "target": TARGET,
         "label": LABEL,
-        "ran_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "ran_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "verdict": "PASS" if rc == 0 else "FAIL",
         "model_host_hits": len(model_hits),
         "openrouter_or_401_lines": len(unf),
@@ -331,7 +332,7 @@ def append_run_manifest(rc, model_hits, unf, broken, a11y_crit, a11y_ser):
     results/; this is the durable log a later session reads to see run history + resume an in-flight
     sweep. Committed deliberately (git only records it when you `git add` it), so runs don't churn."""
     record = {
-        "ran_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "ran_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "target": TARGET,
         "label": LABEL,
         "verdict": "PASS" if rc == 0 else "FAIL",

@@ -1,0 +1,15 @@
+# Python lint (ruff) for the repo's Python — the e2e sweep (tests/e2e/*.py) and the ingest/ pipeline.
+# Kept at the root as ruff.toml (NOT pyproject.toml) so the clean-root convention holds: no root Python
+# package, just a linter config. Run: `uvx ruff check` / `uvx ruff format --check`.
+target-version = "py312"
+line-length = 120
+
+[lint]
+# High-signal, low-noise defaults: pyflakes (F) + pycodestyle (E/W) + import order (I) + pyupgrade (UP)
+# + bugbear (B) + comprehensions (C4) + simplify (SIM) + flake8-pie (PIE) + ruff's own (RUF).
+select = ["E", "W", "F", "I", "UP", "B", "C4", "SIM", "PIE", "RUF"]
+
+[lint.per-file-ignores]
+# The e2e sweep deliberately catches broad Exception around Patchright calls (a flaky browser step must
+# never abort the whole sweep) and prints diagnostics; that is intentional, not a smell.
+"tests/e2e/*.py" = ["BLE001"]
