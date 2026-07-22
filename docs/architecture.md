@@ -17,8 +17,8 @@ only these seams change:
 | `render` | built-in A2UI cards (Column/Card/Text) | static `buildRouteCards()` text today; RouteCard + lazy OSM `RouteMap` panel is **PLANNED** |
 | `input()` | text | text today (canned stub); voice (Web Speech STT + text fallback) is **PLANNED** |
 
-**Deterministic corpus workflows** (e.g. **Sort My Care**, **Sort My Wander**, `render.mode:"corpus"`,
-#72/#80) are a fourth shape: a model-free + fetch-free `query_corpus` exec over a bundled corpus
+**Deterministic corpus workflows** (e.g. **Sort My Care**, **Sort My Wander**, `render.mode:"corpus"`, #72/#80)
+are a fourth shape: a model-free + fetch-free `query_corpus` exec over a bundled corpus
 (`shared/sanitize.ts` → `worker/src/geo.ts` → `worker/src/corpus/*`) → card render + a curated disclaimer —
 registered, not wired into the core, and honestly reported as `USAGE mode:demo`. The mode and exec are
 **generic over a corpus id** (#80), so a new nearest-N one is a `corpus/registry.ts` entry + a JSON + a UI
