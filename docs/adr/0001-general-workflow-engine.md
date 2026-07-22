@@ -69,6 +69,20 @@ a query fn". This ADR is kept as the historical record — where the two differ,
   load rather than being silently ignored. This is the TS engine's own strictness only — the *shared*
   `workflow-definition/v1` schema stays `additionalProperties:true` so cross-engine extras still pass.
 
+## Amendment (#129, plan 015 · H6) — the "two sources of truth" minus is now FULLY resolved
+
+The third minus below was only PARTLY resolved by the W1 amendment above (the corpus `id` was validated
+at load; the `RENDER_MODES`/`STAGE_EXECS` constants themselves stayed hand-maintained, a second source
+of truth alongside the `workflows.ts` registry keys). This is now closed:
+
+- `worker/src/usecases.ts`'s `RENDER_MODES`/`STAGE_EXECS` are `as const` arrays that are the SINGLE
+  source; the `RenderMode`/`StageExec` union types are DERIVED from them (`(typeof ARR)[number]`), not
+  hand-declared alongside the arrays.
+- `worker/src/workflows.ts`'s `registry.render` is now typed as a total `Record<RenderMode, RenderFn>`
+  (was a looser shape), so `tsc` — not just the contract + integration tests — rejects a registry missing
+  an entry for any mode in `RENDER_MODES`, and rejects an entry for a mode that isn't. Drift between the
+  mode/exec sets and the registry is now a compile error, not just a test gap.
+
 ## Consequences
 
 - **+** New corpus workflows (Wander #73, Scam #74) are additive: register + JSON + corpus + tests. No

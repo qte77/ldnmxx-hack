@@ -6,6 +6,39 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Plan 015 — civic usecase expansion + real data
 
+- **Engine: e2e now asserts On It + records both orientations (H7, #144)** — `tests/e2e/flows.json` gives
+  On It a `query`/`cta`/`markers` triple like Care/Wander/Scam, so the sweep **types the example prompt and
+  asserts the route cards render** instead of clicking the CTA and asserting nothing (the same gap #126
+  fixed for Care); video capture now records **both orientations** — desktop (landscape) + mobile-portrait
+  — instead of desktop-only.
+- **Engine: `RENDER_MODES`/`STAGE_EXECS` single-sourced, unions derived (H6, #143)** — `usecases.ts`'s
+  `RENDER_MODES`/`STAGE_EXECS` are now `as const` arrays that are the SINGLE source; the `RenderMode`/
+  `StageExec` union types are DERIVED from them (`(typeof ARR)[number]`), and `workflows.ts`'s
+  `registry.render` is a total `Record<RenderMode, RenderFn>` — so `tsc`, not just tests, now catches
+  drift. Closes ADR-0001's "two sources of truth" Consequences minus.
+- **Engine: validate the `asOf` freshness date format (H5, #142)** — new `worker/src/dates.ts`
+  (`isIsoDate` + `oldestIsoDate`): the corpus + scam queries now compute "data as of …" as the oldest
+  **valid** ISO date across the shown rows, excluding any non-ISO value, so a malformed date can never
+  advertise a wrong freshness. A trust-claim fix landed ahead of W4's real ingest.
+- **Chain: transient-vs-fatal model-error taxonomy + one bounded retry (H3/H4, #141)** —
+  `agent/model.ts`'s `callModelTool` now retries ONCE on a transient HTTP status (`429/500/502/503/504`),
+  honoring `Retry-After` (capped 60 s), and fails fast on everything else (401/407 auth, 404/410 gone, 451
+  legal) via `describeModelStatus`; a thrown fetch (network error / abort) is never retried. The `… | null`
+  fallback contract callers rely on is unchanged.
+- **Sort My Scam Check (W2, #140)** — new civic usecase: a clone-firm / FCA-register **flag** (firm name
+  or FRN → register status + a deterministic clone look-alike note), signposting to verify on the FCA
+  register — never a verdict. A **match** shape, not the geo nearest-N corpus: needed a new `query_scam`
+  exec + a new `scam` render mode, living in its own `worker/src/scam/{registry,query,render}.ts` module
+  (reuses the geo-agnostic `CorpusRow` + `a2ui/cards.ts`'s `cardsBatch`/`appendDisclaimer`). Synthetic +
+  **fictional** firms; curated link = the FCA Financial Services Register; `mode:demo`. 19 scam tests.
+- **Fixed: the Care flagship's prefilled postcode had no sample data (#139)** — `E8 3GT` is the Care
+  example query, but the sample gazetteer lacked it (an empty state on first load). Added `E8 3GT` + local
+  Hackney rows to `data/care/*` and `data/wander/*` samples.
+- **Sort My Wander (W3, #138)** — new civic usecase: free heritage sites + green spaces near a London
+  postcode. **Register-only** — the nearest-N proof of W1's generic corpus seam:
+  `data/wander/*.sample.json` + one `corpus/registry.ts` entry + `usecases/sort-my-wander.json` + a UI
+  entry, no engine TS. Curated Historic England "The List" official link. Also introduced the data-driven
+  e2e manifest `tests/e2e/flows.json`. Worker+ui tsc/lint/tests green (135+22).
 - **Engine: strict usecase schema at load (#133)** — `assertUsecaseDef` now rejects **unknown keys**
   (envelope `{id, title, render, stages}`, stage `{name, kind, events, exec, corpus}`), so a misspelled
   optional field — e.g. `exex` — fails loudly at load instead of being silently dropped (which would

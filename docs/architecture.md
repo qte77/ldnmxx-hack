@@ -6,8 +6,9 @@ One `POST /run?usecase=<id>` endpoint → a small `runUsecase` interpreter (plan
 HUD. The SPA flips between the two demo workflows (**Founder's Copilot ⇄ On It**) via a toggle over the
 `?usecase=` param; each workflow's stage choreography is a `usecases/*.json` read at runtime
 (`worker/src/usecases.ts`), and render + deterministic query dispatch **by name** through the
-`worker/src/workflows.ts` **registry** (`render` by mode — `founders`/`route`/`corpus`; `query` by exec) — so
-adding a corpus workflow is **register-only**, never an engine edit (open/closed; ADR 0001). Per workflow,
+`worker/src/workflows.ts` **registry** (`render` by mode — `founders`/`route`/`corpus`/`scam`; `query` by
+exec) — so adding a **corpus** (nearest-N) workflow is **register-only**, never an engine edit (open/closed;
+ADR 0001); a **match**-shaped workflow (`scam`) needs a new mode + exec + its own module. Per workflow,
 only these seams change:
 
 | Seam | Founder's Copilot | On It |
@@ -16,15 +17,38 @@ only these seams change:
 | `render` | built-in A2UI cards (Column/Card/Text) | static `buildRouteCards()` text today; RouteCard + lazy OSM `RouteMap` panel is **PLANNED** |
 | `input()` | text | text today (canned stub); voice (Web Speech STT + text fallback) is **PLANNED** |
 
-**Deterministic corpus workflows** (e.g. **Sort My Care**, `render.mode:"corpus"`, #72/#80) are a fourth
-shape: a model-free + fetch-free `query_corpus` exec over a bundled corpus (`shared/sanitize.ts` →
-`worker/src/geo.ts` → `worker/src/corpus/*`) → card render + a curated disclaimer — registered, not wired
-into the core, and honestly reported as `USAGE mode:demo`. The mode and exec are **generic over a corpus
-id** (#80), so a new one is a `corpus/registry.ts` entry + a JSON + a UI entry with no engine TS: the
-query pre-formats each row's display line (so the render is shape-agnostic and a future match-shaped
-workflow reuses it), and the load-guard rejects an unregistered `corpus` id at startup. The query seam
-returns a `Promise` so a D1-backed source can replace the bundled JSON without touching dispatch. See
+**Deterministic corpus workflows** (e.g. **Sort My Care**, **Sort My Wander**, `render.mode:"corpus"`, #72/#80)
+are a fourth shape: a model-free + fetch-free `query_corpus` exec over a bundled corpus
+(`shared/sanitize.ts` → `worker/src/geo.ts` → `worker/src/corpus/*`) → card render + a curated disclaimer —
+registered, not wired into the core, and honestly reported as `USAGE mode:demo`. The mode and exec are
+**generic over a corpus id** (#80), so a new nearest-N one is a `corpus/registry.ts` entry + a JSON + a UI
+entry with no engine TS: the query pre-formats each row's display line (so the render is shape-agnostic),
+and the load-guard rejects an unregistered `corpus` id at startup. The query seam returns a `Promise` so a
+D1-backed source can replace the bundled JSON without touching dispatch.
+
+**Match-shaped workflows** are a fifth shape, shipped by **Sort My Scam Check** (#140): a firm name/FCA
+number **lookup**, not a nearest-N over coordinates, so it does NOT fit the frozen geo `CorpusRecord` and
+is NOT register-only — it needed its own `scam` render mode + `query_scam` exec, registered in
+`workflows.ts` alongside `corpus`/`query_corpus`, and lives in its own `worker/src/scam/{registry,query,
+render}.ts` module (reusing the geo-agnostic `CorpusRow` + `a2ui/cards.ts`'s `cardsBatch`/
+`appendDisclaimer`, but never `corpus/render.ts`'s geo-worded copy). Every result routes to the FCA
+register and no status is ever presented as "safe" — a flag, never a verdict. See
 [`usecase-workflows.md`](usecase-workflows.md) + ADR [`0001`](adr/0001-general-workflow-engine.md).
+
+**Model-chain robustness (H3/H4, #141).** `agent/model.ts`'s `callModelTool` now classifies a failed HTTP
+status as transient (`429/500/502/503/504` — retried ONCE, honoring `Retry-After` capped at 60 s) or fatal
+(everything else, incl. 401/407 auth, 404/410 gone, 451 legal — fails fast via `describeModelStatus`); a
+thrown fetch (network error / abort) is never retried, and the `… | null` fallback contract is unchanged.
+
+**Freshness integrity (H5, #142).** `worker/src/dates.ts` (`isIsoDate` + `oldestIsoDate`) validates the
+`asOf` freshness date: the corpus + scam queries advertise the oldest **valid** ISO date across the shown
+rows, excluding any malformed value, so a "data as of …" trust claim can never be wrong because of a bad
+date — landed ahead of the W4 real-data ingest.
+
+**Single-sourced mode/exec unions (H6, #143).** `usecases.ts`'s `RENDER_MODES`/`STAGE_EXECS` are `as const`
+arrays that are the single source; the `RenderMode`/`StageExec` union types are DERIVED from them, and
+`workflows.ts`'s `registry.render` is a total `Record<RenderMode, RenderFn>` — so `tsc`, not just tests,
+now catches drift between the two. Closes ADR-0001's known "two sources of truth" Consequences minus.
 
 ## Data flow — one direction, one trust crossing
 
@@ -73,7 +97,8 @@ sets the next run's `?demo=1` intent; the chip reports what the last run actuall
 - `contract.ts` = validation · `applyA2UIEvent.ts` = render seam · `useAgentSSE.ts` = transport ·
   `runUsecase` + injectable emitter = observability · `usecases.ts` = the use-case seam (loads + guards
   `usecases/*.json`); `workflows.ts` = the general registry (render mode + query exec dispatch). (Worker
-  source: `worker.ts`, `usecases.ts`, `workflows.ts`, `geo.ts`, `corpus/*`, `agent/model.ts`, `a2ui/cards.ts`, `trace/arize.ts`.)
+  source: `worker.ts`, `usecases.ts`, `workflows.ts`, `geo.ts`, `dates.ts`, `corpus/*`, `scam/*`,
+  `agent/model.ts`, `a2ui/cards.ts`, `trace/arize.ts`.)
 - **Trust boundary:** SPA holds no secrets; keys are Worker secrets only; Worker is the sole egress;
   the CORS allowlist is the gate. No third-party JS/fonts/tiles (self-hosted).
 
