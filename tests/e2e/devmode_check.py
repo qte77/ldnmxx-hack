@@ -11,6 +11,7 @@ Examples:
     ... tests/e2e/devmode_check.py https://sortmy.london
 """
 import sys
+
 from patchright.sync_api import sync_playwright
 
 TARGET = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4173"

@@ -67,6 +67,16 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
+  lint-py:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet ruff==0.15.22 # pinned; lints tests/e2e/*.py (+ ingest/ when W4 lands)
+      - run: ruff check
+
   dependency-review:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
