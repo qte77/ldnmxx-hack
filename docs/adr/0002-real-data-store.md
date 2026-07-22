@@ -57,6 +57,10 @@ serve a source only when its **licence permits redistribution**:
 - **`free-key`** → the key gates *access*; the *licence* gates *redistribution*. Independent — verify each.
 - **ODbL / share-alike** (OSM-derived) → attribution **plus** a share-alike assessment on the stored
   derived database.
+- **No-cache / clinical-safety clauses** override an otherwise-open licence: the NHS live Directory of
+  Services forbids caching even though the content is OGL → `redistribute_ok: no`; use the OGL **bulk**
+  equivalent (NHS ODS via TRUD) or keep the source live/link-only. `access` (keyless/free-key) does not
+  capture this — only a verified `redistribute_ok` does.
 - Obligations that ride along even when permitted: **attribution**, **no implied endorsement**, honest
   freshness, and serving a **curated signpost** rather than a wholesale mirror.
 
