@@ -1,8 +1,8 @@
 {
-  "_comment": "Civic flows the e2e sweep drives, kept as DATA so adding a workflow is a manifest edit, not a change to ui_sweep.py. Each entry: `switchLabel` = the progressive-disclosure button to reach it. A run+asserted flow adds `query` (the text typed into #civic-query) + `cta` + `markers`; an entry without a `cta` is a switch-and-screenshot peek (e.g. the On It route). Each run flow's markers include its own summary line, so flows sharing one surface can't false-pass off a stale render.",
+  "_comment": "Civic flows the e2e sweep drives, kept as DATA so adding a workflow is a manifest edit, not a change to ui_sweep.py. Each entry: `switchLabel` = the progressive-disclosure button to reach it. A run+asserted flow adds `query` (the text typed into #civic-query) + `cta` + `markers`; an entry without a `cta` is a switch-and-screenshot peek. Each run flow's markers include its own summary line, so flows sharing one surface can't false-pass off a stale render.",
   "flows": [
     {
-      "name": "onit",
+      "name": "route",
       "switchLabel": "Step-free journeys",
       "query": "step-free from E8 3GT to Westminster",
       "cta": "Find a step-free route",

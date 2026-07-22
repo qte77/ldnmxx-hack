@@ -4,6 +4,13 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 015 — naming + transparency
+
+- **Renamed `on-it` → `sort-my-route`** ("Sort My Route") — the step-free flow now matches the
+  Sort-My-X family across the engine registry, UI, e2e manifest, and active docs. Old
+  `?usecase=on-it` deep links fall back to the flagship (graceful, no alias kept); the historical
+  screenshot filenames are unchanged.
+
 ## [1.3.0] — 2026-07-22
 
 ### Plan 015 — real-data operations (post-1.2.0)

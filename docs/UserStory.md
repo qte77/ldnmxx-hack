@@ -1,7 +1,7 @@
 # User stories
 
 The users the one engine serves (distilled from the sibling `ldnmxx` briefs): the two hackathon demos
-(Founder's Copilot, On It), the four shipped civic flows — **Sort My Care** (flagship), **On It**
+(Founder's Copilot, Sort My Route), the four shipped civic flows — **Sort My Care** (flagship), **Sort My Route**
 (step-free routes), **Sort My Wander** (free heritage + green space), **Sort My Scam Check** (clone-firm
 flag) — and **Benefits Copilot**, the v1 productization target (plans 010/011, proposed).
 
@@ -18,7 +18,7 @@ grant-writing expertise, no budget for a consultant.
 **Joy:** describe the idea once → the copilot assesses the stage, surfaces matched grants with a
 qualify-first gate, suggests who to talk to, and produces a one-click **incorporation-ready** pack.
 
-## On It — the mobility-constrained Londoner *(Live London)*
+## Sort My Route (formerly "On It") — the mobility-constrained Londoner *(Live London)*
 
 **Who:** a Londoner with a mobility constraint (wheelchair, buggy, temporary injury) navigating the city
 daily.

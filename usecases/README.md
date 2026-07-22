@@ -1,6 +1,6 @@
 # usecases/ — declarative stage defs
 
-`founders-copilot.json` + `on-it.json` define each workflow's plan→tool→render **stage choreography**,
+`founders-copilot.json` + `sort-my-route.json` define each workflow's plan→tool→render **stage choreography**,
 read at runtime by the small `runUsecase` interpreter in `worker/src/worker.ts` (loaded + guarded by
 `worker/src/usecases.ts`). Selected by the `?usecase=<id>` query param — **swapping/adding a JSON swaps
 the app**, same engine, same `/run` endpoint.
@@ -32,8 +32,8 @@ Schema (guarded at load):
 
 ```jsonc
 {
-  "id": "on-it",
-  "title": "On It",
+  "id": "sort-my-route",
+  "title": "Sort My Route",
   "render": { "mode": "founders" | "route" | "corpus" | "scam" },
   "stages": [
     { "name": "plan", "kind": "plan", "events": [ { "type": "STEP_STARTED", "text": "…" } ] },

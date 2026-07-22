@@ -142,7 +142,7 @@ export function buildOpportunityCards(opps: Opportunity[] = opportunities): unkn
   );
 }
 
-// On It — a step-free route: a summary card + one card per leg.
+// Sort My Route (formerly On It) — a step-free route: a summary card + one card per leg.
 export function buildRouteCards(r: Route = route): unknown[] {
   const summary: CardSpec = {
     key: "summary",
