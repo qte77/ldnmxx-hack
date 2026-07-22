@@ -1,0 +1,62 @@
+# Tier-3 uptime monitor (W5·B1, #10): run the e2e sweep against the LIVE site on a schedule.
+# Credential-free — it only hits the public URL. The verdict IS the job status: a FAIL fails the run
+# and opens (or comments on) the alert issue; artifacts carry summary.json + screenshots + videos.
+# The committed tests/e2e/runs.jsonl stays a LOCAL-session manifest by design — CI cannot push to the
+# protected main, so the durable CI record is the run history + artifacts + the alert issue.
+name: Tier-3 Monitor
+on:
+  schedule:
+    - cron: "17 */6 * * *" # every 6h, offset to dodge the top-of-hour queue
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - name: Install patchright + Chromium
+        run: |
+          pip install patchright
+          patchright install --with-deps chromium
+      - name: Sweep the live target
+        run: python tests/e2e/ui_sweep.py "https://sortmy.london" tier3
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Tier-3 sweep — sortmy.london"
+            if [ -f tests/e2e/results/tier3/summary.json ]; then
+              echo '```json'
+              cat tests/e2e/results/tier3/summary.json
+              echo '```'
+            else
+              echo "no summary.json produced (sweep crashed before writing it)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: tier3-results
+          path: tests/e2e/results/tier3/
+          retention-days: 14
+      - name: Alert on FAIL (open or update the alert issue)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Tier-3 monitor: live sweep FAILED"
+          n="$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "Still failing: $RUN_URL"
+          else
+            gh issue create --title "$title" --body "Scheduled live sweep against https://sortmy.london FAILED — see $RUN_URL (summary + screenshots in the run artifacts). Investigate: model-host hit, broken civic flow, or axe critical/serious."
+          fi
