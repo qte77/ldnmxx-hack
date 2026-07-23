@@ -29,9 +29,10 @@ export function bundledSource(def: {
   };
 }
 
-// Reject any D1 row that doesn't match the frozen CorpusRecord — a malformed ingest row must never
+// Reject any row that doesn't match the frozen CorpusRecord — a malformed ingest row must never
 // reach the render. Narrow via Record<string, unknown>, never `as Partial<T>` (see AGENT_LEARNINGS).
-function isCorpusRecord(v: unknown): v is CorpusRecord {
+// Exported: the ingest cron (ingest.ts) applies the SAME guard to untrusted artifacts (DRY).
+export function isCorpusRecord(v: unknown): v is CorpusRecord {
   if (typeof v !== "object" || v === null) return false;
   const r = v as Record<string, unknown>;
   return (
