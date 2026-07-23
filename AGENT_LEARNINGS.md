@@ -85,3 +85,21 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
   `--no-gpg-sign`). After a stacked PR's base is squash-merged, replay only the top commit:
   `git rebase --onto origin/main <old-parent> <branch>`.
 - **Refs:** PR #101 (P5 rebased onto main after #98 squash-merged).
+
+## Pages SPA fallback + immutable `/assets/*` can cache-poison a deploy for a year
+
+- **Pattern:** a sweep launched the instant `make deploy` returned found EVERY viewport blank with
+  `Failed to load module script … MIME type "text/html"`. During the deploy-propagation window the
+  new hashed asset briefly 404'd → Pages' **SPA fallback answered index.html (HTTP 200)** for the
+  asset URL → our `_headers` rule stamped that HTML response `public, max-age=31536000, immutable`
+  → the edge cached the poisoned **encoding variant** for a year. Curl (identity encoding) looked
+  healthy while Chromium (br/gzip variant) kept getting HTML — so "verify the deploy landed" via
+  curl alone can lie. Two consecutive sweeps failed on it.
+- **Fix:** (1) immediate: **purge the poisoned URLs** from the zone cache (dashboard Caching →
+  Purge, or an API token with Zone → Cache Purge — the deploy token lacks it). (2) durable:
+  `ui/public/404.html` — its presence DISABLES the Pages SPA fallback, so a missing asset returns a
+  real 404 (uncacheable as immutable HTML); safe because the app is single-route (query params
+  only). (3) practice: never trust a sweep started in the same breath as a deploy — let the edge
+  settle or pre-flight the asset MIME with browser-like headers; when curl and the browser disagree,
+  suspect a per-encoding cache variant.
+- **Refs:** postrename/postrename2 sweep FAILs (runs.jsonl 2026-07-23); the 404.html hardening PR.
