@@ -137,7 +137,7 @@
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "os-datahub",
@@ -153,7 +153,7 @@
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "osm-overpass",
@@ -169,7 +169,7 @@
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "wikidata",
@@ -212,7 +212,7 @@
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "govuk-content",
@@ -255,7 +255,7 @@
       "confidence": "high",
       "notes": "'accepting patients' often stale; confirm by phone. NOTE: the LIVE API forbids caching — the storable Care source is nhs-ods (below).",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "nhs-ods",
@@ -282,10 +282,13 @@
       "interface": "rest-json",
       "access": "keyless",
       "url": "https://data.police.uk/docs/",
+      "license": "OGL-3.0",
+      "redistribute_ok": "yes",
+      "redistribute_note": "present locations as APPROXIMATE (anonymised snap-points, month-only dates) — never imply address-level precision; OGL attribution + link back to data.police.uk.",
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "laqn",
@@ -322,10 +325,13 @@
       "interface": "rest-json",
       "access": "keyless",
       "url": "https://environment.data.gov.uk/flood-monitoring",
+      "license": "OGL-3.0",
+      "redistribute_ok": "conditional",
+      "redistribute_note": "SPLIT: static flood-RISK datasets are storable; live WARNINGS/levels must NOT be served from a cron snapshot (EA: not a substitute for official channels, no safety-critical reliance) — live or link-only via check-for-flooding.service.gov.uk. Attribution: 'This uses Environment Agency flood and river level data from the real-time data API (Beta)'.",
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "ea-flood-rss",
@@ -335,10 +341,13 @@
       "interface": "rss",
       "access": "keyless",
       "url": "https://environment.data.gov.uk/flood-widgets/rss-feeds.html",
+      "license": "OGL-3.0",
+      "redistribute_ok": "conditional",
+      "redistribute_note": "same licensor as ea-flood-monitoring; warning feeds are real-time — link/live only, never a stale snapshot presented as current.",
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "ea-bathing-water",
@@ -435,7 +444,7 @@
       "confidence": "high",
       "notes": "ratings can be 6-18 months stale; surface inspection date",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "dfe-education-stats",
@@ -464,7 +473,7 @@
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "cqc",
@@ -481,7 +490,7 @@
       "confidence": "med",
       "notes": "partnerCode param requested",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "ukair-defra-sos",
@@ -504,11 +513,14 @@
       "interface": "geojson",
       "access": "keyless",
       "url": "https://www.givefood.org.uk/api/",
+      "license": "CC-BY-4.0",
+      "redistribute_ok": "yes",
+      "redistribute_note": "credit with a link + link each foodbank's OWN page; do NOT reorder 'items needed' lists or bulk-contact scraped emails/phones; keep fresh (changes daily → cron re-sync); courtesy email to mail@givefood.org.uk before launch (requested, not gating).",
       "london_relevance": "high",
       "confidence": "high",
       "notes": "courtesy email + credit requested; Trussell Trust has no own API",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "companies-house",
@@ -524,7 +536,7 @@
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "fca-register",
@@ -540,7 +552,7 @@
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-22"
     },
     {
       "id": "charity-commission",
@@ -590,10 +602,13 @@
       "interface": "rest-json",
       "access": "keyless",
       "url": "https://www.planning.data.gov.uk/",
+      "license": "OGL-3.0 (per-dataset, 'except where otherwise stated')",
+      "redistribute_ok": "yes",
+      "redistribute_note": "check EACH dataset's own licence page before ingest (variance is designed-in); attribution is PER dataset — e.g. conservation-area: '© Historic England 2026. Contains Ordnance Survey data © Crown copyright and database right 2026.'",
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "epc",
@@ -686,10 +701,13 @@
       "interface": "geojson",
       "access": "keyless",
       "url": "https://data.london.gov.uk/dataset/cultural-infrastructure-map-2023",
+      "license": "OGL-3.0 (blanket; embedded third-party layers)",
+      "redistribute_ok": "conditional",
+      "redistribute_note": "dataset embeds OS/CAMRA/Audience Agency/Music Venue Trust layers without confirmed OGL sublicensing — higher-risk to redistribute those records verbatim; carry the GLA no-warranty disclaimer + no-endorsement; 2023 snapshot → visible 'as of' (music venues refreshed 2024-03).",
       "london_relevance": "high",
       "confidence": "high",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "eventbrite",
@@ -755,11 +773,14 @@
       "interface": "ndjson",
       "access": "keyless",
       "url": "https://status.openactive.io/",
+      "license": "CC-BY-4.0 (spec-mandated per feed)",
+      "redistribute_ok": "yes",
+      "redistribute_note": "still read each feed's license field at ingest and skip non-CC-BY feeds (cheap defensive check); attribution links the PUBLISHER name (GLL/Better/…) to its dataset site, on the card; booking-critical fields (spaces, times) go stale — show 'last updated' + link out for booking.",
       "london_relevance": "high",
       "confidence": "high",
       "notes": "CC-BY-4.0; pick a London-borough (GLL/Everyone Active) feed from the directory",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "adzuna",
@@ -918,11 +939,14 @@
       "interface": "rest-json",
       "access": "keyless",
       "url": "https://api.threesixtygiving.org/",
+      "license": "mixed per-publisher (CC-BY-4.0/CC0/OGL majority; CC-BY-SA subset + GrantNav aggregate)",
+      "redistribute_ok": "conditional",
+      "redistribute_note": "track the licence PER RECORD at ingest (registry/GrantNav license field); serve only attribution-only-licensed records (CC-BY/CC0/OGL) or ring-fence the CC-BY-SA subset (share-alike could attach to adaptations). Per-record attribution: publisher name + source + licence link.",
       "london_relevance": "high",
       "confidence": "high",
       "notes": "no auth required",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-17"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "va-collections",
