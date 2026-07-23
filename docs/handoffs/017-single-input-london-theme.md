@@ -22,7 +22,7 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
 
 - **Live:** v1.7.0 on `sortmy.london`; 5 corpora in D1; daily ingest cron batched under the
   subrequest cap (#197); tier3 monitor green.
-- ☐ **P0 finishes with this PR** (plan + handoff + tracker issue + ADR stubs).
+- ☐ **P0 finishes with this PR** (plan + handoff + tracker **#201** + ADR stubs).
 - **NEXT = P1 (theme)**: `tokens.css` EyeRest→fo Linear neutrals + `[data-variant]` A/B/C blocks
   (light+dark), `@fontsource/jetbrains-mono` re-added, `variant-init.js` + cycle control mirroring
   the existing theme toggle. **ADR 0005.** Then P2 router → P3 UI/wording → P4 release v1.8.0.

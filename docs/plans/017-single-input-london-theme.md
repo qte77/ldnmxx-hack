@@ -3,7 +3,7 @@ title: "Plan 017 — one input, London-themed: query-driven auto-routing + fo Li
 type: plan
 updated: 2026-07-23
 status: "open — P0 mints the arc; next P1 theme"
-refs: ["ADR 0003 (no-framework)", "ADR 0004 (auto-routing)", "ADR 0005 (theme-divergence)", "#185 (gazetteer, parallel)", "#199 (freshness watchdog, parallel)", "plan 016 (closed)"]
+refs: ["#201 (tracker)", "ADR 0003 (no-framework)", "ADR 0004 (auto-routing)", "ADR 0005 (theme-divergence)", "#185 (gazetteer, parallel)", "#199 (freshness watchdog, parallel)", "plan 016 (closed)"]
 ---
 
 # Plan 017 — one input, London-themed
@@ -32,7 +32,7 @@ agent loops / durable state.
 
 | # | Phase | Docs/ADR/issues it carries | Status |
 |---|---|---|---|
-| P0 | Arc mechanics: plan + handoff + tracker issue + ADR 0003/0004/0005 stubs | plan·handoff·tracker | ☐ |
+| P0 | Arc mechanics: plan + handoff + tracker (#201) + ADR 0003/0004/0005 stubs | plan·handoff·tracker | ☐ |
 | P1 | Theme: `tokens.css` EyeRest→fo Linear + **A/B/C variants** (light+dark), JetBrains Mono self-hosted, variant control | ADR 0005 · CHANGELOG · README stack · glossary | ☐ |
 | P2 | Auto-router (modules, strict TDD): `agent/router.ts` + `shared/routerTool.ts` + prompt pair; `worker.ts` body-read-once; `USECASE_RESOLVED` event; **no-match suggestions card**; **Arize route span**; **`?usecase=` bypass** | ADR 0003+0004 · architecture · glossary | ☐ |
 | P3 | Single-input UI + wording: remove switcher **control** (keep catalog as suggestion DATA), aria-live resolved announcement, reword all strings | README hero · UserStory · index.html meta | ☐ |
