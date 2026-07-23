@@ -4,6 +4,22 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-07-23
+
+### Plan 016 — keyless real data · P4: Sort My Food Hygiene, a NEW register-only usecase (#193)
+
+- **New civic workflow: Sort My Food Hygiene** — postcode → nearest food-hygiene ratings with
+  per-record inspection dates and official FSA links. Built REGISTER-ONLY (the arc's proof at
+  scale): a corpus registry entry, `usecases/sort-my-food-hygiene.json`, one UI `USECASES` entry,
+  and an e2e flow — zero engine edits. Served from D1 (FHRS, 62.9k London establishments via the P1
+  pipeline; migration `0004`), with a REAL-rows bundled sample (OGL) as the fallback.
+- **Licence-honest by design** — FHRS OGL attribution on the disclaimer card (swap-gated); our own
+  card style, never the FSA badge graphic (trademark); ratings staleness stated (inspection date
+  per record).
+- **D1-only recency assert** — the e2e flow queries a postcode deliberately absent from the
+  bundled sample, so it can only pass when the live store serves (marker: Marriott County Hall,
+  78 m).
+
 ## [1.6.0] — 2026-07-23
 
 ### Plan 016 — keyless real data · P3: Care (the flagship) goes REAL (#191)
