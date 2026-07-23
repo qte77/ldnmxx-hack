@@ -35,7 +35,7 @@ agent loops / durable state.
 | P0 | Arc mechanics: plan + handoff + tracker (#201) + ADR 0003/0004/0005 stubs | plan·handoff·tracker | ☐ |
 | P1 | Theme: `tokens.css` EyeRest→fo Linear + **A/B/C variants** (light+dark), JetBrains Mono self-hosted, variant control | ADR 0005 · CHANGELOG · README stack · glossary | ☐ |
 | P2 | Auto-router (modules, strict TDD): `agent/router.ts` + `shared/routerTool.ts` + prompt pair; `worker.ts` body-read-once; `USECASE_RESOLVED` event; **no-match suggestions card**; **Arize route span**; **`?usecase=` bypass** | ADR 0003+0004 · architecture · glossary | ☐ |
-| P2b | **Bounded corpus reads (bbox prefilter)** — every corpus query currently reads the WHOLE view (66,871 rows for food-hygiene). Must land BEFORE P3 exposes free-form asking | CHANGELOG · architecture (ADR 0002 consequence) | ☐ |
+| P2b | **Bounded corpus reads (index migration + bbox prefilter)** — every corpus query currently reads the WHOLE view (66,871 rows for food-hygiene) and the store has NO indexes. Must land BEFORE P3 exposes free-form asking | CHANGELOG · architecture (ADR 0002 consequence) | ☐ |
 | P3 | Single-input UI + wording: remove switcher **control** (keep catalog as suggestion DATA), aria-live resolved announcement, reword all strings | README hero · UserStory · index.html meta | ☐ |
 | P4 | Hardening + release v1.8.0: e2e (3 variants × light/dark), docs sync, issues, URL/env/CLI | CHANGELOG · all docs · issues | ☐ |
 
@@ -90,6 +90,12 @@ agent loops / durable state.
 - `worker/src/corpus/query.ts:13-29` `corpusRows` → `nearestN` (`worker/src/geo.ts:25-35`,
   haversine) does the ranking in JS after the full read — that ordering is what makes the unbounded
   read expensive. Live row counts: fhrs 66,871 · nhle 23,741 · greenspace 12,197 · cqc 9,345.
+- **THE STORE HAS NO INDEXES.** `git grep -in "create index" -- worker/migrations ingest` returns
+  **nothing**: every raw table declares only a `TEXT PRIMARY KEY` and eight columns
+  (`worker/migrations/0004_food_hygiene.sql:5-14`, same shape in `0001`/`0002`/`0003`), and the
+  corpus views are trivial projections over them. D1 bills **rows SCANNED, not rows returned**, so
+  a `WHERE lat BETWEEN …` added to `VIEW_SQL` on its own still scans all 66,871 rows and the daily
+  budget does not move. **P2b must ship an index migration or it is a no-op in production.**
 
 ### Reuse — no new transport needed
 
@@ -176,16 +182,26 @@ model-host OR console errors), vendored axe (gates critical+serious). Flows are 
   `d1Source.records()` pulls the entire view and `nearestN` (`worker/src/geo.ts`) sorts in JS. One
   food-hygiene ask reads **66,871 rows**; D1's free tier allows 5M row-reads/day ⇒ **~75 such asks a
   day**. P2's router raises query volume and P3 invites free-form asking, so this must land first.
-  **Fix:** a pure `bboxAround(origin, km)` helper feeding a parameterised prefilter —
+  **Fix — TWO parts, both required.** (a) **`worker/migrations/0005_geo_indexes.sql`:**
+  `CREATE INDEX IF NOT EXISTS idx_<table>_lat_lng ON <table>(lat, lng);` for every raw corpus table
+  (`fhrs_establishments`, `cqc_locations`, the wander table, `nhs_services`). Without it the
+  prefilter is a full scan with extra steps — see the source map. SQLite seeks the `lat` range and
+  filters `lng` from the index, so scanned rows fall to the latitude band. (b) a pure
+  `bboxAround(origin, km)` helper feeding a parameterised prefilter —
   `… WHERE lat BETWEEN ?1 AND ?2 AND lng BETWEEN ?3 AND ?4 LIMIT ?5` — with a widen-radius retry
   (e.g. 5 km → 15 km → unbounded) when the prefilter returns fewer than `n` rows, so results never
   silently shrink. **SECURITY CONSTRAINT:** the statement set stays STATIC — bind parameters, never
   string-build SQL; the `VIEW_SQL` whitelist property from ADR 0002 must survive.
   **Done-when:** RED observed → GREEN for `bboxAround` (degenerate/antimeridian-free London cases)
-  and the widen-retry planner (mocked D1); a food-hygiene query reads **hundreds, not tens of
-  thousands** of rows (assert via the recording stub); results are IDENTICAL to the unbounded path
-  for the demo postcodes (regression); D1-off bundled fallback untouched. No new ADR — this is an
-  implementation consequence of ADR 0002; record it there.
+  and the widen-retry planner (mocked D1); results are IDENTICAL to the unbounded path for the demo
+  postcodes (regression); D1-off bundled fallback untouched. **The row-read claim is proven LIVE,
+  not against a stub** — a mocked D1 cannot model scanning, so a stub call-count assert passes while
+  production still reads 66,871 rows. Prove it with D1's own accounting: `.all()` returns
+  `meta.rows_read`, so run the food-hygiene query against `--remote` before and after and record
+  both numbers in the PR (also visible via `EXPLAIN QUERY PLAN`, which must show the index, not
+  `SCAN`). Target: a **≥10× cut**; if the latitude band is still too wide, escalate to a quantized
+  `cell` column (indexed, `WHERE cell IN (?…)`) — but **measure first**, do not build it up front.
+  No new ADR — this is an implementation consequence of ADR 0002; record it there.
 - **P3 Single-input UI + wording** (React wiring/copy → e2e is the test). Remove the `switchTo`
   control + the `Or: …` affordance (`App.tsx:166-171,295-309`) — **but KEEP the usecase catalog as
   DATA** (it powers the no-match suggestions + discovery). UI POSTs prompt-only; `active` updates
