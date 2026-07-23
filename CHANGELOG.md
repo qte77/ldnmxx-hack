@@ -4,6 +4,8 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-07-23
+
 ### Plan 015 — naming + transparency
 
 - **Renamed `on-it` → `sort-my-route`** ("Sort My Route") — the step-free flow now matches the
