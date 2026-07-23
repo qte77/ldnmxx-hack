@@ -112,6 +112,32 @@ matrix, clicks switch-buttons + CTAs, videos BOTH orientations, console/network 
 model-host OR console errors), vendored axe (gates critical+serious). Flows are DATA
 `tests/e2e/flows.json`; history `tests/e2e/runs.jsonl`.
 
+## Binding corrections from the P0 review (2026-07-23) — apply in the named phase
+
+1. **P2 — do NOT auto-route to `sort-my-route`.** Its usecase JSON has no `exec`; `workflows.ts:37`
+   renders `buildRouteCards()` with zero query data, i.e. the SAME canned Hackney→Westminster route
+   whatever the user typed. Under a manual switcher that read as an example; under auto-routing it
+   is **fabrication presented as an answer** — a user asking "step-free from Croydon to Camden"
+   gets a confident card for a different journey. ADR 0004 records this as a known limitation, but
+   documenting a hazard is not mitigating it. **Exclude `route` from `classifyHeuristic` and from
+   the model classifier's allowed labels**; keep it reachable via `?usecase=` as a labelled demo.
+   Revisit only when the flow parses origin/destination.
+2. **P3 — show the suggestions in the INITIAL empty state, not only on no-match.** Removing the
+   switcher removes the app's only discovery surface; without this a first-time visitor faces a
+   bare input and must fail an ask before learning what the app does.
+3. **P2 — derive router keywords from the registry, not from `router.ts`.** Add
+   `keywords: string[]` to `CorpusDef` (`worker/src/corpus/registry.ts`) and have
+   `classifyHeuristic` read it. Otherwise adding a corpus becomes a TWO-file change and breaks the
+   register-only property ADR 0001 prizes (016·P4 added a whole usecase with zero engine edits).
+4. **P1 — scope correction.** (a) Restyling the **A2UI cards** (`ui/src/theme/a2uiTheme.ts` +
+   `.a2ui-surface` in `index.css`) is the BULK of P1, not an aside: every result renders as a card
+   and fo's surface model (`--surface-lift` + hairline + `--depth-inset`) differs structurally from
+   EyeRest's `--shadow-card`. (b) The "3 variants × light/dark" axe claim needs **`ui_sweep.py`
+   changes** — axe currently runs on the desktop config only; iterating variants requires switching
+   `data-variant` and re-running the scan, which is sweep code, not just `flows.json`.
+5. **P3 deletion.** `ui/src/usecase.ts` `readUsecase` shrinks to the `?usecase=` bypass — drop the
+   mount-time resolution logic rather than leaving it dead.
+
 ## Phases — TDD rule: load-bearing MODULES get RED-first tests; CSS/config/glue/copy do NOT (e2e is their test)
 
 - **P1 Theme** (CSS/config → e2e + axe ARE the test; no unit tests). Replace `tokens.css` values

@@ -42,6 +42,14 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
 - Parallel/unblocked backlog: **#185** (gazetteer is 6,656 units vs London's ~180k+ — the one row
   count that is too SMALL), **#199** (freshness watchdog — a dead cron is currently invisible).
 
+## Read the plan's "Binding corrections from the P0 review" section
+
+Five corrections found reviewing the plan; the biggest: **never auto-route to `sort-my-route`** —
+its render is canned and origin-agnostic, so auto-routing it would answer a real journey question
+with a fabricated one. Also: suggestions must appear in the INITIAL empty state (the switcher was
+the only discovery surface), router keywords belong on `CorpusDef` (keeps corpora register-only),
+and P1 is bigger than it looks (A2UI card restyle + `ui_sweep.py` variant/axe iteration).
+
 ## Decisions already made — do NOT re-litigate
 
 - **All three accents ship as selectable variants**, default **A Thames Teal** `#0e7581`/`#2ea9b6`
