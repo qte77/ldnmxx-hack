@@ -14,6 +14,9 @@ export default defineConfig({
     proxy: { "/api": { target: "http://localhost:8787", changeOrigin: true } },
   },
   build: { target: "es2022" },
+  // Footer version: injected at build time from the npm-run env (`make bump` stamps package.json);
+  // falls back to "dev" outside an npm script so a bare `vite` run stays honest.
+  define: { __APP_VERSION__: JSON.stringify(nodeEnv.npm_package_version ?? "dev") },
   test: {
     // Unit tests here are pure (SSE parser, contract, applyA2UIEvent) — no DOM needed.
     environment: "node",

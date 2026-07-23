@@ -335,7 +335,7 @@ function Dashboard() {
         >
           Built to WCAG 2.1 AA — report an accessibility issue
         </a>
-        .
+        . <span title="deployed release" className="whitespace-nowrap">v{__APP_VERSION__}</span>
       </footer>
     </div>
   );
