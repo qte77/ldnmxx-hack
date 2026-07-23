@@ -10,6 +10,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
   Sort-My-X family across the engine registry, UI, e2e manifest, and active docs. Old
   `?usecase=on-it` deep links fall back to the flagship (graceful, no alias kept); the historical
   screenshot filenames are unchanged.
+- **Footer shows the shipped version** — `v<version>` injected at build time (vite `define` ←
+  `npm_package_version`, which `make bump` stamps), so the live footer is honest per release with no
+  runtime fetch.
 
 ## [1.3.0] — 2026-07-22
 
