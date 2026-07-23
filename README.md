@@ -98,7 +98,7 @@ A step-free London route — same engine, one `usecase` away.
 ```bash
 make help    # all targets
 make dev     # worker (:8787) + ui (:5173) locally, keyless
-make test    # ui + worker tests
+make test    # ui + worker + ingest tests
 make deploy  # build the SPA + deploy the Worker to Cloudflare
 make bump    # stamp a version across ui/worker + the README badge
 make demo    # boot both, then open localhost:5173 (prod: sortmy.london)
@@ -107,6 +107,13 @@ make demo    # boot both, then open localhost:5173 (prod: sortmy.london)
 Toggle the two example workflows in the UI; `cd worker && npm run tail` shows one Arize span per stage.
 **Demo:** <https://sortmy.london> — SPA on **Cloudflare Pages**, Worker API same-origin at `/api/*`
 ([deploy](docs/deploy-cloudflare.md)). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
+
+**Data pipeline (keyless, arc 016):** a weekly GitHub Action ([`ingest.yml`](.github/workflows/ingest.yml),
+`GITHUB_TOKEN` only) runs the pure, pytest-covered parsers ([`ingest/`](ingest/README.md)) over five
+keyless OGL sources and publishes normalised artifacts to the rolling
+[`corpus-data` release](https://github.com/qte77/ldnmxx-hack/releases/tag/corpus-data); the Worker's
+**daily cron** (04:47 UTC) ingests them into **D1** behind a swap gate (min-rows + licence-attribution) —
+and every corpus degrades to its bundled sample whenever D1 is unbound, failing, or not yet swapped.
 
 **Switches:** `?usecase=founders-copilot|sort-my-route|sort-my-care|sort-my-wander|sort-my-scam-check` picks the
 workflow (`sort-my-care`/`sort-my-wander`/`sort-my-scam-check` are deterministic — model-free + fetch-free)
@@ -124,9 +131,10 @@ agent built in a day joins what incumbents can't, and swaps between both from on
 
 ## Stack — why these tools
 
-- **Cloudflare** (Workers · Pages · Workers AI) — one serverless edge deploy, zero-ops; the Worker is the
-  **trust boundary** (secrets server-side, sole egress). Workers AI serves the keyless free render chain;
-  `data/demo/*.json` is the live data source (no KV; AI Gateway dormant, #29).
+- **Cloudflare** (Workers · Pages · Workers AI · D1) — one serverless edge deploy, zero-ops; the Worker is
+  the **trust boundary** (secrets server-side, sole egress). Workers AI serves the keyless free render
+  chain; the **D1 corpus store** (fed by the daily ingest cron, bundled-sample fallback) + `data/demo/*.json`
+  are the data sources (no KV; AI Gateway dormant, #29).
 - **OpenRouter** — one key, many models. A BYOK key swaps the model with no code change; keyless runs use a
   **free chain** (Workers AI → OpenRouter `:free` → stub; the GitHub Models tier was dropped ahead of its
   2026-07-30 retirement, #132), so the Worker rarely/never spends.
