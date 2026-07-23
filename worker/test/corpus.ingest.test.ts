@@ -99,13 +99,20 @@ describe("chunkRows (D1 bound-parameter batching arithmetic)", () => {
 interface RecordingDb {
   db: D1Database;
   sql: string[];
+  runs: string[]; // every .run() invocation (by SQL) — one subrequest each
+  batches: number[]; // every db.batch() invocation, recorded as its statement count
 }
 
 function recordingDb(counts: Record<string, number> = {}): RecordingDb {
   const sql: string[] = [];
+  const runs: string[] = [];
+  const batches: number[] = [];
   const stmt = (s: string): unknown => ({
     bind: () => stmt(s),
-    run: () => Promise.resolve({ success: true }),
+    run: () => {
+      runs.push(s);
+      return Promise.resolve({ success: true });
+    },
     all: () => Promise.resolve({ results: [] }),
     first: () => {
       const hit = Object.entries(counts).find(([table]) => s.includes(table));
@@ -117,9 +124,12 @@ function recordingDb(counts: Record<string, number> = {}): RecordingDb {
       sql.push(s);
       return stmt(s);
     },
-    batch: (stmts: unknown[]) => Promise.resolve(stmts.map(() => ({ success: true }))),
+    batch: (stmts: unknown[]) => {
+      batches.push(stmts.length);
+      return Promise.resolve(stmts.map(() => ({ success: true })));
+    },
   } as unknown as D1Database;
-  return { db, sql };
+  return { db, sql, runs, batches };
 }
 
 describe("ingestArtifact (shadow -> validate -> swap, atomic, gate-refusable)", () => {
@@ -146,6 +156,29 @@ describe("ingestArtifact (shadow -> validate -> swap, atomic, gate-refusable)", 
     const res = await ingestArtifact(db, gazetteerTarget, rows.slice(0, 3), []);
     expect(res.swapped).toBe(false);
     expect(sql.join("\n")).not.toContain("DELETE FROM postcodes");
+  });
+
+  it("batches the shadow inserts (no per-chunk .run()) so a big corpus stays under the subrequest cap", async () => {
+    // P5 close-out (#182): 66k FHRS rows / ~11 per INSERT ≈ 6k chunks. As individual .run()s that
+    // is 6k subrequests — over the Worker per-invocation cap. Each db.batch() is ONE subrequest.
+    const many = Array.from({ length: 4000 }, (_, i) => ({
+      postcode: `E${String(i)} 1AA`,
+      lat: 51.5,
+      lng: -0.1,
+    }));
+    const { db, runs, batches } = recordingDb({ postcodes_shadow: 4000 });
+    await ingestArtifact(db, gazetteerTarget, many, []);
+    // Inserts must NOT go through individual .run() calls.
+    expect(runs.filter((s) => s.startsWith("INSERT INTO postcodes_shadow"))).toHaveLength(0);
+    // The last batch is the atomic swap (DELETE + INSERT..SELECT + DROP + meta stamp).
+    expect(batches[batches.length - 1]).toBe(4);
+    // The insert chunks go through the batches BEFORE it — far fewer subrequests than chunks,
+    // and every chunk still lands (batched statement count == chunk count).
+    const insertBatches = batches.slice(0, -1);
+    const insertChunks = chunkRows(many, 3).length;
+    expect(insertBatches.length).toBeGreaterThan(0);
+    expect(insertBatches.length).toBeLessThan(insertChunks / 10);
+    expect(insertBatches.reduce((a, b) => a + b, 0)).toBe(insertChunks);
   });
 
   it("REFUSES a corpus swap without attribution — live table untouched", async () => {
