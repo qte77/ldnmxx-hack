@@ -12,6 +12,8 @@ import servicesJson from "../../../data/care/services.sample.json";
 import postcodesJson from "../../../data/care/postcodes.sample.json";
 import wanderPlacesJson from "../../../data/wander/places.sample.json";
 import wanderPostcodesJson from "../../../data/wander/postcodes.sample.json";
+import foodHygieneJson from "../../../data/food-hygiene/establishments.sample.json";
+import foodHygienePostcodesJson from "../../../data/food-hygiene/postcodes.sample.json";
 import type { CorpusLabels, CorpusRecord } from "./contract";
 import type { Coords } from "../geo";
 
@@ -75,6 +77,28 @@ const corpora: Record<string, CorpusDef> = {
       attribution: [
         "Listed buildings: © Historic England 2026 (NHLE). Contains Ordnance Survey data © Crown copyright and database right 2026.",
         "Green spaces: contains OS data © Crown copyright and database right 2026 (OS Open Greenspace).",
+      ],
+    },
+  },
+  "food-hygiene": {
+    // P4 (#182): the register-only proof at scale — FHRS establishments via the daily ingest cron.
+    // The bundled sample below is REAL FHRS rows (OGL, redistribute_ok) near the demo postcodes.
+    d1View: "food_hygiene",
+    records: foodHygieneJson,
+    postcodes: foodHygienePostcodesJson,
+    labels: {
+      noun: "venue",
+      summaryLine: "Food hygiene ratings near you",
+      // Curated + verified, NEVER generated. Our OWN card style — never the FSA badge graphic
+      // (trademark/Brand Standard, see data/sources.json fhrs redistribute_note).
+      officialLink: { text: "Search official food hygiene ratings", url: "https://ratings.food.gov.uk/" },
+      emptyInvalidHint: "Try a London postcode like SW9 9SL.",
+      emptyUnknownHint:
+        "Nothing found for that postcode — search the official FSA ratings site below.",
+      // The licence obligations for the REAL data this corpus serves (FHRS OGL; inspection dates
+      // are shown per record). Non-empty is the cron's swap-gate precondition.
+      attribution: [
+        "Food hygiene ratings: Food Standards Agency data © Crown copyright, licensed under the Open Government Licence v3.0. Ratings can be 6–18 months old — each card shows its inspection date.",
       ],
     },
   },

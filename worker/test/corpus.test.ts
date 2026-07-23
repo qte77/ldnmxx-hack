@@ -169,6 +169,22 @@ describe("queryCorpus over a D1 source (care carries a d1View)", () => {
     expect(joined).toContain("Crown copyright");
   });
 
+  it("food-hygiene registry is a full corpus: d1View, FHRS attribution, real sample fallback (P4 #182)", () => {
+    const def = getCorpus("food-hygiene");
+    expect(def?.d1View).toBe("food_hygiene");
+    expect(def?.records.length).toBeGreaterThan(0);
+    expect(Object.keys(def?.postcodes ?? {})).toContain("SW9 9SL");
+    const joined = (def?.labels.attribution ?? []).join(" ");
+    expect(joined).toContain("Food Standards Agency");
+    expect(joined).toContain("Open Government Licence");
+  });
+
+  it("food-hygiene reads D1 when ctx.db is bound (register-only proof at scale)", async () => {
+    const db = stubDb({ origin: { lat: 51.5, lng: -0.1 }, rows: [d1Row] });
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "food-hygiene" }, { db });
+    expect(q.rows.map((r) => r.id)).toEqual(["d1-near"]);
+  });
+
   it("care registry carries the CQC attribution + coverage-honest empty hint (P3 #182)", () => {
     const labels = getCorpus("care")?.labels;
     const joined = (labels?.attribution ?? []).join(" ");

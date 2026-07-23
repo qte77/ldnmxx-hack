@@ -45,6 +45,14 @@ export const INGEST_TARGETS: IngestTarget[] = [
   },
   // P3: care via the keyless CQC directory CSV (9.3k London locations at first fill).
   { corpus: "care", artifact: "cqc.json", table: "cqc_locations", kind: "corpus", minRows: 1000 },
+  // P4: food hygiene via FHRS (62.9k London establishments at first fill).
+  {
+    corpus: "food-hygiene",
+    artifact: "fhrs.json",
+    table: "fhrs_establishments",
+    kind: "corpus",
+    minRows: 1000,
+  },
 ];
 
 export interface GazetteerRow {

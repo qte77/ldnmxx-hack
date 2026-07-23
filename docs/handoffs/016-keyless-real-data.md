@@ -41,10 +41,17 @@ all keyless, all `redistribute_ok`, all agent-only.
   the edge cron is not). Recency-marker lesson: compute markers with the APP's origin (real
   gazetteer coords) + haversine, NOT offline approximations — first sweep FAILed honestly on a
   marker 330m off; fixed marker = "Stockwell Road Sw9" (stable pre/post greenspace).
-- **NEXT = P3 Care real via CQC**: migration 0003 (`cqc_locations` raw + `care_signposts_v2`?
-  NO — repoint the EXISTING `care_signposts` view to the cqc table in 0003) · registry care
-  attribution (CQC ack + OGL) · `INGEST_TARGETS` cqc entry (attributionOf care, min 1000) ·
-  coverage-honest copy (no community pharmacies; no ratings — link out) · release v1.6.0.
+- ☑ **P3 SHIPPED + v1.6.0 RELEASED/DEPLOYED** (#191 + #192, tag v1.6.0, 2026-07-23): migration
+  0003 (care_signposts REPOINTED to `cqc_locations`; nhs_services dropped) · **care swapped live:
+  9,345 CQC rows** (as_of 2026-07-22, the directory date) · CQC OGL attribution + coverage-honest
+  copy (no pharmacies, no ratings — link out) · parser dedupe for pipe-duplicated service types ·
+  greenspace as_of ISO pad (self-heals on the next weekly Action).
+- **NEXT = P4 Sort My Food Hygiene** (in flight on `feat/016-p4-food-hygiene`): migration 0004
+  (`fhrs_establishments` + `food_hygiene` view) · registry entry (REAL-rows bundled sample, FHRS
+  OGL attribution, own card never the FSA badge) · usecase JSON + UI USECASES entry + flow
+  (markers: "O2 Academy Brixton" 3m from SW9 9SL + FSA attribution) · release v1.7.0. Then P5
+  hygiene micro-PRs (pin patchright in tier3 · release.yml · drop dead care `category` · reserved
+  env vars · D1 steps in deploy docs) and the arc close-out.
 
 ## How to run this arc (the loop)
 
