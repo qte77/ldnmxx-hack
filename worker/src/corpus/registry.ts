@@ -40,6 +40,9 @@ const corpora: Record<string, CorpusDef> = {
       emptyInvalidHint: "Try a London postcode like E8 3GT.",
       emptyUnknownHint:
         "We don't have sample data for that postcode yet — try E8 3GT, SW9 9SL or N1 9GU.",
+      // P1 (#182): empty while the corpus serves the bundled sample. P3 sets the CQC obligation
+      // strings when real data lands — the ingest cron refuses to swap while this is empty.
+      attribution: [],
     },
   },
   wander: {
@@ -59,6 +62,9 @@ const corpora: Record<string, CorpusDef> = {
       emptyInvalidHint: "Try a London postcode like E8 3GT.",
       emptyUnknownHint:
         "We don't have sample data for that postcode yet — try E8 3GT, SW9 9SL or N1 9GU.",
+      // P1 (#182): empty while the corpus serves the bundled sample. P2 sets the Historic England
+      // + OS obligation strings when real NHLE/greenspace data lands (swap-gated, as above).
+      attribution: [],
     },
   },
 };

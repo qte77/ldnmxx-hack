@@ -16,7 +16,7 @@ export function buildCorpusCards(q: CorpusQuery): unknown[] {
       title: q.query ? `No sample ${labels.noun}s near ${q.query}` : "Enter a valid UK postcode",
       lines: [q.query ? labels.emptyUnknownHint : labels.emptyInvalidHint],
     };
-    return appendDisclaimer(cardsBatch([empty]), labels.officialLink);
+    return appendDisclaimer(cardsBatch([empty]), labels.officialLink, labels.attribution);
   }
   const count = q.rows.length;
   const summary: CardSpec = {
@@ -29,5 +29,5 @@ export function buildCorpusCards(q: CorpusQuery): unknown[] {
     title: r.title,
     lines: [r.line, r.why, `[Official page](${r.officialUrl})`],
   }));
-  return appendDisclaimer(cardsBatch([summary, ...cards]), labels.officialLink);
+  return appendDisclaimer(cardsBatch([summary, ...cards]), labels.officialLink, labels.attribution);
 }

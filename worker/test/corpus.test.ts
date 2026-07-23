@@ -19,6 +19,7 @@ const def: CorpusDef = {
     officialLink: { text: "Search official NHS services", url: "https://www.nhs.uk/service-search" },
     emptyInvalidHint: "Try a London postcode like SW9 9SL.",
     emptyUnknownHint: "We don't have sample data for that postcode yet.",
+    attribution: [],
   },
 };
 

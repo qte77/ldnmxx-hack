@@ -24,6 +24,11 @@ export interface CorpusLabels {
   officialLink: { text: string; url: string };
   emptyInvalidHint: string; // shown when the input was not a valid postcode
   emptyUnknownHint: string; // shown when the postcode is valid but the corpus has nothing for it
+  // P1 (#182): the corpus's licence-obligation strings (data/sources.json redistribute_note),
+  // rendered as caption lines on the disclaimer card. Reviewed TS like every label — never
+  // data-supplied. Empty for a bundled-sample corpus; the ingest cron REFUSES to swap real data
+  // into a corpus whose attribution is empty (obligation as a hard gate, not convention).
+  attribution: string[];
 }
 
 // A row handed to the render. `line` is the retrieval-specific secondary line, PRE-FORMATTED by the
