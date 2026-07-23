@@ -3,6 +3,7 @@ import routeJson from "../../usecases/sort-my-route.json";
 import sortMyCareJson from "../../usecases/sort-my-care.json";
 import sortMyWanderJson from "../../usecases/sort-my-wander.json";
 import sortMyScamJson from "../../usecases/sort-my-scam-check.json";
+import sortMyFoodHygieneJson from "../../usecases/sort-my-food-hygiene.json";
 import { corpusIds } from "./corpus/registry";
 
 // A usecase is pure data: the plan/tool stage choreography (played verbatim over SSE) plus a render
@@ -146,6 +147,7 @@ const registry: Record<string, UsecaseDef> = {
   "sort-my-care": load(sortMyCareJson),
   "sort-my-wander": load(sortMyWanderJson),
   "sort-my-scam-check": load(sortMyScamJson),
+  "sort-my-food-hygiene": load(sortMyFoodHygieneJson), // P4 (#182): register-only proof at scale
 };
 
 export const usecaseIds: string[] = Object.keys(registry);

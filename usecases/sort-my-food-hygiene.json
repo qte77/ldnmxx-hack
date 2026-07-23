@@ -1,0 +1,25 @@
+{
+  "id": "sort-my-food-hygiene",
+  "title": "Sort My Food Hygiene",
+  "render": { "mode": "corpus" },
+  "stages": [
+    {
+      "name": "plan",
+      "kind": "plan",
+      "events": [
+        { "type": "STEP_STARTED", "text": "read your postcode" },
+        { "type": "TEXT_MESSAGE_CONTENT", "text": "Finding food hygiene ratings near you…" }
+      ]
+    },
+    {
+      "name": "query",
+      "kind": "tool",
+      "exec": "query_corpus",
+      "corpus": "food-hygiene",
+      "events": [
+        { "type": "TOOL_CALL_START", "text": "fetch_food_hygiene" },
+        { "type": "TOOL_CALL_END", "text": "fetch_food_hygiene" }
+      ]
+    }
+  ]
+}

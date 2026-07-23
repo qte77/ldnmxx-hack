@@ -55,6 +55,8 @@ const VIEW_SQL: Record<string, string> = {
     "SELECT id, name, authority, why, officialUrl, lastUpdated, lat, lng FROM care_signposts",
   wander_places:
     "SELECT id, name, authority, why, officialUrl, lastUpdated, lat, lng FROM wander_places",
+  food_hygiene:
+    "SELECT id, name, authority, why, officialUrl, lastUpdated, lat, lng FROM food_hygiene",
 };
 
 // A corpus read through its D1 view (the CorpusRecord contract in SQL — see worker/migrations).

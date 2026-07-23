@@ -1,0 +1,122 @@
+[
+  {
+    "id": "fhrs-484482",
+    "name": "O2 Academy Brixton",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 3, inspected 2021-10-22 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/484482",
+    "lastUpdated": "2021-10-22",
+    "lat": 51.465355,
+    "lng": -0.115176
+  },
+  {
+    "id": "fhrs-1558876",
+    "name": "Brixton Kebab",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 4, inspected 2026-05-20 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/1558876",
+    "lastUpdated": "2026-05-20",
+    "lat": 51.4654115,
+    "lng": -0.1152943
+  },
+  {
+    "id": "fhrs-1939318",
+    "name": "Sato's Kitchen",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 4, inspected 2026-05-08 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/1939318",
+    "lastUpdated": "2026-05-08",
+    "lat": 51.4654954,
+    "lng": -0.115478
+  },
+  {
+    "id": "fhrs-484481",
+    "name": "Quality Cafe",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 3, inspected 2025-04-04 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/484481",
+    "lastUpdated": "2025-04-04",
+    "lat": 51.46558,
+    "lng": -0.115729
+  },
+  {
+    "id": "fhrs-1822638",
+    "name": "hom",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 5, inspected 2025-03-14 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/1822638",
+    "lastUpdated": "2025-03-14",
+    "lat": 51.5451211,
+    "lng": -0.0748638
+  },
+  {
+    "id": "fhrs-1210095",
+    "name": "Mildreds Restaurant",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 5, inspected 2025-03-06 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/1210095",
+    "lastUpdated": "2025-03-06",
+    "lat": 51.545509,
+    "lng": -0.074738
+  },
+  {
+    "id": "fhrs-1371737",
+    "name": "CAKE BOX",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 4, inspected 2024-12-30 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/1371737",
+    "lastUpdated": "2024-12-30",
+    "lat": 51.545027,
+    "lng": -0.0756326
+  },
+  {
+    "id": "fhrs-692196",
+    "name": "Creams Cafe",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 5, inspected 2020-12-08 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/692196",
+    "lastUpdated": "2020-12-08",
+    "lat": 51.54511,
+    "lng": -0.0757
+  },
+  {
+    "id": "fhrs-1689897",
+    "name": "BaxterStorey - WeWork",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 5, inspected 2024-02-14 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/1689897",
+    "lastUpdated": "2024-02-14",
+    "lat": 51.5349987,
+    "lng": -0.1215484
+  },
+  {
+    "id": "fhrs-735152",
+    "name": "Baxterstorey @ Guardian Media Group",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 5, inspected 2025-04-23 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/735152",
+    "lastUpdated": "2025-04-23",
+    "lat": 51.5349987,
+    "lng": -0.1215484
+  },
+  {
+    "id": "fhrs-764813",
+    "name": "Rotunda Bar, Restaurant and Kitchen",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 5, inspected 2024-09-13 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/764813",
+    "lastUpdated": "2024-09-13",
+    "lat": 51.5349987,
+    "lng": -0.1215484
+  },
+  {
+    "id": "fhrs-1888962",
+    "name": "WeWork Barista Station",
+    "authority": "Food Standards Agency",
+    "why": "Food hygiene rating 5, inspected 2025-12-17 \u2014 confirm on the official FSA page.",
+    "officialUrl": "https://ratings.food.gov.uk/business/1888962",
+    "lastUpdated": "2025-12-17",
+    "lat": 51.5349987,
+    "lng": -0.1215484
+  }
+]

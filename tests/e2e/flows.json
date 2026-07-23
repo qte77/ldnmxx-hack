@@ -41,6 +41,20 @@
       ]
     },
     {
+      "name": "food-hygiene",
+      "switchLabel": "Food hygiene ratings",
+      "query": "SE1 7PB",
+      "cta": "Check food hygiene",
+      "markers": [
+        "Food hygiene ratings near you",
+        "near SE1 7PB",
+        "data as of",
+        "Marriott County Hall",
+        "Food Standards Agency",
+        "Always confirm with the official source"
+      ]
+    },
+    {
       "name": "scam",
       "switchLabel": "Check a firm",
       "query": "Thames Capital Partners",

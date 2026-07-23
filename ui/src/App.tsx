@@ -43,6 +43,17 @@ const USECASES = [
     civic: true,
   },
   {
+    id: "sort-my-food-hygiene",
+    label: "Sort My Food Hygiene",
+    headline: "Check food hygiene ratings near you",
+    blurb: "Enter a London postcode to see food hygiene ratings for places nearby, each with its inspection date and a link to the official FSA record.",
+    placeholder: "Your London postcode, e.g. SW9 9SL",
+    example: "SW9 9SL",
+    cta: "Check food hygiene",
+    switchLabel: "Food hygiene ratings",
+    civic: true,
+  },
+  {
     id: "sort-my-scam-check",
     label: "Sort My Scam Check",
     headline: "Check a firm before you trust it",
