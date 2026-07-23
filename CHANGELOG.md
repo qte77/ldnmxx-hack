@@ -13,6 +13,11 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 - **Footer shows the shipped version** — `v<version>` injected at build time (vite `define` ←
   `npm_package_version`, which `make bump` stamps), so the live footer is honest per release with no
   runtime fetch.
+- **Fix: Pages SPA fallback can no longer cache-poison `/assets/*`** — during a deploy-propagation
+  window a briefly-missing hashed asset was answered by the SPA fallback (index.html, HTTP 200) and
+  stamped `immutable` by our own `_headers`, poisoning the edge for a year (blank page for
+  encoding-variant requests; caught by two failing sweeps). A `ui/public/404.html` now disables the
+  fallback so missing assets 404 for real (safe: the app is single-route). See AGENT_LEARNINGS.
 
 ## [1.3.0] — 2026-07-22
 
