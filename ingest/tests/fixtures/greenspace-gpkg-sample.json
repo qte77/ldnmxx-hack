@@ -1,0 +1,63 @@
+{
+ "access_point": {
+  "row_count": 355705,
+  "columns": [
+   "fid",
+   "geometry",
+   "id",
+   "access_type",
+   "ref_to_greenspace_site"
+  ],
+  "rows": [
+   {
+    "fid": 1,
+    "geometry": "HEX:47500001346c00000101000000e17a14aefef71f41ae47e17a6c2f0541",
+    "id": "2212623F-BD96-4866-8B1C-4E583537454E",
+    "access_type": "Motor Vehicle And Pedestrian",
+    "ref_to_greenspace_site": "49E9C778-7418-A491-E063-8CCAA00A0EF3"
+   },
+   {
+    "fid": 2,
+    "geometry": "HEX:47500001346c00000101000000a4703d0a689e1741cdcccccc55881841",
+    "id": "C8A4CBFA-C4C5-4D55-9901-8B9F1912053A",
+    "access_type": "Pedestrian",
+    "ref_to_greenspace_site": "49E9C867-8F15-A491-E063-8CCAA00A0EF3"
+   }
+  ]
+ },
+ "greenspace_site": {
+  "row_count": 165978,
+  "columns": [
+   "fid",
+   "geometry",
+   "id",
+   "function",
+   "distinctive_name_1",
+   "distinctive_name_2",
+   "distinctive_name_3",
+   "distinctive_name_4"
+  ],
+  "rows": [
+   {
+    "fid": 1,
+    "geometry": "HEX:47500003346c0000e17a14ae272712417b14ae479f27124114ae47e124b601416666666600b7014101060000000100000001030000000100000007000000e17a14ae272712416666666600b7014100000000562712413d0ad7a3ccb60141713d0ad79227124114ae47e124b601417b14ae479f271241a4703d0a31b601417b14ae477b2712417b14ae4799b60141295c8fc2952712411f85eb51e2b60141e17a14ae272712416666666600b70141",
+    "id": "49E9C6F0-83ED-A491-E063-8CCAA00A0EF3",
+    "function": "Play Space",
+    "distinctive_name_1": null,
+    "distinctive_name_2": null,
+    "distinctive_name_3": null,
+    "distinctive_name_4": null
+   },
+   {
+    "fid": 2,
+    "geometry": "HEX:47500003346c00007b14aec7db932141ec51b81ea4942141e17a14ae23dbfc4052b81e8513e1fc400106000000010000000103000000010000000b000000ec51b81ea49421413d0ad7a32cddfc40713d0ad768942141ae47e17a48dffc40e17a14ae5a942141713d0ad7e7defc4048e17a1430942141d7a3703d1ee0fc4014ae47e1fb93214152b81e8513e1fc40f6285c0fef9321415c8fc2f59ce0fc400ad7a3f0e69321413d0ad7a344e0fc40666666e6069421417b14ae477de0fc407b14aec7db932141...TRUNCATED",
+    "id": "49E9C71E-3CBA-A491-E063-8CCAA00A0EF3",
+    "function": "Religious Grounds",
+    "distinctive_name_1": "St Mary Magdalen's Church",
+    "distinctive_name_2": null,
+    "distinctive_name_3": null,
+    "distinctive_name_4": null
+   }
+  ]
+ }
+}

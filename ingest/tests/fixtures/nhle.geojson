@@ -1,0 +1,86 @@
+{
+ "type": "FeatureCollection",
+ "properties": {
+  "exceededTransferLimit": true
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "id": 470,
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      -0.0972799621821162,
+      51.5223683876579
+     ]
+    ]
+   },
+   "properties": {
+    "OBJECTID": 470,
+    "ListEntry": 1021941,
+    "Name": "CRESCENT HOUSE INCLUDING GROUND FLOOR SHOPS AND SHAKESPEARE PUBLIC HOUSE",
+    "Grade": "II*",
+    "ListDate": 881193600000,
+    "AmendDate": null,
+    "CaptureScale": "1:2500",
+    "hyperlink": "https://historicengland.org.uk/listing/the-list/list-entry/1021941",
+    "NGR": "TQ 32102 82099",
+    "Easting": 532102,
+    "Northing": 182099
+   }
+  },
+  {
+   "type": "Feature",
+   "id": 471,
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      -0.0970175601946692,
+      51.5229936462393
+     ]
+    ]
+   },
+   "properties": {
+    "OBJECTID": 471,
+    "ListEntry": 1021942,
+    "Name": "Hatfield House, including garden walls to rear",
+    "Grade": "II",
+    "ListDate": 881193600000,
+    "AmendDate": null,
+    "CaptureScale": "1:2500",
+    "hyperlink": "https://historicengland.org.uk/listing/the-list/list-entry/1021942",
+    "NGR": "TQ 32118 82169",
+    "Easting": 532118,
+    "Northing": 182169
+   }
+  },
+  {
+   "type": "Feature",
+   "id": 472,
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      -0.0957994514679694,
+      51.5228209899655
+     ]
+    ]
+   },
+   "properties": {
+    "OBJECTID": 472,
+    "ListEntry": 1021943,
+    "Name": "Basterfield House including steps to garden",
+    "Grade": "II",
+    "ListDate": 881193600000,
+    "AmendDate": null,
+    "CaptureScale": "1:2500",
+    "hyperlink": "https://historicengland.org.uk/listing/the-list/list-entry/1021943",
+    "NGR": "TQ 32203 82152",
+    "Easting": 532203,
+    "Northing": 182152
+   }
+  }
+ ]
+}
