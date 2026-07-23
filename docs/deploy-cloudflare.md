@@ -21,6 +21,32 @@ bash scripts/provision_cf.sh                      # build ui/ -> Pages, deploy t
 DOMAIN=sortmy.london bash scripts/finish_cf.sh    # first time only: attach the custom domain
 ```
 
+## D1 corpus store (016 #182)
+
+- **Migrations** (after any `worker/migrations/` change; additive ones are safe to pre-stage):
+  `cd worker && ./node_modules/.bin/wrangler d1 migrations apply DB --remote --config wrangler.toml`
+  — ALWAYS pass `--config` (bare wrangler walks up to the root Pages config).
+- **Data** flows in via the daily cron (`scheduled()`, 04:47 UTC): `corpus-data` release assets →
+  shadow table → validate (min-rows + registry-attribution licence gate) → atomic swap →
+  `corpus_meta` stamp. The weekly ingester is `.github/workflows/ingest.yml` (dispatchable).
+- **Fire the cron on demand** (verification): `--test-scheduled` does NOT exist in `--remote` dev —
+  copy `wrangler.toml` to a temp config with `remote = true` on the D1 binding (drop `routes`),
+  run `wrangler dev --test-scheduled --config <temp>`, hit `/__scheduled?cron=47+4+*+*+*`, poll
+  `corpus_meta` for the LAST target's stamp, delete the temp config (see AGENT_LEARNINGS).
+- **State check:**
+  `./node_modules/.bin/wrangler d1 execute DB --remote --config wrangler.toml --command "SELECT * FROM corpus_meta" --json`
+- Every corpus degrades to its bundled sample when D1 is unbound, failing, unseeded, or its view
+  is not yet swapped — an empty store never breaks a workflow.
+
+## Worker environment (reference)
+
+Secrets (via `wrangler secret put`, never in code/config): `OPENROUTER_KEY` · `ARIZE_API_KEY` ·
+`ARIZE_SPACE_ID`. Vars/bindings (in `worker/wrangler.toml`): `ALLOWED_ORIGINS` · `AI` (Workers AI)
+· `DB` (D1) · `RATE_LIMITER`. Optional overrides (`Env` in `worker/src/worker.ts`):
+`ARIZE_PROJECT` · `AI_GATEWAY_URL` · `DEFAULT_MODEL` · `PACE_MS` · `WORKERS_AI_MODEL` ·
+`OPENROUTER_FREE_MODEL` · `OPENROUTER_FREE_MODELS` — all documented at their `Env` declaration;
+treat every name above as RESERVED.
+
 ## Topology
 
 - **SPA:** Vite build (`ui/dist`, base `/`) -> CF Pages project `sortmy-london`. SPA fallback
