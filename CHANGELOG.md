@@ -4,6 +4,21 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 017 — CI deploy + credential-free D1 verification (#201)
+
+- **New workflow `Deploy (Cloudflare)`** (`workflow_dispatch`, `production` Environment) — runs
+  `scripts/provision_cf.sh`, then asserts with browser headers that the hashed entry script is served
+  as JavaScript, guarding the #178 SPA-fallback regression that once blanked the site.
+- **New workflow `D1 Verify (read-only)`** (`workflow_dispatch`, `production` Environment) — one of
+  four **static** SELECTs: `corpus_meta` freshness (the carried-over 016 cron check), `row_counts`,
+  and `bbox_plan` / `bbox_rows_read` for plan 017 P2b. The dispatch takes a `choice`, never free-text
+  SQL, mirroring ADR 0002's closed `VIEW_SQL` whitelist.
+- **Why:** a dev environment without Cloudflare credentials can neither deploy nor verify — the D1
+  binding is `remote = true`, so even `wrangler dev` refuses to start. These move both into CI, so
+  P2b's row-read done-when is measurable with no local credential. **New secrets:**
+  `CLOUDFLARE_API_TOKEN` (now also needs D1:Edit) + `CLOUDFLARE_ACCOUNT_ID`; both workflows fail fast
+  with a readable message until they exist. Documented in `docs/deploy-cloudflare.md`.
+
 ### Plan 017 — one input, London-themed · P1: the theme (#201)
 
 - **New look: the fo Linear system with three London accent variants.** `ui/src/tokens.css` moves

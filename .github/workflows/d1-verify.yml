@@ -1,0 +1,94 @@
+# Read-only D1 checks, runnable from CI so no local Cloudflare credential is needed.
+#
+# Why this exists: the devcontainer has no CF credentials, and the D1 binding is `remote = true`, so
+# even `wrangler dev` cannot start there. Without this workflow the carried-over 016 cron check and
+# plan 017 P2b's row-read measurement (which IS its done-when) are unverifiable. See the
+# "Arc-start access checklist" in docs/plans/017-single-input-london-theme.md.
+#
+# SAFETY: the statement set is STATIC and read-only — a `choice` input selects one of the SQL strings
+# below, exactly as ADR 0002 keeps worker/src/corpus/source.ts's VIEW_SQL a closed whitelist. No
+# free-text SQL input exists, so a dispatch cannot mutate or exfiltrate beyond these SELECTs.
+# Actions are SHA-pinned (repo policy); the trailing comment tracks the tag.
+name: D1 Verify (read-only)
+on:
+  workflow_dispatch:
+    inputs:
+      check:
+        description: "Which read-only check to run"
+        type: choice
+        required: true
+        default: corpus_meta
+        options:
+          - corpus_meta # freshness: did the 04:47 UTC ingest cron advance ingested_at?
+          - row_counts # per-corpus row counts (the swap-gate floors)
+          - bbox_plan # P2b: EXPLAIN QUERY PLAN for the bbox prefilter — SCAN or index?
+          - bbox_rows_read # P2b: the bounded query's meta.rows_read (the before/after number)
+
+permissions:
+  contents: read
+
+jobs:
+  query:
+    runs-on: ubuntu-latest
+    environment: production # same gate as deploy: the token is production-scoped
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CHECK: ${{ inputs.check }} # via env, never interpolated into the command line
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+
+      - name: Preflight — credentials present
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it as a repository secret."
+            echo "This check also needs Account > D1 > Edit (Cloudflare has no read-only D1 scope)."
+            exit 1
+          fi
+
+      # The bbox literals are the plan's London demo box; they bind nothing user-supplied. Once P2b
+      # ships its index migration, bbox_plan should stop saying SCAN and bbox_rows_read should fall
+      # from tens of thousands to hundreds — that delta is the P2b done-when.
+      - name: Run the selected check
+        run: |
+          set -euo pipefail
+          case "$CHECK" in
+            corpus_meta)
+              SQL="SELECT corpus, as_of, ingested_at, row_count FROM corpus_meta ORDER BY corpus" ;;
+            row_counts)
+              SQL="SELECT 'fhrs' AS corpus, COUNT(*) AS n FROM fhrs_establishments
+                   UNION ALL SELECT 'postcodes', COUNT(*) FROM postcodes" ;;
+            bbox_plan)
+              SQL="EXPLAIN QUERY PLAN SELECT id, name, lat, lng FROM fhrs_establishments
+                   WHERE lat BETWEEN 51.45 AND 51.55 AND lng BETWEEN -0.15 AND -0.05 LIMIT 20" ;;
+            bbox_rows_read)
+              SQL="SELECT id, name, lat, lng FROM fhrs_establishments
+                   WHERE lat BETWEEN 51.45 AND 51.55 AND lng BETWEEN -0.15 AND -0.05 LIMIT 20" ;;
+            *)
+              echo "::error::unknown check '$CHECK'"; exit 1 ;;
+          esac
+          echo "check=$CHECK"
+          # --json surfaces meta.rows_read, which is the honest row-read accounting; a mocked D1
+          # cannot model scanning, so this number (not a unit-test stub) settles P2b.
+          ./node_modules/.bin/wrangler d1 execute DB --remote --config wrangler.toml \
+            --command "$SQL" --json | tee /tmp/d1-result.json
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## D1 check: \`$CHECK\`"
+            echo '```json'
+            cat /tmp/d1-result.json 2>/dev/null || echo "(no output — see the step log)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

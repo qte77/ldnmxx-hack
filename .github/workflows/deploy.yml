@@ -1,0 +1,86 @@
+# Deploy to Cloudflare (Pages SPA + Worker) from CI instead of a laptop.
+#
+# DORMANT until the owner provisions the credentials — see the "Arc-start access checklist" in
+# docs/plans/017-single-input-london-theme.md. Without them the job fails fast at the preflight step
+# with a readable message rather than a wrangler stack trace.
+#
+# Gated deliberately: this token can write to production, so the job runs ONLY on manual dispatch and
+# ONLY through the `production` Environment (add required reviewers there to make it an approval).
+# Actions are SHA-pinned (repo policy: allowed_actions=selected + sha_pinning_required); the trailing
+# comment tracks the tag.
+name: Deploy (Cloudflare)
+on:
+  workflow_dispatch:
+    inputs:
+      skip_preflight:
+        description: "Skip the post-deploy asset MIME check (not recommended)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency: # never let two deploys race the edge
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Preflight — credentials present
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it as a repository secret."
+            echo "Scopes: Pages:Edit, Workers Scripts:Edit, Zone>Workers Routes:Edit (see scripts/provision_cf.sh)."
+            exit 1
+          fi
+
+      # The script builds ui/, creates the Pages project if absent, deploys it, then deploys the
+      # Worker with an explicit --config (wrangler v4 otherwise prefers the root Pages config).
+      - name: Deploy (Pages + Worker)
+        run: bash scripts/provision_cf.sh
+
+      # Guards the #178 incident class: during a deploy window the SPA fallback can be served for a
+      # hashed JS asset and edge-cached as immutable, so the site goes blank for some encoding
+      # variants while curl looks fine. Assert the entry script is served as JavaScript, not HTML,
+      # using BROWSER headers (the bug did not reproduce with a bare curl UA).
+      - name: Post-deploy asset MIME check
+        if: ${{ !inputs.skip_preflight }}
+        run: |
+          set -euo pipefail
+          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
+          sleep 20 # let the edge settle before asserting
+          html="$(curl -sSf -A "$UA" -H 'Accept-Encoding: gzip, deflate, br' --compressed https://sortmy.london/)"
+          asset="$(printf '%s' "$html" | grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' | head -n1)"
+          if [ -z "$asset" ]; then
+            echo "::error::could not find the hashed entry script in the served HTML"
+            exit 1
+          fi
+          echo "entry asset: $asset"
+          ctype="$(curl -sSf -o /dev/null -w '%{content_type}' -A "$UA" \
+                   -H 'Accept-Encoding: gzip, deflate, br' --compressed "https://sortmy.london$asset")"
+          echo "content-type: $ctype"
+          case "$ctype" in
+            *javascript*) echo "ok — entry script served as JavaScript" ;;
+            *) echo "::error::entry script served as '$ctype' (expected javascript) — SPA-fallback regression, see #178"; exit 1 ;;
+          esac
+
+      - name: Next step
+        run: |
+          {
+            echo "## Deployed to https://sortmy.london"
+            echo "Run **Tier-3 Monitor** (workflow_dispatch) to sweep the live site — it is credential-free."
+          } >> "$GITHUB_STEP_SUMMARY"
