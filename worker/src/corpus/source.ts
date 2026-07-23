@@ -53,6 +53,8 @@ export function isCorpusRecord(v: unknown): v is CorpusRecord {
 const VIEW_SQL: Record<string, string> = {
   care_signposts:
     "SELECT id, name, authority, why, officialUrl, lastUpdated, lat, lng FROM care_signposts",
+  wander_places:
+    "SELECT id, name, authority, why, officialUrl, lastUpdated, lat, lng FROM wander_places",
 };
 
 // A corpus read through its D1 view (the CorpusRecord contract in SQL — see worker/migrations).

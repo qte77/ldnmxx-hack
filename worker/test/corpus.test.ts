@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { queryCorpus, queryCorpusDef } from "../src/corpus/query";
-import type { CorpusDef } from "../src/corpus/registry";
+import { getCorpus, type CorpusDef } from "../src/corpus/registry";
 import type { CorpusRecord } from "../src/corpus/contract";
 import type { Coords } from "../src/geo";
 
@@ -153,10 +153,20 @@ describe("queryCorpus over a D1 source (care carries a d1View)", () => {
     expect(q.rows.some((r) => r.id === "d1-near")).toBe(false);
   });
 
-  it("a corpus without a d1View ignores ctx.db (wander stays bundled)", async () => {
-    const db = stubDb({ origin: { lat: 0, lng: 0 }, rows: [d1Row] });
+  it("wander reads D1 when ctx.db is bound (P2 #182 — real NHLE/greenspace via wander_places)", async () => {
+    // P2 flips wander to d1View; the no-d1View branch in queryCorpus stays as a guard for future
+    // bundled-only corpora (its live representative left with this flip).
+    const db = stubDb({ origin: { lat: 51.5, lng: -0.1 }, rows: [d1Row] });
     const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "wander" }, { db });
-    expect(q.rows.some((r) => r.id === "d1-near")).toBe(false);
+    expect(q.rows.map((r) => r.id)).toEqual(["d1-near"]);
+  });
+
+  it("wander registry carries non-empty attribution (the licence swap-gate precondition)", () => {
+    const labels = getCorpus("wander")?.labels;
+    expect(labels?.attribution.length).toBeGreaterThan(0);
+    const joined = (labels?.attribution ?? []).join(" ");
+    expect(joined).toContain("Historic England");
+    expect(joined).toContain("Crown copyright");
   });
 });
 
