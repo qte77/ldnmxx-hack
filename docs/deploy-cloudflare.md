@@ -21,6 +21,28 @@ bash scripts/provision_cf.sh                      # build ui/ -> Pages, deploy t
 DOMAIN=sortmy.london bash scripts/finish_cf.sh    # first time only: attach the custom domain
 ```
 
+### …or from CI, with no local credential (017 P1)
+
+A dev environment without Cloudflare credentials cannot deploy **or verify** anything: the D1 binding
+is `remote = true`, so even `wrangler dev` refuses to start. Two dispatch-only workflows move that
+work into Actions:
+
+| Workflow | Does | Gate |
+|---|---|---|
+| **Deploy (Cloudflare)** `.github/workflows/deploy.yml` | runs `provision_cf.sh`, then asserts the hashed entry script is served as JavaScript with browser headers (the #178 SPA-fallback regression) | `workflow_dispatch` + `production` Environment |
+| **D1 Verify (read-only)** `.github/workflows/d1-verify.yml` | one of four **static** SELECTs — `corpus_meta` freshness, `row_counts`, and P2b's `bbox_plan` / `bbox_rows_read` | `workflow_dispatch` + `production` Environment |
+| **Tier-3 Monitor** `.github/workflows/tier3-monitor.yml` | the full e2e sweep against the live site | none — credential-free |
+
+**Setup (once):** add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets
+(`gh secret set CLOUDFLARE_API_TOKEN --repo qte77/ldnmxx-hack` prompts for hidden input — never paste
+a token into a shell history or a chat), then add required reviewers to the `production` Environment
+so a deploy is an approval rather than a button. **`d1-verify` additionally needs Account > D1 >
+Edit** on the token — Cloudflare has no read-only D1 scope. Both workflows fail fast with a readable
+message while the secrets are absent.
+
+The D1 statement set is **static and read-only by construction**: the dispatch takes a `choice`, not
+free-text SQL, mirroring how ADR 0002 keeps `VIEW_SQL` a closed whitelist.
+
 ## D1 corpus store (016 #182)
 
 - **Migrations** (after any `worker/migrations/` change; additive ones are safe to pre-stage):

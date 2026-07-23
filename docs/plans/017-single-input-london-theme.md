@@ -331,8 +331,15 @@ loop: this devcontainer has **no Cloudflare credentials**, so `make dev`, `make 
 `wrangler dev` fails at boot with *"No credentials found, and the environment is non-interactive"*
 — the D1 binding is `remote = true`, so even LOCAL dev needs auth. Provision once, up front:
 
-- **`CLOUDFLARE_API_TOKEN`** in the root `.env` or `~/.cf-token` (Workers Scripts:Edit, D1:Edit,
-  Pages:Edit). Everything below unblocks together — nothing else is missing.
+- **`CLOUDFLARE_API_TOKEN`** (+ `CLOUDFLARE_ACCOUNT_ID`) — Workers Scripts:Edit, Pages:Edit,
+  **D1:Edit** (no read-only D1 scope exists), Zone > Workers Routes:Edit. Everything below unblocks
+  together — nothing else is missing.
+- **Provision it as a repo ACTIONS SECRET, not (only) locally** — pre-staged in P1:
+  `.github/workflows/deploy.yml` (runs `provision_cf.sh` + the #178 asset-MIME assert) and
+  `.github/workflows/d1-verify.yml` (four STATIC read-only SELECTs incl. P2b's `bbox_plan` /
+  `bbox_rows_read`). Both are `workflow_dispatch` + `production` Environment and fail fast with a
+  readable message until the secret exists. **This means P2b's done-when is reachable from CI with
+  no local credential at all** — dispatch `bbox_rows_read` before and after the index migration.
 - Blocked until then: deploy + hash-asserting MIME pre-flight · the remote `ui_sweep.py` run ·
   the carried-over 016 `SELECT * FROM corpus_meta` cron check · P2b's `meta.rows_read` measurement
   (which is P2b's whole done-when, so **P2b cannot be honestly completed without this**).
