@@ -22,11 +22,16 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
 
 - **Live:** v1.7.0 on `sortmy.london`; 5 corpora in D1; daily ingest cron batched under the
   subrequest cap (#197); tier3 monitor green.
-- ☐ **P0 finishes with this PR** (plan + handoff + tracker **#201** + ADR stubs).
-- **NEXT = P1 (theme)**: `tokens.css` EyeRest→fo Linear neutrals + `[data-variant]` A/B/C blocks
-  (light+dark), `@fontsource/jetbrains-mono` re-added, `variant-init.js` + cycle control mirroring
-  the existing theme toggle. **ADR 0005.** Then P2 router → **P2b bbox prefilter** → P3 UI/wording
-  → P4 release v1.8.0.
+- ☑ **P0 shipped** (#202/#203/#204/#205) · ☑ **P1 shipped** (#208) + two plan corrections banked
+  (#206 P2b index, #207 router-keyword home).
+- 🔴 **BLOCKER, new: no Cloudflare credentials in this devcontainer.** `wrangler dev` fails at boot
+  ("No credentials found, non-interactive"), so **deploy, the remote sweep, the 016 `corpus_meta`
+  cron check and P2b's `rows_read` measurement are ALL blocked** until `CLOUDFLARE_API_TOKEN` lands
+  in the root `.env` / `~/.cf-token`. See the plan's **Arc-start access checklist**. P1's theme was
+  verified credential-free (below); P2b **cannot** be — its done-when IS a live measurement.
+- **NEXT = P2 (auto-router)**, which is fully agent-runnable without credentials (pure modules +
+  vitest). Then **P2b** (needs the credential) → P3 UI/wording → P4 release v1.8.0. **Owe P1 a
+  remote sweep** the moment credentials land.
 - **P2b is a hard prerequisite for P3, not an optimisation.** Corpus queries read the WHOLE view
   today (66,871 rows for food-hygiene) against D1's 5M row-reads/day ⇒ ~75 asks/day. P3's free-text
   input invites exploratory asking, so the bbox prefilter must land BEFORE the UI ships.
@@ -83,6 +88,17 @@ bigger than it looks (A2UI card restyle + `ui_sweep.py` variant/axe iteration).
    **progress report** (shipped · next · % · blocked/deferred).
 4. **Decide-by-defaults are in the plan — apply them silently; never stall.** Owner gates: NONE
    (only the one-per-session `--admin` merge go-ahead).
+
+## What P1 actually proved (and how, without credentials)
+
+`npm run build && npm run preview` serves the REAL bundle on `:4173`; a probe importing
+`ui_sweep`'s own `set_appearance` + `run_axe` walked all 3 variants × light/dark: **0 critical,
+0 serious, 0 console errors**, with the computed `--color-primary` asserted per combination so a
+variant that silently failed to repaint could not pass. **The gate was then proven to go RED**:
+restoring fo's `#5e6ad2` reproduced `color-contrast` (serious, 2 nodes) on indigo×dark ONLY, and
+green everywhere else — axe independently confirming the arithmetic that motivated the deviation.
+This does **not** cover the corpus flows (they need the Worker), so no `runs.jsonl` line was
+written — P1 still owes a remote sweep.
 
 ## Gotchas (inherited + new — do not relearn)
 

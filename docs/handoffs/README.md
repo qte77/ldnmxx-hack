@@ -2,12 +2,14 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0 shipped, next P1
+## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0+P1 shipped, next P2
 
 Arc 017 is open: query-driven auto-routing (one free-text input picks the workflow) + the fo
-`linear.css` theme with three London accent variants. **P0 is merged** (plan, handoff, ADR
-0003/0004/0005, tracker #201). **Next = P1 (theme).** Predecessor 016 is CLOSED — five real corpora
-live in D1, v1.7.0 deployed.
+`linear.css` theme with three London accent variants. **P0 and P1 are merged** (plan, handoff, ADRs
+0003/0004/0005, tracker #201; theme + variants in #208). **Next = P2 (auto-router)** — the last
+phase that needs no credentials. ⚠ **Cloudflare credentials are missing in the devcontainer**, which
+blocks every live verification including P2b's done-when: see the plan's _Arc-start access
+checklist_. Predecessor 016 is CLOSED — five real corpora live in D1, v1.7.0 deployed.
 
 ## Index
 
