@@ -477,20 +477,20 @@
     },
     {
       "id": "cqc",
-      "name": "CQC Syndication API",
+      "name": "CQC directory bulk (API now key-gated)",
       "category": "gov-civic-env",
-      "provides": "ratings/inspections for care providers (hospitals, care homes, GPs, dentists)",
-      "interface": "rest-json",
+      "provides": "location directory for care providers (hospitals, care homes, GPs, dentists) + date of latest check",
+      "interface": "bulk-csv",
       "access": "keyless",
-      "url": "https://api.cqc.org.uk/public/v1",
+      "url": "https://www.cqc.org.uk/about-us/transparency/using-cqc-data",
       "license": "OGL-3.0",
       "redistribute_ok": "yes",
-      "redistribute_note": "partnerCode param required (a self-chosen string is fine); acknowledge 'using CQC information'; show the rating publication date. Med-confidence on any non-public 'Syndication partner' tier terms.",
+      "redistribute_note": "acknowledge 'using CQC information'; the directory CSV carries NO ratings (only 'date of latest check' + the official location URL) so the rating-date obligation is moot — link out for ratings. The Syndication API (api.cqc.org.uk / api.service.cqc.org.uk) returns 403 without a developer-portal subscription key as of 2026-07-23, so it is NOT keyless anymore; the weekly-dated directory CSV on the using-cqc-data page is the keyless path (link discovered per run).",
       "london_relevance": "high",
-      "confidence": "med",
-      "notes": "partnerCode param requested",
+      "confidence": "high",
+      "notes": "P1 verified live 2026-07-23: 22_July_2026_CQC_directory.csv parsed; Region column filters London",
       "first_checked": "2026-07-17",
-      "last_checked": "2026-07-22"
+      "last_checked": "2026-07-23"
     },
     {
       "id": "ukair-defra-sos",

@@ -13,9 +13,10 @@ dev-ui:  ## Vite dev server (:5173), proxies /api -> :8787
 dev-worker:  ## wrangler dev (:8787) — the /api engine + console Arize spans
 	cd worker && npm run dev
 
-test:  ## Run ui + worker tests
+test:  ## Run ui + worker + ingest tests
 	cd ui && npm test
 	cd worker && npm test
+	uvx pytest -q ingest
 
 deploy:  ## Build the SPA -> Cloudflare Pages, then deploy the Worker (CF auth via root .env or ~/.cf-token)
 	bash scripts/provision_cf.sh
