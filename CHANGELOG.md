@@ -4,6 +4,26 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-07-23
+
+### Plan 016 — keyless real data · P3: Care (the flagship) goes REAL (#191)
+
+- **Sort My Care now serves REAL data from D1** — the keyless CQC directory (9,345 London
+  locations at first fill): migration `0003` adds the record-shaped `cqc_locations` table and
+  REPOINTS the existing `care_signposts` view to it (zero churn in `VIEW_SQL`/registry `d1View`);
+  the never-filled TRUD-era `nhs_services` table is dropped (NHS ODS #161 stays additive). The
+  bundled sample remains the outage fallback.
+- **Signpost-honest by construction** — the directory carries no ratings, so the copy says
+  "regulated by CQC — see the official page for current ratings" (no stale-rating liability), and
+  the coverage-honest empty state notes that community pharmacies are not listed. CQC OGL
+  attribution ("using CQC information") renders on the disclaimer card and is the cron's
+  swap-gate precondition.
+- **Parser hardening from real data** — pipe-duplicated service types deduped
+  ("Doctors/GPs|Doctors/GPs" seen live); `seed.py` pads OS "YYYY-MM" versions to full ISO so the
+  greenspace `asOf` passes date validation.
+- **Care recency e2e assert** — markers computed with the app's own origin + haversine (the P2
+  lesson): "Blue Dental Care" (40 m from the test postcode, D1-only) + the CQC attribution line.
+
 ## [1.5.0] — 2026-07-23
 
 ### Plan 016 — keyless real data · P2: Wander goes REAL (#187)
