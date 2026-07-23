@@ -34,10 +34,17 @@ all keyless, all `redistribute_ok`, all agent-only.
   **Source reality shifted — see plan P1 details:** CQC API 403s unauthenticated (keyless path =
   weekly directory CSV, no ratings → link out); OS Greenspace = GeoPackage (BNG→WGS84 in parsers);
   NHLE = `NHLE_v02_VIEW` layer 0. Cron-firing verification gotcha → AGENT_LEARNINGS.
-- **NEXT = P2 Wander real**: migration `0002` (nhle/greenspace raw tables + `wander_places` view) →
-  registry `wander.d1View` + `VIEW_SQL` entry + REAL attribution strings (© Historic England +
-  OS Crown copyright — the swap gate demands them) → `INGEST_TARGETS` entries for nhle/greenspace →
-  sweep freshness-RECENCY assert → release v1.5.0.
+- ☑ **P2 SHIPPED + v1.5.0 RELEASED/DEPLOYED** (#187 + #188, tag v1.5.0, 2026-07-23): migration
+  0002 applied remote · wander flips to `wander_places` D1 view with REAL attribution (HE + OS
+  Crown copyright) · **wander-nhle swapped live: 23,741 rows** (`corpus_meta` as_of 1949-02-24);
+  wander-greenspace (12.2k) completes via re-fire/daily cron (local-dev proxy inserts are slow —
+  the edge cron is not). Recency-marker lesson: compute markers with the APP's origin (real
+  gazetteer coords) + haversine, NOT offline approximations — first sweep FAILed honestly on a
+  marker 330m off; fixed marker = "Stockwell Road Sw9" (stable pre/post greenspace).
+- **NEXT = P3 Care real via CQC**: migration 0003 (`cqc_locations` raw + `care_signposts_v2`?
+  NO — repoint the EXISTING `care_signposts` view to the cqc table in 0003) · registry care
+  attribution (CQC ack + OGL) · `INGEST_TARGETS` cqc entry (attributionOf care, min 1000) ·
+  coverage-honest copy (no community pharmacies; no ratings — link out) · release v1.6.0.
 
 ## How to run this arc (the loop)
 

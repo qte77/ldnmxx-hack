@@ -2,7 +2,7 @@
 title: "Plan 016 — keyless real data: one pipeline, three real corpora (no TRUD)"
 type: plan
 updated: 2026-07-23
-status: "in progress — P1 SHIPPED (#183, live-proven); next P2 Wander real"
+status: "in progress — P2 SHIPPED (#187, v1.5.0 live); next P3 Care via CQC"
 refs: ["#181? (016 tracker — see handoff)", "#10 (cron)", "#161 (TRUD/ODS — 016 backlog, additive)", "#168 (upstream watch)", "ADR 0002", "plan 015 (closed)"]
 ---
 
@@ -20,7 +20,7 @@ refs: ["#181? (016 tracker — see handoff)", "#10 (cron)", "#161 (TRUD/ODS — 
 |---|---|---|
 | P0 | Arc mechanics: close 015 · mint this plan + handoff · tracker issue · #113 closed | ☑ #181 |
 | P1 | Pipeline: `ingest/seed.py` parsers (TDD) · `ingest.yml` → release asset · CF cron `scheduled()` → D1 shadow→validate→swap · `attribution` surface in labels/render | ☑ #183 |
-| P2 | Wander REAL (NHLE + OS Open Greenspace) + freshness-recency e2e assert → release v1.5.0 | ☐ |
+| P2 | Wander REAL (NHLE + OS Open Greenspace) + freshness-recency e2e assert → release v1.5.0 | ☑ #187 |
 | P3 | Care REAL via CQC (flagship; coverage-honest copy) → release v1.6.0 | ☐ |
 | P4 | Sort My Food Hygiene — NEW register-only usecase (FHRS) → release v1.7.0 | ☐ |
 | P5 | Hygiene (woven in): pin patchright in tier3 · `release.yml` · drop dead care `category` · reserved env vars · D1 steps in deploy docs | ☐ |
