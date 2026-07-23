@@ -128,8 +128,8 @@ describe("worker /run", () => {
     if (batch) assertSelfContained(batch);
   });
 
-  it("streams a self-contained on-it route batch (same engine, different JSON)", async () => {
-    const res = await worker.fetch(post("on-it"), env, ctx);
+  it("streams a self-contained sort-my-route batch (same engine, different JSON)", async () => {
+    const res = await worker.fetch(post("sort-my-route"), env, ctx);
     const batch = parseFrames(await res.text()).find((f) => f.a2uiMessages)?.a2uiMessages;
     expect(batch).toBeTruthy();
     if (batch) assertSelfContained(batch);

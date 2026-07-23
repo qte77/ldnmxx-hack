@@ -3,7 +3,7 @@
 ## One core, three seams
 
 One `POST /run?usecase=<id>` endpoint → a small `runUsecase` interpreter (plan → tool → render) → an A2UI
-HUD. The SPA flips between the two demo workflows (**Founder's Copilot ⇄ On It**) via a toggle over the
+HUD. The SPA flips between the two demo workflows (**Founder's Copilot ⇄ Sort My Route**) via a toggle over the
 `?usecase=` param; each workflow's stage choreography is a `usecases/*.json` read at runtime
 (`worker/src/usecases.ts`), and render + deterministic query dispatch **by name** through the
 `worker/src/workflows.ts` **registry** (`render` by mode — `founders`/`route`/`corpus`/`scam`; `query` by
@@ -11,9 +11,9 @@ exec) — so adding a **corpus** (nearest-N) workflow is **register-only**, neve
 ADR 0001); a **match**-shaped workflow (`scam`) needs a new mode + exec + its own module. Per workflow,
 only these seams change:
 
-| Seam | Founder's Copilot | On It |
+| Seam | Founder's Copilot | Sort My Route |
 |---|---|---|
-| `tools[]` | `assess_stage` + `search_opportunities` — **live model tools** (each streams reasoning + its own Arize LLM span, #18); `find_contacts` (#9) · `incorporate` (#12) planned | lookup_postcode · get_tfl_journey — **PLANNED**; On It is a canned stub today |
+| `tools[]` | `assess_stage` + `search_opportunities` — **live model tools** (each streams reasoning + its own Arize LLM span, #18); `find_contacts` (#9) · `incorporate` (#12) planned | lookup_postcode · get_tfl_journey — **PLANNED**; Sort My Route is a canned stub today |
 | `render` | built-in A2UI cards (Column/Card/Text) | static `buildRouteCards()` text today; RouteCard + lazy OSM `RouteMap` panel is **PLANNED** |
 | `input()` | text | text today (canned stub); voice (Web Speech STT + text fallback) is **PLANNED** |
 

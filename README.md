@@ -34,7 +34,7 @@ param; add your own by dropping in a `usecases/*.json`.
 ```text
                   ┌─ Founder's Copilot · usecase=founders-copilot
    swap usecase ──┤  one toggle, same engine
-                  └─ On It · usecase=on-it
+                  └─ Sort My Route · usecase=sort-my-route
                   │
                   ▼
 User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
@@ -52,7 +52,7 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
 - **Example workflow — Founder's Copilot (flagship):** describe your idea → the model **assesses your
   stage** and **ranks matching grants** (two live model tools that stream their reasoning, #18),
   qualify-first, plus a verified incorporate how-to pack. The live Companies House filing (#12) is planned.
-- **Example workflow — On It (interchange proof):** a step-free London route — same engine, one
+- **Example workflow — Sort My Route (interchange proof):** a step-free London route — same engine, one
   `usecase` away (a canned stub today; live tools are planned).
 - **Civic pilot — Sort My Care:** a **deterministic** postcode → nearest-NHS-services signpost — model-free
   and fetch-free, with honest "data as of …" freshness and a "confirm with the official source" disclaimer.
@@ -63,7 +63,7 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
   a deterministic clone look-alike note, signposting to the FCA register. `?usecase=sort-my-scam-check`.
 - Keyless demo path; secrets stay Worker-only *(stack rationale below)*.
 
-**URL parameters** (all optional): `?usecase=<id>` selects the workflow (`founders-copilot` · `on-it` ·
+**URL parameters** (all optional): `?usecase=<id>` selects the workflow (`founders-copilot` · `sort-my-route` ·
 `sort-my-care` · `sort-my-wander` · `sort-my-scam-check`); `?theme=light|dark` forces the theme (else
 system); `?dev=1` reveals the AG-UI/A2UI dev console + ⚙ Key panel (also `Ctrl+K` / `Ctrl+I`; persisted in
 `localStorage`); `?demo=1` forces the Worker's deterministic path. No secret is ever read from the URL or
@@ -82,13 +82,13 @@ Grants matched to the idea, qualify-first gate, live AG-UI event stream.
 </details>
 
 <details>
-<summary>Screenshot — On It</summary>
+<summary>Screenshot — Sort My Route</summary>
 
 A step-free London route — same engine, one `usecase` away.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/images/groundwork-on-it-dark.png">
-  <img alt="Groundwork On It: step-free route cards" src="assets/images/groundwork-on-it-light.png">
+  <img alt="Groundwork Sort My Route: step-free route cards" src="assets/images/groundwork-on-it-light.png">
 </picture>
 
 </details>
@@ -108,7 +108,7 @@ Toggle the two example workflows in the UI; `cd worker && npm run tail` shows on
 **Demo:** <https://sortmy.london> — SPA on **Cloudflare Pages**, Worker API same-origin at `/api/*`
 ([deploy](docs/deploy-cloudflare.md)). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
 
-**Switches:** `?usecase=founders-copilot|on-it|sort-my-care|sort-my-wander|sort-my-scam-check` picks the
+**Switches:** `?usecase=founders-copilot|sort-my-route|sort-my-care|sort-my-wander|sort-my-scam-check` picks the
 workflow (`sort-my-care`/`sort-my-wander`/`sort-my-scam-check` are deterministic — model-free + fetch-free)
 · a **Demo⇄Live toggle** in the header
 (or `?demo=1`) forces the keyless deterministic stub even with a model key set — the events header then

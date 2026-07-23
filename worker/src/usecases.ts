@@ -1,5 +1,5 @@
 import foundersJson from "../../usecases/founders-copilot.json";
-import onitJson from "../../usecases/on-it.json";
+import routeJson from "../../usecases/sort-my-route.json";
 import sortMyCareJson from "../../usecases/sort-my-care.json";
 import sortMyWanderJson from "../../usecases/sort-my-wander.json";
 import sortMyScamJson from "../../usecases/sort-my-scam-check.json";
@@ -142,7 +142,7 @@ function load(json: unknown): UsecaseDef {
 
 const registry: Record<string, UsecaseDef> = {
   "founders-copilot": load(foundersJson),
-  "on-it": load(onitJson),
+  "sort-my-route": load(routeJson), // formerly "on-it"; old deep links fall back to the flagship
   "sort-my-care": load(sortMyCareJson),
   "sort-my-wander": load(sortMyWanderJson),
   "sort-my-scam-check": load(sortMyScamJson),

@@ -1,6 +1,6 @@
 {
-  "id": "on-it",
-  "title": "On It",
+  "id": "sort-my-route",
+  "title": "Sort My Route",
   "render": { "mode": "route" },
   "stages": [
     {

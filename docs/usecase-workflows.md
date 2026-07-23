@@ -116,16 +116,16 @@ data* instead of inventing it (less hallucination = better idea-validation + tru
 the founder's own idea (`assess_stage` input) and Companies House **name availability** for the user's chosen
 name (live, or mocked for the demo). Staleness → re-seed = cron (deferred #12); `data/demo/` = offline fallback.
 
-## On It (thin swap)
+## Sort My Route (thin swap)
 
-**Shipped today:** none of this — On It is a **canned stub** (static `buildRouteCards()` text,
+**Shipped today:** none of this — Sort My Route is a **canned stub** (static `buildRouteCards()` text,
 always the same demo route, no live tools). Everything below (voice, postcodes.io, TfL, OSM/Overpass,
 the replay) is **target design, not yet built**.
 
 **User:** a mobility-constrained Londoner. **Thin = route only** (the modularity proof):
 
 ```
-RUN  /run?usecase=on-it   (voice: "step-free from E8 3GT to Westminster")
+RUN  /run?usecase=sort-my-route   (voice: "step-free from E8 3GT to Westminster")
   plan(parse origin postcode + destination)
     → tool(lookup_postcode: postcodes.io → borough + coords + nearest step-free station)
       → tool(get_tfl_journey: TfL Journey → step-free route + disruption)
@@ -142,12 +142,12 @@ RUN  /run?usecase=on-it   (voice: "step-free from E8 3GT to Westminster")
 - **Accessibility overlay (on-theme, lean) — the "easy-access" layer:** OSM already carries the data
   (`wheelchair=yes|limited|no`, `highway=elevator`, `ramp`, `tactile_paving`). Query **Overpass** (keyless)
   for these near the route → **color-coded markers** on the `RouteMap` = step-free/accessible points for the
-  mobility-constrained user (directly reinforces On It's idea-validation). **Cache/wiremock the Overpass
+  mobility-constrained user (directly reinforces Sort My Route's idea-validation). **Cache/wiremock the Overpass
   result** for a deterministic demo (Overpass is rate-limited). *(A pre-rendered Wheelmap tile layer may
   exist, but its keyless-embed ToU is unconfirmed — prefer Overpass markers we control + OSM attribution.)*
-- **On It = side project → pre-record it (from the REAL workflow, not a faked JSON).** Build the keyless
+- **Sort My Route = side project → pre-record it (from the REAL workflow, not a faked JSON).** Build the keyless
   loop **STT → postcode → path (+ map/a11y) → TTS** once, run it, and **capture the SSE stream →
-  `ui/src/recordings/on-it.json`**; the demo plays it via `useReplayEngine` (our offline safety-net engine).
+  `ui/src/recordings/sort-my-route.json`**; the demo plays it via `useReplayEngine` (our offline safety-net engine).
   This **bounds A's build effort** (record one clean run) and removes live flakiness (STT recognition,
   TfL/Overpass rate-limits, TTS latency) from the secondary track.
 - **TTS is now feasible** (was deferred): pre-generate once → play via the **built-in A2UI `AudioPlayer`**
@@ -194,13 +194,13 @@ RUN  /run?usecase=sort-my-care   (postcode as the run prompt, e.g. "SW9 9SL")
 
 Target design, not a status report — see shipped/planned tags above. Honest today-state:
 
-| Criterion | Founder's Copilot | On It |
+| Criterion | Founder's Copilot | Sort My Route |
 |---|---|---|
 | **Idea validation** (Londoner evidence) | ⚠️ off-resource; lean on JTBD + qualify gate | target design only — canned stub today, no live demand signal |
 | **Technical** (stack) | shipped: `runUsecase` over `usecases/*.json`, real OpenRouter render + stub fallback, Arize console spans, built-in A2UI. Planned: KV, AI Gateway wiring (#29), Companies House | planned only: same engine, but no live tools/voice yet — stub renders static cards |
 | **Project readiness** | grants + incorporate cards built; stage/contacts planned | thin canned stub; full E2E is planned |
 | **UX/design** | ✅ watch-it-work HUD, one-click journey, EyeRest theme | planned: voice accessibility — not shipped |
 
-**Strategy:** On It carries idea-validation; Founder's Copilot carries the UX joy. Pitch the primary
+**Strategy:** Sort My Route carries idea-validation; Founder's Copilot carries the UX joy. Pitch the primary
 workflow → one-click swap to the other = the single move that covers all four criteria (once the planned
 work above lands). See `archive/submission.md` (archived).

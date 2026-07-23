@@ -5,7 +5,7 @@ import { matchesToggle, readDevMode, writeDevMode } from "./devmode";
 import { readUsecase } from "./usecase";
 import { useAgentSSE, type Byok, type RunStatus } from "./agent/useAgentSSE";
 
-// The civic flows one engine serves. Sort My Care is the flagship (default); On It is the
+// The civic flows one engine serves. Sort My Care is the flagship (default); Sort My Route is the
 // secondary civic flow, revealed on demand. Founder's Copilot is an engine demo (civic:false)
 // — off-message for a public-service tool, so it's reachable ONLY via ?usecase=founders-copilot.
 const USECASES = [
@@ -21,8 +21,8 @@ const USECASES = [
     civic: true,
   },
   {
-    id: "on-it",
-    label: "On It",
+    id: "sort-my-route",
+    label: "Sort My Route",
     headline: "Plan a step-free journey",
     blurb: "Enter a start and destination for a step-free route across London.",
     placeholder: "e.g. step-free from E8 3GT to Westminster",
