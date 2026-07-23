@@ -2,18 +2,19 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [016 — keyless real data](016-keyless-real-data.md) — CLOSED (P0–P5 shipped)
+## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0 shipped, next P1
 
-Arc 016 is complete: five real corpora live in D1 (postcodes · NHLE · OS Greenspace · CQC · FHRS),
-v1.5.0/1.6.0/1.7.0 released + deployed + swept, the ingest cron batched under the subrequest cap.
-**Next-session first action + backlog are in [016](016-keyless-real-data.md)'s "ARC CLOSED" block**
-(verify the real 04:47 UTC edge cron; then #185 gazetteer widening is the highest-ROI next arc).
+Arc 017 is open: query-driven auto-routing (one free-text input picks the workflow) + the fo
+`linear.css` theme with three London accent variants. **P0 is merged** (plan, handoff, ADR
+0003/0004/0005, tracker #201). **Next = P1 (theme).** Predecessor 016 is CLOSED — five real corpora
+live in D1, v1.7.0 deployed.
 
 ## Index
 
 | # | Handoff | State |
 |---|---|---|
-| 016 | [Keyless real data — pipeline + 3 real corpora](016-keyless-real-data.md) | **CLOSED** — P0–P5 shipped |
+| 017 | [One input, London-themed](017-single-input-london-theme.md) | **OPEN** — P0 shipped, next P1 |
+| 016 | [Keyless real data — pipeline + 3 real corpora](016-keyless-real-data.md) | closed — P0–P5 shipped |
 | 015 | [Civic usecase expansion + real data](015-civic-usecase-expansion.md) | closed (≈90%; remainder → 016) |
 | 014 | [Civic landing + strictness + perf](014-civic-landing-strictness-perf.md) | superseded |
 | 013 | [UI pivot + security + brand + e2e](013-ui-pivot-security-brand-e2e.md) | superseded |

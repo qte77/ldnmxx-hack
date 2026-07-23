@@ -31,6 +31,17 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
   today (66,871 rows for food-hygiene) against D1's 5M row-reads/day ⇒ ~75 asks/day. P3's free-text
   input invites exploratory asking, so the bbox prefilter must land BEFORE the UI ships.
 
+## Carried over from 016 — do this first, it is quick
+
+- **Verify the real 04:47 UTC edge cron populated D1 at full load:**
+  `cd worker && ./node_modules/.bin/wrangler d1 execute DB --remote --config wrangler.toml
+  --command "SELECT * FROM corpus_meta" --json` — every `ingested_at` should have advanced past
+  2026-07-23T18:22Z. **The `db.batch()` fix already shipped (#197, live-verified)**, so this is
+  confirmation, not remediation. If stamps did NOT advance, the cause is something else (asset
+  fetch, CPU time) — check the Worker logs before changing insert code.
+- Parallel/unblocked backlog: **#185** (gazetteer is 6,656 units vs London's ~180k+ — the one row
+  count that is too SMALL), **#199** (freshness watchdog — a dead cron is currently invisible).
+
 ## Decisions already made — do NOT re-litigate
 
 - **All three accents ship as selectable variants**, default **A Thames Teal** `#0e7581`/`#2ea9b6`

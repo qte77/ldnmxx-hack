@@ -172,6 +172,45 @@ model-host OR console errors), vendored axe (gates critical+serious). Flows are 
 - **P4 Hardening + release v1.8.0.** Full docs sync (below), issues, e2e (3 variants × light/dark),
   release ritual. **Done-when:** all gates green; deploy ritual PASS; v1.8.0 tagged+released+deployed.
 
+## P3 copy spec — the distilled claim ladder (use VERBATIM; do not re-derive)
+
+Produced by a claim-distillation pass (2026-07-23). Each rung does ONE job and every line adds a
+fact the reader does not already have.
+
+| Rung | Job | Copy |
+|---|---|---|
+| Eyebrow | orient — *do I belong here?* | `London public services · free, no sign-up` |
+| H1 | the promise, ONE claim | `Ask in your own words. Get the official source.` |
+| Dek | substantiate — *why believe it?* | `Not a live search: we keep a snapshot of official registers — CQC, the Food Standards Agency, Historic England, Ordnance Survey — refreshed weekly. Every result shows the date on the record itself and links to the live page.` |
+| CTA | the action | `Find it` (placeholder: `e.g. food hygiene near SE1`) |
+| Microcopy | de-risk — *what's the catch?* | `No account, no cookies — anonymous page-view counts only. We point you to the official record; confirm there before you act.` |
+
+**Struck claims — do NOT reintroduce:**
+
+- *"The honest, free way…"* — the definite article asserts uniqueness we cannot defend, and
+  "honest" claims a virtue instead of proving it. Prove it via dating + linking.
+- *"know it's current"* — **indefensible**: FHRS ratings run 6–18 months old and NHLE `as_of` is
+  1949-02-24. Say *dated*, never *current*.
+- *"Answers come from public registers"* — implies a live fetch and **contradicts ADR 0002's
+  fetch-free hot path**. Say we hold a snapshot.
+- The A2UI / "swap a JSON, swap the app" / "civic wayfinder" framings — builder metaphors, not user
+  facts. They stay in the README engine section only.
+
+**Hard copy constraints (done-whens for P3):**
+
+1. **Two dates are distinct and must not be conflated** — our snapshot's age
+   (`corpus_meta.ingested_at`, weekly) vs the record's own age (`lastUpdated`, sometimes decades).
+   The UI shows the record's date; the dek explains the snapshot cadence.
+2. **Never imply live fetch** anywhere in product copy.
+3. **Never imply every workflow is register-backed** — scam-check runs on SYNTHETIC data and the
+   route flow is CANNED. The dek names only CQC / FSA / Historic England / OS.
+4. **State each claim once**, in the rung where it lands hardest. "Find the official public service
+   you need" currently appears in `<title>`, the sr-only `h1` AND the header tagline — collapse to
+   the H1; `<title>`/OG inherit H1 + eyebrow only.
+5. **"Sort it" is never a button label** — the wordmark gets latitude a CTA does not; a button that
+   promises resolution breaks the signpost stance at the decision point. If the brand rhythm is
+   wanted, the honest form states the handoff: `We find it. You sort it.`
+
 ## ADRs (write with their phase; mirror `docs/adr/0002` format)
 
 - **0003 — No agent framework; single LLM call with structured output.** (P2) Considered Pydantic-AI
