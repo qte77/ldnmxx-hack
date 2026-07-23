@@ -137,6 +137,15 @@ describe("queryCorpus over a D1 source (care carries a d1View)", () => {
     expect(q.rows.some((r) => r.id === "d1-near")).toBe(false);
   });
 
+  it("falls back to the bundled sample when the VIEW is empty (gazetteer seeded, corpus not yet swapped)", async () => {
+    // P1 (#182): the cron seeds the gazetteer before any corpus swaps in. The swap gate refuses
+    // <50 rows, so a live view is never legitimately empty — empty view ⇔ unswapped corpus ⇒ bundled.
+    const db = stubDb({ origin: { lat: 51.5, lng: -0.1 }, rows: [] });
+    const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db });
+    expect(q.rows.length).toBeGreaterThan(0);
+    expect(q.rows.some((r) => r.id === "d1-near")).toBe(false);
+  });
+
   it("falls back to the bundled sample when D1 errors (an outage never breaks Care)", async () => {
     const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" }, { db: stubDb({ fail: true }) });
     expect(q.rows.length).toBeGreaterThan(0);
