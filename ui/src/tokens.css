@@ -62,6 +62,7 @@
  * Read before first paint by ui/public/variant-init.js: ?variant= › localStorage › default.
  */
 :root {
+  color-scheme: light dark;
   --accent-l: #0e7581;
   --accent-d: #2ea9b6;
   --accent-rgb: 14 117 129;
@@ -120,8 +121,4 @@
   --color-data-caution: #e5a50a;
   --color-data-negative: #f2555a;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
-}
-
-:root {
-  color-scheme: light dark;
 }
