@@ -25,7 +25,11 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
 - ☐ **P0 finishes with this PR** (plan + handoff + tracker **#201** + ADR stubs).
 - **NEXT = P1 (theme)**: `tokens.css` EyeRest→fo Linear neutrals + `[data-variant]` A/B/C blocks
   (light+dark), `@fontsource/jetbrains-mono` re-added, `variant-init.js` + cycle control mirroring
-  the existing theme toggle. **ADR 0005.** Then P2 router → P3 UI/wording → P4 release v1.8.0.
+  the existing theme toggle. **ADR 0005.** Then P2 router → **P2b bbox prefilter** → P3 UI/wording
+  → P4 release v1.8.0.
+- **P2b is a hard prerequisite for P3, not an optimisation.** Corpus queries read the WHOLE view
+  today (66,871 rows for food-hygiene) against D1's 5M row-reads/day ⇒ ~75 asks/day. P3's free-text
+  input invites exploratory asking, so the bbox prefilter must land BEFORE the UI ships.
 
 ## Decisions already made — do NOT re-litigate
 
