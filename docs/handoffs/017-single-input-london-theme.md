@@ -30,6 +30,11 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
 - **P2b is a hard prerequisite for P3, not an optimisation.** Corpus queries read the WHOLE view
   today (66,871 rows for food-hygiene) against D1's 5M row-reads/day ⇒ ~75 asks/day. P3's free-text
   input invites exploratory asking, so the bbox prefilter must land BEFORE the UI ships.
+- **P2b ships an INDEX MIGRATION or it is a no-op.** The store has no indexes at all
+  (`git grep -in "create index" -- worker/migrations` → nothing) and D1 bills rows **scanned**, so
+  a bare `WHERE lat BETWEEN …` still scans 66,871 rows. Prove the win with `meta.rows_read` from a
+  `--remote` query, never a mocked-D1 call count — a stub cannot model scanning and would go green
+  on a production no-op. Full spec in the plan's P2b bullet.
 
 ## Carried over from 016 — do this first, it is quick
 
