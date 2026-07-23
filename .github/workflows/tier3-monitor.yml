@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
       - name: Install patchright + Chromium
         run: |
-          pip install patchright
+          pip install patchright==1.61.2 # pinned to the locally-proven sweep version (P5 #182)
           patchright install --with-deps chromium
       - name: Sweep the live target
         run: python tests/e2e/ui_sweep.py "https://sortmy.london" tier3

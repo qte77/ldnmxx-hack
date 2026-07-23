@@ -1,0 +1,33 @@
+name: Release
+# P5 (016 #182): create the GitHub release automatically when a version tag is pushed, with the
+# matching CHANGELOG section as notes — removes the manual `gh release create` step from the
+# per-phase release ritual. GITHUB_TOKEN only.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write # create the release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Create release with the CHANGELOG section as notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          # Extract this version's section from CHANGELOG.md (from its heading to the next "## [").
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { on=1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          if ! [ -s notes.md ]; then echo "No CHANGELOG section for $VERSION" > notes.md; fi
+          # No-op if the release already exists (e.g. created manually).
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes-file notes.md
