@@ -33,7 +33,7 @@ agent loops / durable state.
 | # | Phase | Docs/ADR/issues it carries | Status |
 |---|---|---|---|
 | P0 | Arc mechanics: plan + handoff + tracker (#201) + ADR 0003/0004/0005 stubs | plan·handoff·tracker | ☐ |
-| P1 | Theme: `tokens.css` EyeRest→fo Linear + **A/B/C variants** (light+dark), JetBrains Mono self-hosted, variant control | ADR 0005 · CHANGELOG · README stack · glossary | ☐ |
+| P1 | Theme: `tokens.css` EyeRest→fo Linear + **A/B/C variants** (light+dark), JetBrains Mono self-hosted, variant control | ADR 0005 · CHANGELOG · README stack · glossary | ☑ merged (#208) · **live sweep owed** (see access checklist) |
 | P2 | Auto-router (modules, strict TDD): `agent/router.ts` + `shared/routerTool.ts` + prompt pair; `worker.ts` body-read-once; `USECASE_RESOLVED` event; **no-match suggestions card**; **Arize route span**; **`?usecase=` bypass** | ADR 0003+0004 · architecture · glossary | ☐ |
 | P2b | **Bounded corpus reads (index migration + bbox prefilter)** — every corpus query currently reads the WHOLE view (66,871 rows for food-hygiene) and the store has NO indexes. Must land BEFORE P3 exposes free-form asking | CHANGELOG · architecture (ADR 0002 consequence) | ☐ |
 | P3 | Single-input UI + wording: remove switcher **control** (keep catalog as suggestion DATA), aria-live resolved announcement, reword all strings | README hero · UserStory · index.html meta | ☐ |
@@ -323,6 +323,25 @@ a variant × scheme matrix. Local Chromium page-crash (devcontainer memory) ⇒ 
 After each major milestone, concise: what **shipped** · what's **next** · **overall %** ·
 **blocked/deferred** (+ what's pre-staged).
 
+## Arc-start access checklist — THE one real gate (discovered in P1, 2026-07-23)
+
+The handoff said "Owner gates: NONE". That is true of the *code* loop and false of the *verify*
+loop: this devcontainer has **no Cloudflare credentials**, so `make dev`, `make deploy`, any
+`wrangler d1 … --remote`, and therefore the whole per-phase deploy ritual cannot run here.
+`wrangler dev` fails at boot with *"No credentials found, and the environment is non-interactive"*
+— the D1 binding is `remote = true`, so even LOCAL dev needs auth. Provision once, up front:
+
+- **`CLOUDFLARE_API_TOKEN`** in the root `.env` or `~/.cf-token` (Workers Scripts:Edit, D1:Edit,
+  Pages:Edit). Everything below unblocks together — nothing else is missing.
+- Blocked until then: deploy + hash-asserting MIME pre-flight · the remote `ui_sweep.py` run ·
+  the carried-over 016 `SELECT * FROM corpus_meta` cron check · P2b's `meta.rows_read` measurement
+  (which is P2b's whole done-when, so **P2b cannot be honestly completed without this**).
+- **Credential-free fallback that DOES work** (used to verify P1): `npm run build && npm run
+  preview` serves the real bundle on `:4173`, and a probe importing `ui_sweep`'s own
+  `set_appearance` + `run_axe` walks the 3×2 matrix against it. This covers theme/contrast/console
+  but NOT the corpus flows, which need the Worker. Do not write a PASS line to `runs.jsonl` from a
+  partial run.
+
 ## Standing execution contract — e2e hands-off, UNATTENDED
 
 Binds `.claude/rules/unattended-execution.md` + the e2e-runnability checklist in
@@ -331,8 +350,9 @@ gates (`make test` + tsc + eslint worker/shared/ui + ruff + markdownlint) + **se
 semgrep; `detectInjection` on router input) → push → **squash-merge ONLY on green CI** → `--admin`
 (ruleset-gated) → **prune remote + local branches**. Deploy ritual per phase: deploy →
 hash-asserting MIME pre-flight (browser headers) → edge-settle → sweep → `runs.jsonl` (honest FAILs
-kept). Decide-by-defaults applied silently; never stall waiting on the owner. **Owner gates: NONE**
-(the only human touchpoint is the one-per-session `--admin` merge go-ahead).
+kept). Decide-by-defaults applied silently; never stall waiting on the owner. **Owner touchpoints:
+the one-per-session `--admin` merge go-ahead, and — corrected in P1 — the one-time Cloudflare
+credential above, without which no phase can be live-verified.**
 
 ## Verification
 
