@@ -4,6 +4,34 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 017 — one input, London-themed · P1: the theme (#201)
+
+- **New look: the fo Linear system with three London accent variants.** `ui/src/tokens.css` moves
+  off the vendored EyeRest palette (amber on parchment) to near-black/near-white neutrals plus a
+  selectable accent — **A Thames Teal** (default), **B Heritage Indigo**, **C Westminster Green** —
+  each in light and dark. Token *names* are unchanged, so every existing Tailwind utility still
+  resolves. The file is now project-owned: **ADR 0005**, and a future session must not re-vendor
+  EyeRest over it.
+- **New URL switch `?variant=thames|indigo|green`**, persisted in `localStorage["qte77-variant"]`
+  and applied before first paint by `ui/public/variant-init.js` — the same anti-FOUC, CSP-safe
+  (external, not inline) pattern as `theme-init.js`. A cycle control sits beside the theme toggle.
+- **Contrast measured, not assumed — three upstream values did not survive it.** fo's dark indigo
+  is 3.89:1 on the dark card surface (fails AA as text) → `#7b86e3`; fo's semantic trio measures
+  3.59/3.08/1.98 on the light neutrals → deepened light equivalents; fo's hairline border is
+  ~1.4:1, fine for a card edge but not where a border IS the control affordance (WCAG 1.4.11) →
+  new `--color-border-strong` for inputs and toggles. Details in ADR 0005.
+- **The e2e sweep now scans the whole matrix** — axe runs per accent variant × scheme (6
+  combinations on desktop, screenshot each), which is what caught the indigo failure before it
+  shipped. Previously only the default palette was ever scanned.
+- **JetBrains Mono is self-hosted again** (`@fontsource/jetbrains-mono`, latin-400) and now has a
+  user-facing job: the footer version and the dev event stream set numerals in it.
+- **Retired the #154 workaround** — links no longer hardcode a deepened `#725810`; every variant's
+  accent clears AA on the card surface in both schemes, so the colour comes from the token. No hex
+  remains outside `tokens.css` except `<meta name="theme-color">`, which takes no `var()`.
+- **Removed dead CSS** — the `#theme-toggle` width-sizer and focus rules referenced an id and a
+  `theme.ts` that do not exist in this repo (ported from a sibling). Both toggles now carry a real
+  focus ring. Dropped the unused `--color-data-alt` token.
+
 ### Plan 016 — keyless real data · post-close hardening
 
 - **Ingest cron batches its D1 shadow inserts** (`db.batch()`, 50 statements/subrequest) — a
