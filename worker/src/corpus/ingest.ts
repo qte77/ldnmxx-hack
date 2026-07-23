@@ -43,6 +43,8 @@ export const INGEST_TARGETS: IngestTarget[] = [
     minRows: 500,
     attributionOf: "wander",
   },
+  // P3: care via the keyless CQC directory CSV (9.3k London locations at first fill).
+  { corpus: "care", artifact: "cqc.json", table: "cqc_locations", kind: "corpus", minRows: 1000 },
 ];
 
 export interface GazetteerRow {

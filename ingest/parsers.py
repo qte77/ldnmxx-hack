@@ -257,7 +257,9 @@ def parse_cqc_directory(text: str) -> list[dict]:
         name, postcode, url = row.get("Name"), row.get("Postcode"), row.get("Location URL")
         if not loc_id or not name or not postcode or not url or not produced:
             continue
-        services = row.get("Service types") or "Care service"
+        # Real data carries pipe-separated duplicates ("Doctors/GPs|Doctors/GPs") — dedupe, keep order.
+        raw_services = (row.get("Service types") or "Care service").split("|")
+        services = " · ".join(dict.fromkeys(s.strip() for s in raw_services if s.strip()))
         checked = (row.get("Date of latest check") or "").split(" - ")[0]
         checked_part = f"; last checked {checked}" if checked else ""
         out.append(

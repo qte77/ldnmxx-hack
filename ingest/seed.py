@@ -104,7 +104,10 @@ def fetch_nhle() -> list[dict]:
 def fetch_greenspace() -> list[dict]:
     """GB GeoPackage (~59MB) -> sqlite rows -> London records (parsers do WKB + BNG->WGS84)."""
     product = fetch_json(OS_DOWNLOADS)
+    # OS versions are "YYYY-MM" — pad to full ISO so dates.ts validation accepts it (asOf honesty).
     as_of = str(product.get("version", ""))[:10] or "unknown"
+    if re.fullmatch(r"\d{4}-\d{2}", as_of):
+        as_of += "-01"
     url = f"{OS_DOWNLOADS}/downloads?area=GB&format=GeoPackage&redirect"
     blob = fetch_bytes(url)
     zf = zipfile.ZipFile(io.BytesIO(blob))

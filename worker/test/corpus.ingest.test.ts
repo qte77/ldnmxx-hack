@@ -158,8 +158,17 @@ describe("ingestArtifact (shadow -> validate -> swap, atomic, gate-refusable)", 
 });
 
 describe("INGEST_TARGETS (the closed, reviewable set the cron may touch)", () => {
-  it("P2 ships the gazetteer + the two wander raw tables", () => {
-    expect(INGEST_TARGETS.map((t) => t.corpus)).toEqual(["gazetteer", "wander-nhle", "wander-greenspace"]);
+  it("P3 ships the gazetteer + the two wander raw tables + care via CQC", () => {
+    expect(INGEST_TARGETS.map((t) => t.corpus)).toEqual([
+      "gazetteer",
+      "wander-nhle",
+      "wander-greenspace",
+      "care",
+    ]);
+    const care = INGEST_TARGETS.find((t) => t.corpus === "care")!;
+    expect(care.table).toBe("cqc_locations");
+    expect(care.kind).toBe("corpus");
+    expect(care.minRows).toBeGreaterThanOrEqual(1000);
     const gaz = INGEST_TARGETS[0]!;
     expect(gaz.table).toBe("postcodes");
     expect(gaz.minRows).toBeGreaterThanOrEqual(1000);
