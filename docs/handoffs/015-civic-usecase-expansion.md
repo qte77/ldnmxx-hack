@@ -1,5 +1,5 @@
 ---
-title: "Handoff 015 — v1.2.0 LIVE+verified · D1 provisioned (empty, fail-safe) · W5·B1 monitor live; ALL remaining work blocked on #161 (TRUD, user-deferred)"
+title: "Handoff 015 — CLOSED 2026-07-23 (≈90% shipped through v1.4.0); remainder migrated → handoff 016 (keyless real data). Historical record only — resume from docs/handoffs/016-*.md"
 type: handoff
 updated: 2026-07-22
 pairs_with: docs/plans/015-civic-usecase-expansion.md

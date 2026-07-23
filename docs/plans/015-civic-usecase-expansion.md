@@ -2,7 +2,7 @@
 title: "Plan 015 — civic usecase expansion + real data (fast-follow to 014)"
 type: plan
 updated: 2026-07-22
-status: "≈85% — W6 + W5·B1 shipped; v1.2.0 live+verified; D1 provisioned; ALL remaining work blocked on #161 (TRUD, user-deferred)"
+status: "CLOSED 2026-07-23 — ≈90% shipped (through v1.4.0); remainder (NHS-ODS W4 + W5·B2/B3, TRUD-gated) MIGRATED to plan 016 (keyless real data)"
 refs: ["#113 (015 tracker)", "#80 query-stage/manifest", "#74 Scam", "#73 Wander", "#13 real Care corpus", "#10 ingest cron", "014 plan/handoff (predecessor, shipped+live)"]
 ---
 
