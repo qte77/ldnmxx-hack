@@ -106,6 +106,10 @@ export function swapGate(target: IngestTarget, rowCount: number, attribution: st
   return { ok: true };
 }
 
+// Multi-row INSERT statements per db.batch() call. One batch = one D1 subrequest; 50 keeps each
+// round-trip modest while cutting the subrequest count ~50x versus per-chunk .run()s.
+const INSERT_BATCH = 50;
+
 // D1 bound-parameter batching: split rows so each INSERT stays within the parameter budget.
 export function chunkRows<T>(rows: readonly T[], paramsPerRow: number, maxParams = 90): T[][] {
   const perChunk = Math.max(1, Math.floor(maxParams / paramsPerRow));
@@ -149,13 +153,17 @@ export async function ingestArtifact(
   const cols = COLUMNS[target.kind];
   await db.prepare(`DROP TABLE IF EXISTS ${shadow}`).run();
   await db.prepare(`CREATE TABLE ${shadow} AS SELECT * FROM ${target.table} WHERE 0`).run();
-  for (const chunk of chunkRows(rows, cols.length)) {
+  // Build one multi-row INSERT per param-bounded chunk, then send them in db.batch() GROUPS: each
+  // batch is a SINGLE subrequest, so a 66k-row corpus costs a few dozen subrequests instead of
+  // thousands of individual .run()s — which would exceed the Worker per-invocation subrequest cap
+  // on the real edge cron (#182 close-out; the local-dev fire path does not enforce the cap).
+  const inserts = chunkRows(rows, cols.length).map((chunk) => {
     const placeholders = chunk.map(() => `(${cols.map(() => "?").join(",")})`).join(",");
     const params = chunk.flatMap((r) => rowParams(target.kind, r));
-    await db
-      .prepare(`INSERT INTO ${shadow} (${cols.join(",")}) VALUES ${placeholders}`)
-      .bind(...params)
-      .run();
+    return db.prepare(`INSERT INTO ${shadow} (${cols.join(",")}) VALUES ${placeholders}`).bind(...params);
+  });
+  for (let i = 0; i < inserts.length; i += INSERT_BATCH) {
+    await db.batch(inserts.slice(i, i + INSERT_BATCH));
   }
 
   const counted = await db.prepare(`SELECT COUNT(*) AS n FROM ${shadow}`).first<{ n: number }>();
