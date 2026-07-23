@@ -30,15 +30,17 @@ work into Actions:
 | Workflow | Does | Gate |
 |---|---|---|
 | **Deploy (Cloudflare)** `.github/workflows/deploy.yml` | runs `provision_cf.sh`, then asserts the hashed entry script is served as JavaScript with browser headers (the #178 SPA-fallback regression) | `workflow_dispatch` + `production` Environment |
-| **D1 Verify (read-only)** `.github/workflows/d1-verify.yml` | one of four **static** SELECTs — `corpus_meta` freshness, `row_counts`, and P2b's `bbox_plan` / `bbox_rows_read` | `workflow_dispatch` + `production` Environment |
+| **D1 Verify (read-only)** `.github/workflows/d1-verify.yml` | one of four **static** SELECTs — `corpus_meta` freshness, `row_counts`, and P2b's `bbox_plan` / `bbox_rows_read` | `workflow_dispatch` only — **no Environment gate**, so measurement stays self-service |
 | **Tier-3 Monitor** `.github/workflows/tier3-monitor.yml` | the full e2e sweep against the live site | none — credential-free |
 
 **Setup (once):** add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets
 (`gh secret set CLOUDFLARE_API_TOKEN --repo qte77/ldnmxx-hack` prompts for hidden input — never paste
-a token into a shell history or a chat), then add required reviewers to the `production` Environment
-so a deploy is an approval rather than a button. **`d1-verify` additionally needs Account > D1 >
-Edit** on the token — Cloudflare has no read-only D1 scope. Both workflows fail fast with a readable
-message while the secrets are absent.
+a token into a shell history or a chat). Keep them **repository** secrets, not Environment secrets,
+so the ungated `d1-verify` can read them. The `production` Environment already requires a review from
+`qte77` and only allows protected branches, so a deploy is an approval rather than a button (note
+GitHub's default `can_admins_bypass: true`). **`d1-verify` additionally needs Account > D1 > Edit**
+on the token — Cloudflare has no read-only D1 scope. Both workflows fail fast with a readable message
+while the secrets are absent.
 
 The D1 statement set is **static and read-only by construction**: the dispatch takes a `choice`, not
 free-text SQL, mirroring how ADR 0002 keeps `VIEW_SQL` a closed whitelist.
