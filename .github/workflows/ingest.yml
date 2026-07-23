@@ -1,0 +1,32 @@
+name: Ingest
+# P1 (#182): fetch the keyless sources, normalise via the pytest-covered parsers (ingest/), and
+# publish per-corpus JSON artifacts to the rolling `corpus-data` release. The Worker's daily cron
+# consumes them (shadow -> validate -> swap). GITHUB_TOKEN only — no CF credential ever enters CI.
+on:
+  schedule:
+    - cron: "17 5 * * 1" # weekly, Mon 05:17 UTC (decide-by-default, plan 016)
+  workflow_dispatch:
+
+permissions:
+  contents: write # create/upload assets on the rolling corpus-data release
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      # seed.py is stdlib-only: nothing to install. It exits non-zero if any artifact came out
+      # under its floor, so a broken source fails the run loudly instead of publishing a stub.
+      - run: python ingest/seed.py --out dist
+      - name: Publish artifacts to the rolling corpus-data release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view corpus-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create corpus-data --repo "$GITHUB_REPOSITORY" \
+              --title "corpus-data (rolling)" \
+              --notes "Rolling normalised corpus artifacts published by ingest.yml. Consumed by the Worker ingest cron."
+          gh release upload corpus-data dist/*.json --repo "$GITHUB_REPOSITORY" --clobber

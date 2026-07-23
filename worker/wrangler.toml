@@ -38,3 +38,9 @@ binding = "DB"
 database_name = "sortmy_london_corpus"
 database_id = "cc6bb743-4041-455e-bf30-b4ecd5d184c3"
 migrations_dir = "migrations"
+
+# P1 (#182): daily corpus-ingest cron (src/corpus/ingest.ts via scheduled()) — pulls the `corpus-data`
+# release artifacts published by .github/workflows/ingest.yml (weekly), shadow->validate->swap into D1.
+# 04:47 UTC: off-peak, offset from the ingester (Mon 05:17) so a same-day asset lands next morning.
+[triggers]
+crons = ["47 4 * * *"]

@@ -109,18 +109,26 @@ function appendCard(batch: unknown[], spec: CardSpec): unknown[] {
 // Wander/Scam next). The official link is supplied PER CORPUS from its curated, verified labels
 // (corpus/registry.ts) — never hardcoded here and never generated. Freshness ("as of <date>") is
 // shown per-workflow in its own summary card, from the corpus lastUpdated.
-const disclaimerCard = (link: { text: string; url: string }): CardSpec => ({
+// P1 (#182): `attribution` = the corpus's licence-obligation strings (OGL/CQC/FHRS), supplied from
+// its curated labels (corpus/registry.ts) like the link — never from ingested data. Empty ⇒ the
+// card renders exactly as before (bundled-sample corpora carry no attribution).
+const disclaimerCard = (link: { text: string; url: string }, attribution: string[]): CardSpec => ({
   key: "disclaimer",
   title: "ℹ️ Always confirm with the official source",
   lines: [
     "A signpost to public services — not advice, a referral, or a booking. Details can change.",
     `[${link.text}](${link.url})`,
+    ...attribution,
   ],
 });
 
 // Append the deterministic disclaimer card to a corpus-workflow batch.
-export function appendDisclaimer(batch: unknown[], link: { text: string; url: string }): unknown[] {
-  return appendCard(batch, disclaimerCard(link));
+export function appendDisclaimer(
+  batch: unknown[],
+  link: { text: string; url: string },
+  attribution: string[] = []
+): unknown[] {
+  return appendCard(batch, disclaimerCard(link, attribution));
 }
 
 // Founder's Copilot — grant/opportunity cards with a qualify-first eligibility line.

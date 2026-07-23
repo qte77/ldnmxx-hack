@@ -1,5 +1,6 @@
 import { makeEmitter, exportSpans, MAX_TRACE_SPANS, type Emitter, type Span } from "./trace/arize";
 import { withIncorporate } from "./a2ui/cards";
+import { runIngest } from "./corpus/ingest";
 import { registry } from "./workflows";
 import { callRenderModel, extractToolArgs, type ToolSpec } from "./agent/model";
 import { buildProviders, renderFree, runChain, type Provider } from "./agent/providers";
@@ -402,6 +403,13 @@ export async function runUsecase(
 }
 
 export default {
+  // P1 (#182): the daily corpus-ingest cron (wrangler.toml [triggers]) — release asset -> shadow ->
+  // validate -> swap (corpus/ingest.ts). Handler glue only; the planner is module-TDD'd. No DB
+  // bound (local dev/tests) ⇒ a no-op, and runIngest itself never throws past a target.
+  scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): void {
+    if (env.DB) ctx.waitUntil(runIngest(env.DB));
+  },
+
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const cors = corsHeaders(request, env);

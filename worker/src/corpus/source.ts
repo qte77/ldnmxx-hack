@@ -29,9 +29,10 @@ export function bundledSource(def: {
   };
 }
 
-// Reject any D1 row that doesn't match the frozen CorpusRecord — a malformed ingest row must never
+// Reject any row that doesn't match the frozen CorpusRecord — a malformed ingest row must never
 // reach the render. Narrow via Record<string, unknown>, never `as Partial<T>` (see AGENT_LEARNINGS).
-function isCorpusRecord(v: unknown): v is CorpusRecord {
+// Exported: the ingest cron (ingest.ts) applies the SAME guard to untrusted artifacts (DRY).
+export function isCorpusRecord(v: unknown): v is CorpusRecord {
   if (typeof v !== "object" || v === null) return false;
   const r = v as Record<string, unknown>;
   return (
@@ -83,7 +84,15 @@ export function d1Source(db: D1Database, view: string): CorpusSource {
       // Widen to unknown[] first: an interface has no implicit index signature, so the type-guard
       // filter only narrows from unknown, not from D1's Record<string, unknown> rows.
       const rows: unknown[] = rs.results;
-      return rows.filter(isCorpusRecord);
+      const valid = rows.filter(isCorpusRecord);
+      // P1 (#182): an empty view can only be a NOT-YET-SWAPPED corpus — the cron's swap gate
+      // refuses <50 rows, so a live view is never legitimately empty. Throwing routes through
+      // queryCorpus's bundled fallback (the gazetteer seed-probe pattern above, #171), so seeding
+      // the gazetteer alone can never strand a corpus on an empty D1 answer.
+      if (valid.length === 0) {
+        throw new Error(`d1Source: view "${view}" has no valid rows — corpus not swapped yet`);
+      }
+      return valid;
     },
   };
 }

@@ -48,8 +48,9 @@ refs: ["#181? (016 tracker — see handoff)", "#10 (cron)", "#161 (TRUD/ODS — 
 **Worker (`worker/src/worker.ts`)** — `Env.DB?: D1Database`; `ModelCtx.db` set in `resolveRun`;
 `playStage` passes `{ db: ctx.db }` to query fns; the interpreter (`runUsecase`/`playStage`/
 `renderBatch`) stays CLOSED. P1 adds the `scheduled()` export beside `fetch` (asset → shadow →
-validate `row_count ≥ 50` → atomic view swap → stamp `corpus_meta`); module-TDD the pure
-validate/swap planner against a mocked D1, not the handler glue.
+validate [`row_count ≥ 50` AND registry `attribution` non-empty for the corpus] → atomic view swap →
+stamp `corpus_meta`); module-TDD the pure validate/swap planner against a mocked D1, not the
+handler glue.
 
 **Store** — D1 `sortmy_london_corpus` (`cc6bb743-4041-455e-bf30-b4ecd5d184c3`) LIVE + bound + EMPTY
 (fail-safe verified in prod). `worker/migrations/0001_corpus_store.sql` = `nhs_services` +
@@ -93,29 +94,45 @@ inspection date; OWN card, never the FSA badge) · postcodes.io OGL (GB only, ne
 - **P1 pipeline** — parsers test-first (RED observed) for: NHLE ArcGIS GeoJSON, OS Greenspace
   GeoJSON, CQC paginated `/locations` (London localAuthority allowlist), FHRS London establishments,
   postcodes.io bulk gazetteer. `seed.py` orchestrates → per-corpus normalised JSON artifacts.
+  **Live-verified reality (2026-07-23, supersedes the assumptions above):** OS Greenspace has NO
+  GeoJSON offering → GB **GeoPackage** (~59MB) → stdlib sqlite + GPKG-WKB point decode + pure
+  OSGB36→WGS84 Helmert (`parsers.py`); the CQC API **403s all unauthenticated clients tried**
+  (urllib + browser-impersonated curl_cffi, two sessions; docs still claim keyless — WAF or quiet
+  key-gating, unproven) → keyless path = the weekly **`*_CQC_directory.csv`** on the using-cqc-data page
+  (link discovered per run; NO ratings carried → copy links out for ratings — cleaner
+  signpost-honesty than stale ratings); NHLE = `NHLE_v02_VIEW` FeatureServer layer 0 (Listed
+  Building points, London bbox paging). Smoke artifacts: nhle 23.7k · greenspace 12.2k · cqc 9.3k
+  · fhrs 62.9k · gazetteer 6.7k rows (407KB).
   Action publishes → CF cron consumes. Attribution surface: `CorpusLabels.attribution` rendered via
-  `appendDisclaimer`. Done-when: dispatched Action produces the asset; triggered cron fills D1
+  `appendDisclaimer`; the swap validator ALSO refuses a corpus whose registry `attribution` is
+  empty — licence obligations as a hard gate, not convention (attribution stays reviewed-TS-only).
+  Done-when: dispatched Action produces the asset; triggered cron fills D1
   (shadow→swap, `corpus_meta` stamped); 172+ tests green; D1-off fallback untouched.
 - **P2 Wander real** — migration 0002 (nhle/greenspace raw + `wander_places` view), registry
   `d1View` + `VIEW_SQL`, attribution labels, sweep freshness-RECENCY assert. Release v1.5.0.
-- **P3 Care real via CQC** — care fed from CQC rows (lat/lng in payload; postcodes.io only for
-  user-input gazetteer), labels + rating date + coverage honesty; ODS (#161) additive later.
-  Release v1.6.0.
+- **P3 Care real via CQC** — care fed from the directory-CSV rows (geocoded via postcodes.io in
+  `seed.py`; the CSV carries no ratings → copy says "regulated by CQC — see the official page for
+  current ratings", which is MORE signpost-honest and kills the stale-rating liability); labels +
+  coverage honesty; ODS (#161) additive later. Release v1.6.0.
 - **P4 Food Hygiene** — register-only proof at scale: corpus + registry + `usecases/
   sort-my-food-hygiene.json` + UI entry + flow. Release v1.7.0.
 - **P5 hygiene** — see queue; each its own small PR between phases.
 
 ## Backlog (not built this arc)
 
-Scam-via-CH-bulk · Crisis Support (Give Food — CC-BY, link-back per foodbank, NO list-reorder, NO
-bulk-contact, courtesy email) · 360Giving per-RECORD licence pattern · GLA cultural / planning
+Scam-via-CH-bulk · **gazetteer widening to full-London postcode units** (ONSPD via the keyless ONS
+geoportal; P1 universe = corpus-referenced postcodes + seed set) · Crisis Support (Give Food —
+CC-BY, link-back per foodbank, NO list-reorder, NO bulk-contact, courtesy email) · 360Giving
+per-RECORD licence pattern · GLA cultural / planning
 datasets (conditional) · **#161 TRUD/ODS + verification checklist (user-deferred)** · real-time data
 pattern (EA warnings, air, transport) — needs its own ADR.
 
 ## Decide-by-defaults (apply silently; owner may override at any checkpoint)
 
-`partnerCode=sortmy-london` · ingester weekly Mon 05:17 UTC + dispatch · release tag `corpus-data` ·
-cron daily 04:47 UTC · swap threshold ≥50 rows/corpus · London filter = postcode-area allowlist
+CQC via keyless directory CSV, never the key-gated API (partnerCode default is dead) · ingester
+weekly Mon 05:17 UTC + dispatch · release tag `corpus-data` ·
+cron daily 04:47 UTC · swap gate = ≥50 rows/corpus + non-empty registry `attribution` · London
+filter = postcode-area allowlist
 (CQC: localAuthority list) · per-phase releases v1.5.0/v1.6.0/v1.7.0.
 
 ## Standing execution contract — e2e hands-off, UNATTENDED

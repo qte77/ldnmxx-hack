@@ -43,6 +43,7 @@ const labels: CorpusLabels = {
   officialLink: { text: "Search official NHS services", url: "https://www.nhs.uk/service-search" },
   emptyInvalidHint: "Try a London postcode like SW9 9SL.",
   emptyUnknownHint: "We don't have sample data for that postcode yet — try SW9 9SL, E1 6AN or N1 9GU.",
+  attribution: [],
 };
 
 const sample: CorpusQuery = {
@@ -99,6 +100,37 @@ describe("buildCorpusCards", () => {
     expect(json).toContain("Enter a valid UK postcode");
     expect(json).toContain("Try a London postcode like SW9 9SL.");
     expect(rootList(batch)).toContain("card-disclaimer");
+  });
+
+  // P1 (#182): licence obligations (data/sources.json redistribute_note) render as extra caption
+  // lines on the disclaimer card — from the corpus's reviewed labels, never from ingested data.
+  it("renders the corpus attribution strings on the disclaimer card", () => {
+    const attributed: CorpusQuery = {
+      ...sample,
+      labels: {
+        ...labels,
+        attribution: [
+          "© Historic England 2026",
+          "Contains OS data © Crown copyright and database right 2026",
+        ],
+      },
+    };
+    const batch = buildCorpusCards(attributed) as Batch[];
+    assertSelfContained(batch);
+    const json = JSON.stringify(batch);
+    expect(json).toContain("© Historic England 2026");
+    expect(json).toContain("Contains OS data © Crown copyright and database right 2026");
+    // On the DISCLAIMER card: title + caveat + link + 2 attribution lines.
+    const update = batch.find((m) => m.surfaceUpdate)?.surfaceUpdate;
+    const body = update?.components.find((c) => c.id === "body-disclaimer");
+    expect(body?.component["Column"]?.children?.explicitList).toHaveLength(5);
+  });
+
+  it("renders no attribution lines for a sample corpus (empty attribution)", () => {
+    const batch = buildCorpusCards(sample) as Batch[];
+    const update = batch.find((m) => m.surfaceUpdate)?.surfaceUpdate;
+    const body = update?.components.find((c) => c.id === "body-disclaimer");
+    expect(body?.component["Column"]?.children?.explicitList).toHaveLength(3);
   });
 
   it("shows a 'none nearby' state (postcode kept) when the query returned no rows", () => {

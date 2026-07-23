@@ -37,4 +37,7 @@ export const scamLabels: CorpusLabels = {
   },
   emptyInvalidHint: "Enter a firm name or its FCA reference (FRN) to check.",
   emptyUnknownHint: "We don't have that firm in our sample — check the FCA register directly.",
+  // P1 (#182): empty while the corpus serves the bundled synthetic sample (FCA register data is
+  // redistribute_ok: "no" — see data/sources.json — so real attribution never lands here).
+  attribution: [],
 };

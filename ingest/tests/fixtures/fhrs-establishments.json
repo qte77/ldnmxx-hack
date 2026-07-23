@@ -1,0 +1,138 @@
+{
+ "establishments": [
+  {
+   "AddressLine1": "1 REBEL",
+   "AddressLine2": "Lancing Street",
+   "AddressLine3": "",
+   "AddressLine4": "London",
+   "BusinessName": "1 REBEL",
+   "BusinessType": "Restaurant/Cafe/Canteen",
+   "BusinessTypeID": 1,
+   "ChangesByServerID": 0,
+   "Distance": null,
+   "FHRSID": 1824267,
+   "LocalAuthorityBusinessID": "205889",
+   "LocalAuthorityCode": "506",
+   "LocalAuthorityEmailAddress": "foodsafety@camden.gov.uk",
+   "LocalAuthorityName": "Camden",
+   "LocalAuthorityWebSite": "http://www.camden.gov.uk",
+   "NewRatingPending": false,
+   "Phone": "",
+   "PostCode": "NW1 1NA",
+   "RatingDate": "2026-03-18T00:00:00",
+   "RatingKey": "fhrs_5_en-gb",
+   "RatingValue": "5",
+   "RightToReply": "",
+   "SchemeType": "FHRS",
+   "geocode": {
+    "longitude": "-0.1314354",
+    "latitude": "51.528421"
+   },
+   "scores": {
+    "Hygiene": 5,
+    "Structural": 5,
+    "ConfidenceInManagement": 5
+   }
+  },
+  {
+   "AddressLine1": "",
+   "AddressLine2": "103 Parkway",
+   "AddressLine3": "",
+   "AddressLine4": "London",
+   "BusinessName": "103 PARKWAY",
+   "BusinessType": "Restaurant/Cafe/Canteen",
+   "BusinessTypeID": 1,
+   "ChangesByServerID": 0,
+   "Distance": null,
+   "FHRSID": 1640835,
+   "LocalAuthorityBusinessID": "203039",
+   "LocalAuthorityCode": "506",
+   "LocalAuthorityEmailAddress": "foodsafety@camden.gov.uk",
+   "LocalAuthorityName": "Camden",
+   "LocalAuthorityWebSite": "http://www.camden.gov.uk",
+   "NewRatingPending": false,
+   "Phone": "",
+   "PostCode": "NW1 7PP",
+   "RatingDate": "2024-01-22T00:00:00",
+   "RatingKey": "fhrs_5_en-gb",
+   "RatingValue": "5",
+   "RightToReply": "",
+   "SchemeType": "FHRS",
+   "geocode": {
+    "longitude": "-0.14581",
+    "latitude": "51.5369133"
+   },
+   "scores": {
+    "Hygiene": 5,
+    "Structural": 5,
+    "ConfidenceInManagement": 5
+   }
+  },
+  {
+   "AddressLine1": "",
+   "AddressLine2": "10 Argyle Street",
+   "AddressLine3": "",
+   "AddressLine4": "London",
+   "BusinessName": "10th Floor at The Standard Hotel",
+   "BusinessType": "Retailers - other",
+   "BusinessTypeID": 4613,
+   "ChangesByServerID": 0,
+   "Distance": null,
+   "FHRSID": 1251671,
+   "LocalAuthorityBusinessID": "196778",
+   "LocalAuthorityCode": "506",
+   "LocalAuthorityEmailAddress": "foodsafety@camden.gov.uk",
+   "LocalAuthorityName": "Camden",
+   "LocalAuthorityWebSite": "http://www.camden.gov.uk",
+   "NewRatingPending": false,
+   "Phone": "",
+   "PostCode": "WC1H 8EG",
+   "RatingDate": "2022-06-22T00:00:00",
+   "RatingKey": "fhrs_5_en-gb",
+   "RatingValue": "5",
+   "RightToReply": "",
+   "SchemeType": "FHRS",
+   "geocode": {
+    "longitude": "-0.1245024",
+    "latitude": "51.5294345"
+   },
+   "scores": {
+    "Hygiene": 0,
+    "Structural": 0,
+    "ConfidenceInManagement": 0
+   }
+  }
+ ],
+ "meta": {
+  "dataSource": "ElasticSearch",
+  "extractDate": "2026-07-23T11:27:17.1624564+01:00",
+  "itemCount": 3,
+  "returncode": "OK",
+  "totalCount": 4275,
+  "totalPages": 1425,
+  "pageSize": 3,
+  "pageNumber": 1
+ },
+ "links": [
+  {
+   "rel": "self",
+   "href": "https://api.ratings.food.gov.uk/establishments?localauthorityid=93&pagesize=3&pagenumber=1"
+  },
+  {
+   "rel": "first",
+   "href": "https://api.ratings.food.gov.uk:443/establishments?localauthorityid=93&pagesize=3&pagenumber=1"
+  },
+  {
+   "rel": "previous",
+   "href": "https://api.ratings.food.gov.uk:443/establishments?localauthorityid=93&pagesize=3&pagenumber=1"
+  },
+  {
+   "rel": "next",
+   "href": "https://api.ratings.food.gov.uk:443/establishments?localauthorityid=93&pagesize=3&pagenumber=2"
+  },
+  {
+   "rel": "last",
+   "href": "https://api.ratings.food.gov.uk:443/establishments?localauthorityid=93&pagesize=3&pagenumber=1425"
+  }
+ ]
+}
