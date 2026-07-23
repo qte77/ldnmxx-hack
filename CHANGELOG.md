@@ -4,6 +4,13 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 016 — keyless real data · post-close hardening
+
+- **Ingest cron batches its D1 shadow inserts** (`db.batch()`, 50 statements/subrequest) — a
+  66k-row corpus now costs ~120 subrequests instead of ~6,000, safely under the Worker
+  per-invocation cap the local-dev fires never exercised (#197). Swap logic unchanged; verified
+  live (batched path re-stamped the gazetteer in prod D1).
+
 ## [1.7.0] — 2026-07-23
 
 ### Plan 016 — keyless real data · P4: Sort My Food Hygiene, a NEW register-only usecase (#193)
