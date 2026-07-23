@@ -4,7 +4,22 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
-### Plan 016 — keyless real data · P1 pipeline (#183, live-proven; ships in v1.5.0)
+## [1.5.0] — 2026-07-23
+
+### Plan 016 — keyless real data · P2: Wander goes REAL (#187)
+
+- **Sort My Wander now serves REAL data from D1** — migration `0002` (record-shaped `nhle_places` +
+  `greenspace_places` raw tables + the `wander_places` UNION view), registry `d1View` flip, one
+  static `VIEW_SQL` entry, and `INGEST_TARGETS` for both artifacts (23.7k NHLE listed buildings +
+  12.2k OS Open Greenspace sites, London). The bundled sample stays the offline/outage fallback.
+- **Licence attribution goes live** — the wander disclaimer card now renders the Historic England
+  (NHLE) and OS Crown-copyright lines from reviewed registry TS; non-empty attribution is the
+  cron's swap-gate precondition, so real data cannot serve without its obligations.
+- **Freshness-RECENCY e2e assert** — the sweep's wander flow now asserts a D1-only record renders
+  ("Platforms Piece", 89 m from the test postcode, absent from the bundled sample by construction)
+  plus the attribution line — proof the LIVE site serves real data, not the sample.
+
+### Plan 016 — keyless real data · P1 pipeline (#183, live-proven)
 
 - **Keyless ingest pipeline, built once for three corpora** — pure stdlib parsers
   (`ingest/parsers.py`, 24 pytest cases on captured-real fixtures: postcodes.io bulk, NHLE ArcGIS,
