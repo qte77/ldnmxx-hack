@@ -168,6 +168,15 @@ describe("queryCorpus over a D1 source (care carries a d1View)", () => {
     expect(joined).toContain("Historic England");
     expect(joined).toContain("Crown copyright");
   });
+
+  it("care registry carries the CQC attribution + coverage-honest empty hint (P3 #182)", () => {
+    const labels = getCorpus("care")?.labels;
+    const joined = (labels?.attribution ?? []).join(" ");
+    expect(joined).toContain("CQC information");
+    expect(joined).toContain("Open Government Licence");
+    // Coverage honesty: the CQC directory has no community pharmacies — say so where it matters.
+    expect(labels?.emptyUnknownHint).toContain("pharmac");
+  });
 });
 
 describe("queryCorpus (async seam over the registry)", () => {

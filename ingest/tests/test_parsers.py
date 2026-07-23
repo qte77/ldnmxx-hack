@@ -195,6 +195,18 @@ class TestParseCqcDirectory:
         assert "Dentist" in r["why"]
         assert r["lastUpdated"] == "2026-07-22"  # the file's produced-on date
 
+    def test_dedupes_pipe_separated_service_types(self):
+        # Real data carries duplicates like "Doctors/GPs|Doctors/GPs" (seen live 2026-07-23).
+        text = (FIXTURES / "cqc-directory-head.csv").read_text()
+        text += (
+            '\n"Stockwell Group Practice",,"Stockwell Road,London",SW9 9GH,,,'
+            "Doctors/GPs|Doctors/GPs,12/May/2025 - 00:00,Services for everyone,"
+            "Stockwell Partnership,Lambeth,London,"
+            "https://www.cqc.org.uk/location/1-999999999,1-999999999,1-888888888"
+        )
+        r = next(x for x in parse_cqc_directory(text) if x["id"] == "cqc-1-999999999")
+        assert r["why"].count("Doctors/GPs") == 1
+
     def test_attach_coords_geocodes_and_drops_unresolved(self):
         recs = self.parsed()
         gaz = {"E1 7BS": {"lat": 51.516, "lng": -0.077}}

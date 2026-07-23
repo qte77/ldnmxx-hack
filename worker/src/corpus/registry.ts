@@ -38,11 +38,15 @@ const corpora: Record<string, CorpusDef> = {
       // Curated + verified, NEVER generated.
       officialLink: { text: "Search official NHS services", url: "https://www.nhs.uk/service-search" },
       emptyInvalidHint: "Try a London postcode like E8 3GT.",
+      // Coverage honesty (P3): the CQC directory has no community pharmacies — point at the
+      // official NHS search rather than implying nothing exists nearby.
       emptyUnknownHint:
-        "We don't have sample data for that postcode yet — try E8 3GT, SW9 9SL or N1 9GU.",
-      // P1 (#182): empty while the corpus serves the bundled sample. P3 sets the CQC obligation
-      // strings when real data lands — the ingest cron refuses to swap while this is empty.
-      attribution: [],
+        "Nothing found for that postcode. Community pharmacies are not listed here — use the official NHS search below.",
+      // P3 (#182): the licence obligations for the REAL data this corpus serves (CQC directory,
+      // OGL). Non-empty is the cron's swap-gate precondition; rendered on the disclaimer card.
+      attribution: [
+        "Care locations: using CQC information © Care Quality Commission, licensed under the Open Government Licence v3.0. Ratings are not shown — check each service's official CQC page.",
+      ],
     },
   },
   wander: {
