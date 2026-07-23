@@ -103,3 +103,17 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
   settle or pre-flight the asset MIME with browser-like headers; when curl and the browser disagree,
   suspect a per-encoding cache variant.
 - **Refs:** postrename/postrename2 sweep FAILs (runs.jsonl 2026-07-23); the 404.html hardening PR.
+
+
+## Firing a Workers cron for real: `--test-scheduled` does not exist in `--remote` dev
+
+- **Pattern:** verifying a deployed `scheduled()` handler end-to-end (P1 #182): `wrangler dev
+  --remote --test-scheduled` silently ignores the flag — `GET /__scheduled` falls through to your
+  own `fetch` handler (here: a 404), so the "fire" looks like it happened but nothing ran. There is
+  also NO public CF API to fire a deployed cron on demand.
+- **Fix:** run **local** dev with a **remote binding**: temporary `wrangler.test.toml` = copy of
+  `wrangler.toml` + `remote = true` on the `[[d1_databases]]` binding (+ drop `routes`), then
+  `wrangler dev --test-scheduled --config wrangler.test.toml` and
+  `curl http://127.0.0.1:<port>/__scheduled?cron=...` → `scheduled()` runs in local workerd against
+  the REAL D1 + real outbound fetch. Verified: `ingest gazetteer: swapped=true rows=6656` landed in
+  prod D1. Delete the temp config afterwards; the deployed daily cron remains the standing prover.
