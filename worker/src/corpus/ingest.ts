@@ -15,17 +15,34 @@ import { getCorpus } from "./registry";
 import { isCorpusRecord } from "./source";
 
 export interface IngestTarget {
-  corpus: string; // corpus_meta key ("gazetteer" or a registry corpus id)
+  corpus: string; // corpus_meta key ("gazetteer" or "<registryId>-<source>" for multi-source corpora)
   artifact: string; // release asset filename under the rolling `corpus-data` tag
   table: string; // live D1 table (worker/migrations/*)
   kind: "gazetteer" | "corpus";
   minRows: number; // the swap gate: fewer rows than this and the live table is left untouched
+  attributionOf?: string; // registry id whose labels.attribution gates this target (default: corpus)
 }
 
-// The closed set the cron may touch. P1: the postcode gazetteer only (the machinery prover —
-// per-corpus fills activate in P2/P3 alongside their migrations + registry attribution).
+// The closed set the cron may touch. P1: the postcode gazetteer (machinery prover). P2: the two
+// wander raw tables — one corpus, two sources, each gated by the wander registry attribution.
 export const INGEST_TARGETS: IngestTarget[] = [
   { corpus: "gazetteer", artifact: "postcodes.json", table: "postcodes", kind: "gazetteer", minRows: 1000 },
+  {
+    corpus: "wander-nhle",
+    artifact: "nhle.json",
+    table: "nhle_places",
+    kind: "corpus",
+    minRows: 1000,
+    attributionOf: "wander",
+  },
+  {
+    corpus: "wander-greenspace",
+    artifact: "greenspace.json",
+    table: "greenspace_places",
+    kind: "corpus",
+    minRows: 500,
+    attributionOf: "wander",
+  },
 ];
 
 export interface GazetteerRow {
@@ -171,7 +188,9 @@ export async function runIngest(db: D1Database): Promise<void> {
       const data: unknown = await res.json();
       const rows = target.kind === "gazetteer" ? gazetteerRows(data) : corpusRows(data);
       const attribution =
-        target.kind === "corpus" ? (getCorpus(target.corpus)?.labels.attribution ?? []) : [];
+        target.kind === "corpus"
+          ? (getCorpus(target.attributionOf ?? target.corpus)?.labels.attribution ?? [])
+          : [];
       const out = await ingestArtifact(db, target, rows, attribution);
       console.log(
         `ingest ${target.corpus}: swapped=${String(out.swapped)} rows=${String(out.rowCount)}` +

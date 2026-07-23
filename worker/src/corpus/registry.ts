@@ -46,6 +46,9 @@ const corpora: Record<string, CorpusDef> = {
     },
   },
   wander: {
+    // P2 (#182): reads the wander_places D1 view (real NHLE + OS Open Greenspace, filled by the
+    // ingest cron) when env.DB is bound; the bundled sample below stays the fallback.
+    d1View: "wander_places",
     // Uncast, like `care` above: the bundled JSON is structurally checked against CorpusRecord/Coords,
     // so a malformed sample row is a compile error rather than a silently-asserted shape.
     records: wanderPlacesJson,
@@ -62,9 +65,13 @@ const corpora: Record<string, CorpusDef> = {
       emptyInvalidHint: "Try a London postcode like E8 3GT.",
       emptyUnknownHint:
         "We don't have sample data for that postcode yet — try E8 3GT, SW9 9SL or N1 9GU.",
-      // P1 (#182): empty while the corpus serves the bundled sample. P2 sets the Historic England
-      // + OS obligation strings when real NHLE/greenspace data lands (swap-gated, as above).
-      attribution: [],
+      // P2 (#182): the licence obligations for the REAL data this corpus serves (data/sources.json
+      // redistribute_note — NHLE OGL + OS Open Greenspace OGL). Non-empty is the cron's swap-gate
+      // precondition; rendered as caption lines on the disclaimer card.
+      attribution: [
+        "Listed buildings: © Historic England 2026 (NHLE). Contains Ordnance Survey data © Crown copyright and database right 2026.",
+        "Green spaces: contains OS data © Crown copyright and database right 2026 (OS Open Greenspace).",
+      ],
     },
   },
 };

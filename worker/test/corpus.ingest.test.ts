@@ -158,10 +158,20 @@ describe("ingestArtifact (shadow -> validate -> swap, atomic, gate-refusable)", 
 });
 
 describe("INGEST_TARGETS (the closed, reviewable set the cron may touch)", () => {
-  it("P1 ships exactly the gazetteer target", () => {
-    expect(INGEST_TARGETS.map((t) => t.corpus)).toEqual(["gazetteer"]);
+  it("P2 ships the gazetteer + the two wander raw tables", () => {
+    expect(INGEST_TARGETS.map((t) => t.corpus)).toEqual(["gazetteer", "wander-nhle", "wander-greenspace"]);
     const gaz = INGEST_TARGETS[0]!;
     expect(gaz.table).toBe("postcodes");
     expect(gaz.minRows).toBeGreaterThanOrEqual(1000);
+  });
+
+  it("both wander targets are corpus-kind (licence-gated) and take attribution from the wander registry", () => {
+    const wander = INGEST_TARGETS.filter((t) => t.corpus.startsWith("wander-"));
+    expect(wander.map((t) => t.table)).toEqual(["nhle_places", "greenspace_places"]);
+    for (const t of wander) {
+      expect(t.kind).toBe("corpus");
+      expect(t.attributionOf).toBe("wander");
+      expect(t.minRows).toBeGreaterThanOrEqual(500);
+    }
   });
 });
