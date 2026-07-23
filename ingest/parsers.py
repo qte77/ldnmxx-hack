@@ -306,7 +306,9 @@ def parse_fhrs(pages: list[dict]) -> list[dict]:
             except (TypeError, ValueError):
                 continue
             rating_date = (est.get("RatingDate") or "").split("T")[0]
-            if not fhrs_id or not name or not rating_date:
+            # FHRS stamps un-inspected establishments with the placeholder 1900-01-01 — drop it so
+            # it can never become a false "data as of 1900" (data honesty, #182 P5).
+            if not fhrs_id or not name or not rating_date or rating_date == "1900-01-01":
                 continue
             value = est.get("RatingValue") or "unavailable"
             out.append(

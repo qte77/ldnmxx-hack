@@ -19,7 +19,22 @@ The 19-source licence audit made TRUD irrelevant for real data: build the ingest
 (P1), then land real corpora three times — Wander (P2), Care-via-CQC (P3), NEW Food Hygiene (P4) —
 all keyless, all `redistribute_ok`, all agent-only.
 
-## State at handoff (2026-07-23)
+## ARC CLOSED — 2026-07-23 (P0–P5 all shipped)
+
+**v1.7.0 live on `sortmy.london`; all 5 corpora seeded in D1** (postcodes 6,656 · nhle 23,741 ·
+greenspace 12,197 · cqc 9,345 · fhrs 66,871 = 118,810 rows), each swap-gated on rows + licence
+attribution, each with a bundled-sample fallback. Pipeline proven end-to-end live (Action → release
+→ daily cron → D1). Two follow-ups carried to the NEXT arc (NOT stranded):
+
+1. **Edge-cron subrequest limit UNVERIFIED at full load** — every live prove fired through local dev
+   (no subrequest cap). The real 04:47 UTC run does all 5 targets in one invocation (~110k rows).
+   **First next-arc action: read `corpus_meta` timestamps after 04:47 tomorrow; if they didn't
+   advance, wrap chunk-inserts in `db.batch()` groups (≈75× fewer subrequests) — ~10 LOC + 1 test.**
+2. **Backlog (open issues):** #185 gazetteer widening (ONSPD full-London), #161 NHS-ODS additive
+   enrichment, #168/#150 upstream watches. Freshness watchdog (alert on stale `corpus_meta`) is a
+   suggested enhancement.
+
+The rest of this doc is the historical arc record.
 
 - **Live:** v1.4.0 on `sortmy.london` (sweep-verified); D1 `sortmy_london_corpus` bound + EMPTY +
   fail-safe-verified (#171); Tier-3 monitor sweeping 6-hourly (`tier3-monitor.yml`).

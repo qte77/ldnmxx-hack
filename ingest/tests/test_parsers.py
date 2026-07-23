@@ -250,3 +250,12 @@ class TestParseFhrs:
 
         ids = {r["id"] for r in self.records(mutate)}
         assert "fhrs-1824267" not in ids
+
+    def test_drops_placeholder_1900_rating_dates(self):
+        # FHRS gives un-inspected establishments RatingDate 1900-01-01 — a real value that would
+        # otherwise become a false "data as of 1900-01-01". Drop it (data-honesty, #182 P5).
+        def mutate(d):
+            d["establishments"][0]["RatingDate"] = "1900-01-01T00:00:00"
+
+        ids = {r["id"] for r in self.records(mutate)}
+        assert "fhrs-1824267" not in ids
