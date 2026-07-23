@@ -131,10 +131,26 @@ model-host OR console errors), vendored axe (gates critical+serious). Flows are 
 2. **P3 — show the suggestions in the INITIAL empty state, not only on no-match.** Removing the
    switcher removes the app's only discovery surface; without this a first-time visitor faces a
    bare input and must fail an ask before learning what the app does.
-3. **P2 — derive router keywords from the registry, not from `router.ts`.** Add
-   `keywords: string[]` to `CorpusDef` (`worker/src/corpus/registry.ts`) and have
-   `classifyHeuristic` read it. Otherwise adding a corpus becomes a TWO-file change and breaks the
-   register-only property ADR 0001 prizes (016·P4 added a whole usecase with zero engine edits).
+3. **P2 — derive router keywords from the registry, not from `router.ts`** — but from the USECASE
+   registry, **not `CorpusDef`** (revised 2026-07-23 after checking both registries). The goal
+   stands: keywords must be register-only data, or adding a usecase becomes a TWO-file change and
+   breaks the property ADR 0001 prizes (016·P4 added a whole usecase with zero engine edits).
+   `CorpusDef` (`worker/src/corpus/registry.ts:20-27`) is the wrong home for two reasons.
+   (a) **It covers 3 of the 6 usecases.** Only `care`, `wander` and `food-hygiene` are corpora;
+   `sort-my-scam-check` renders mode `scam` via exec `query_scam` and has no `CorpusDef` at all
+   (`worker/src/usecases.ts:26,40,144-151`), so it would need a SECOND keyword home — re-creating
+   the exact two-file change this correction exists to prevent. (b) **The ids do not line up.**
+   `classifyHeuristic` must return a usecase id (`sort-my-care`), but corpora are keyed by corpus
+   id (`care`) with no reverse link; the only path back is scanning every usecase's stages for a
+   `query_corpus` stage naming that corpus.
+   **Do instead:** add `keywords?: string[]` to `UsecaseDef` (`worker/src/usecases.ts:45-50`) AND
+   to the `USECASE_KEYS` allow-list (`:53`) — omitting the second makes `assertNoUnknownKeys` throw
+   at startup, so the wiring cannot be half-done. `classifyHeuristic` reads the registry.
+   **Bonus: "never auto-routed" becomes DATA.** `founders-copilot` and `sort-my-route` simply carry
+   no `keywords`, satisfying correction 1 structurally rather than via an exclusion list inside
+   `router.ts`. No data-honesty breach: `usecases/*.json` is committed, reviewed, build-time data
+   (`:114-117`), not ingested data, and the shared workflow-definition/v1 schema is
+   `additionalProperties:true` (`:62-63`), so the extra field stays cross-engine compatible.
 4. **P1 — scope correction.** (a) Restyling the **A2UI cards** (`ui/src/theme/a2uiTheme.ts` +
    `.a2ui-surface` in `index.css`) is the BULK of P1, not an aside: every result renders as a card
    and fo's surface model (`--surface-lift` + hairline + `--depth-inset`) differs structurally from
@@ -156,7 +172,8 @@ model-host OR console errors), vendored axe (gates critical+serious). Flows are 
   `tokens.css`. **ADR 0005 written.**
 - **P2 Auto-router** (load-bearing MODULES → strict TDD, RED observed first).
   - New pure `worker/src/agent/router.ts`: `classifyHeuristic(prompt): string|null` (postcode via
-    `normalisePostcode` + keyword sets → care/wander/food-hygiene/route/scam) and
+    `normalisePostcode` + the per-usecase `keywords` read from the registry — see correction 3;
+    `sort-my-route` and `founders-copilot` carry none, so neither can be auto-routed) and
     `classifyUsecase(prompt, providers): Promise<{id: string|null, source:"heuristic"|"model"|"none"}>`
     — heuristic → model escalation on ambiguity → **`id: null` when still unconfident**.
   - **NO silent flagship default** (owner decision). **No-match** renders a deterministic

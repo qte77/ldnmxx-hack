@@ -52,8 +52,10 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
 Five corrections found reviewing the plan; the biggest: **never auto-route to `sort-my-route`** —
 its render is canned and origin-agnostic, so auto-routing it would answer a real journey question
 with a fabricated one. Also: suggestions must appear in the INITIAL empty state (the switcher was
-the only discovery surface), router keywords belong on `CorpusDef` (keeps corpora register-only),
-and P1 is bigger than it looks (A2UI card restyle + `ui_sweep.py` variant/axe iteration).
+the only discovery surface), router keywords are **register-only data on `UsecaseDef`** (NOT on
+`CorpusDef` — that covers only 3 of the 6 usecases and is keyed by corpus id, not usecase id; the
+revised correction 3 has the detail, and it makes "never auto-routed" a data property), and P1 is
+bigger than it looks (A2UI card restyle + `ui_sweep.py` variant/axe iteration).
 
 ## Decisions already made — do NOT re-litigate
 
