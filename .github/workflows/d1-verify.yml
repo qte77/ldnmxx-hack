@@ -30,7 +30,10 @@ permissions:
 jobs:
   query:
     runs-on: ubuntu-latest
-    environment: production # same gate as deploy: the token is production-scoped
+    # Deliberately NOT gated behind the `production` Environment, unlike deploy.yml. This job only
+    # runs static read-only SELECTs over public-register data, and gating it would put an owner
+    # approval in front of every P2b measurement — defeating the unattended loop this exists to
+    # enable. The deploy gate is where the approval belongs, because that is what mutates prod.
     timeout-minutes: 10
     defaults:
       run:
