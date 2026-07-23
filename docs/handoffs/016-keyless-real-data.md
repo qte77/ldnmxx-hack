@@ -27,7 +27,14 @@ all keyless, all `redistribute_ok`, all agent-only.
   fallback; migration 0001; licence matrix in `data/sources.json`; glossary/ADR 0002/archive docs.
 - ☐ **P0 finishes with this PR** (015 closed, 016 minted, tracker issue, #113 closed).
 - **NEXT = P1**: `ingest/seed.py` parsers (pytest, RED first) → `ingest.yml` → release asset
-  `corpus-data` → CF cron `scheduled()` → D1 shadow→validate(≥50 rows)→swap→`corpus_meta`.
+  `corpus-data` → CF cron `scheduled()` → D1 shadow→validate(≥50 rows + non-empty registry
+  `attribution`)→swap→`corpus_meta`.
+- **P1 in flight (2026-07-23, branch `feat/016-p1-ingest-pipeline`):** worker half + parsers +
+  seed.py + ingest.yml built and smoke-verified live (artifacts: nhle 23.7k · greenspace 12.2k ·
+  cqc 9.3k · fhrs 62.9k · gazetteer 6.7k). **Source reality shifted — see plan P1 details:** CQC
+  API is key-gated → keyless directory CSV; OS Greenspace = GeoPackage (BNG→WGS84 in parsers);
+  NHLE = `NHLE_v02_VIEW` layer 0. Remaining: PR → green merge → dispatched-Action + triggered-cron
+  live prove.
 
 ## How to run this arc (the loop)
 
