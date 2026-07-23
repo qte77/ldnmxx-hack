@@ -25,16 +25,19 @@ all keyless, all `redistribute_ok`, all agent-only.
   fail-safe-verified (#171); Tier-3 monitor sweeping 6-hourly (`tier3-monitor.yml`).
 - **Shipped by 015 (don't rebuild):** `CorpusSource` seam + `VIEW_SQL` whitelist + empty-store
   fallback; migration 0001; licence matrix in `data/sources.json`; glossary/ADR 0002/archive docs.
-- ☐ **P0 finishes with this PR** (015 closed, 016 minted, tracker issue, #113 closed).
-- **NEXT = P1**: `ingest/seed.py` parsers (pytest, RED first) → `ingest.yml` → release asset
-  `corpus-data` → CF cron `scheduled()` → D1 shadow→validate(≥50 rows + non-empty registry
-  `attribution`)→swap→`corpus_meta`.
-- **P1 in flight (2026-07-23, branch `feat/016-p1-ingest-pipeline`):** worker half + parsers +
-  seed.py + ingest.yml built and smoke-verified live (artifacts: nhle 23.7k · greenspace 12.2k ·
-  cqc 9.3k · fhrs 62.9k · gazetteer 6.7k). **Source reality shifted — see plan P1 details:** CQC
-  API is key-gated → keyless directory CSV; OS Greenspace = GeoPackage (BNG→WGS84 in parsers);
-  NHLE = `NHLE_v02_VIEW` layer 0. Remaining: PR → green merge → dispatched-Action + triggered-cron
-  live prove.
+- ☑ **P0 shipped** (#181: 015 closed, 016 minted, tracker #182, #113 closed).
+- ☑ **P1 SHIPPED + LIVE-PROVEN** (#183 merged `a6e0aaf`, 2026-07-23): parsers (24 pytest,
+  captured-real fixtures) · `seed.py` · `ingest.yml` → all 5 artifacts on the rolling `corpus-data`
+  release (nhle 23,741 · greenspace 12,197 · cqc 9,345 · fhrs 62,909 · postcodes 6,656) · Worker
+  `scheduled()` + daily cron `47 4 * * *` deployed · **cron fired for real → prod D1 `postcodes` =
+  6,656 rows, `corpus_meta` stamped** · empty-view⇒bundled fallback + attribution swap-gate live.
+  **Source reality shifted — see plan P1 details:** CQC API 403s unauthenticated (keyless path =
+  weekly directory CSV, no ratings → link out); OS Greenspace = GeoPackage (BNG→WGS84 in parsers);
+  NHLE = `NHLE_v02_VIEW` layer 0. Cron-firing verification gotcha → AGENT_LEARNINGS.
+- **NEXT = P2 Wander real**: migration `0002` (nhle/greenspace raw tables + `wander_places` view) →
+  registry `wander.d1View` + `VIEW_SQL` entry + REAL attribution strings (© Historic England +
+  OS Crown copyright — the swap gate demands them) → `INGEST_TARGETS` entries for nhle/greenspace →
+  sweep freshness-RECENCY assert → release v1.5.0.
 
 ## How to run this arc (the loop)
 
