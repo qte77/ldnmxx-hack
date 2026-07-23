@@ -59,8 +59,14 @@ FLOORS = {"postcodes": 1000, "nhle": 1000, "greenspace": 500, "cqc": 1000, "fhrs
 
 
 def fetch_bytes(url: str, headers: dict | None = None, data: bytes | None = None) -> bytes:
+    # Scheme allowlist: every source URL is https (constants above, or links/redirects discovered
+    # FROM those https pages) — refuse anything else so a poisoned discovered link cannot become a
+    # file:// or ftp:// read. This is the REAL guard behind the scanner suppressions on the urlopen
+    # below (semgrep dynamic-urllib-use-detected; CodeFactor/bandit B310 audit-url-open).
+    if not url.startswith("https://"):
+        raise ValueError(f"refusing non-https URL: {url}")
     req = urllib.request.Request(url, data=data, headers={"User-Agent": UA, **(headers or {})})
-    with urllib.request.urlopen(req, timeout=300) as r:
+    with urllib.request.urlopen(req, timeout=300) as r:  # nosemgrep # nosec B310
         return r.read()
 
 

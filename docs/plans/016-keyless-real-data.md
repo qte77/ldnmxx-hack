@@ -96,8 +96,9 @@ inspection date; OWN card, never the FSA badge) · postcodes.io OGL (GB only, ne
   postcodes.io bulk gazetteer. `seed.py` orchestrates → per-corpus normalised JSON artifacts.
   **Live-verified reality (2026-07-23, supersedes the assumptions above):** OS Greenspace has NO
   GeoJSON offering → GB **GeoPackage** (~59MB) → stdlib sqlite + GPKG-WKB point decode + pure
-  OSGB36→WGS84 Helmert (`parsers.py`); the CQC API is **key-gated** (developer-portal subscription;
-  403 without) → keyless path = the weekly **`*_CQC_directory.csv`** on the using-cqc-data page
+  OSGB36→WGS84 Helmert (`parsers.py`); the CQC API **403s all unauthenticated clients tried**
+  (urllib + browser-impersonated curl_cffi, two sessions; docs still claim keyless — WAF or quiet
+  key-gating, unproven) → keyless path = the weekly **`*_CQC_directory.csv`** on the using-cqc-data page
   (link discovered per run; NO ratings carried → copy links out for ratings — cleaner
   signpost-honesty than stale ratings); NHLE = `NHLE_v02_VIEW` FeatureServer layer 0 (Listed
   Building points, London bbox paging). Smoke artifacts: nhle 23.7k · greenspace 12.2k · cqc 9.3k
