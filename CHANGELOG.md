@@ -4,6 +4,25 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 016 — keyless real data · P1 pipeline (#183, live-proven; ships in v1.5.0)
+
+- **Keyless ingest pipeline, built once for three corpora** — pure stdlib parsers
+  (`ingest/parsers.py`, 24 pytest cases on captured-real fixtures: postcodes.io bulk, NHLE ArcGIS,
+  OS Open Greenspace GeoPackage incl. GPKG-WKB decode + OSGB36→WGS84 Helmert, CQC directory CSV,
+  FHRS) + `ingest/seed.py` orchestrator; weekly `ingest.yml` publishes normalised artifacts to the
+  rolling `corpus-data` release (`GITHUB_TOKEN` only — no CF credential in CI).
+- **Daily corpus-ingest cron** (`worker/src/corpus/ingest.ts`, `scheduled()`, `47 4 * * *` UTC):
+  release asset → shadow table → validate → atomic swap → `corpus_meta` stamp. Proven live: prod D1
+  `postcodes` = 6,656 rows on first fire.
+- **Licence obligations as a hard gate** — `CorpusLabels.attribution` (reviewed TS only) renders on
+  the disclaimer card, and the cron REFUSES to swap real data into a corpus whose attribution is
+  empty; artifacts under their row floor are refused (and fail the Action loudly).
+- **Empty-view ⇒ bundled fallback** — a seeded gazetteer with a not-yet-swapped corpus view serves
+  the bundled sample, never an empty answer (extends the #171 seed-probe pattern).
+- **Source-reality sync** (`data/sources.json`): CQC API 403s unauthenticated clients → keyless
+  path is the weekly `*_CQC_directory.csv` (no ratings carried — copy links out for ratings);
+  OS Open Greenspace ships GeoPackage/Shapefile/GML only (no GeoJSON).
+
 ## [1.4.0] — 2026-07-23
 
 ### Plan 015 — naming + transparency

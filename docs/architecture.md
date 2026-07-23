@@ -62,10 +62,14 @@ user input → SPA useAgentSSE ──POST /api/run?usecase=<id>──▶ Worker 
    SPA: parse frames → AgentEvent → applyA2UIEvent (validate vs contract.ts) → render seam
         → A2UI surface (built-in Column/Card render)  +  EventStream (live log)
 
-  PLANNED, out of band (ingest/ unbuilt — deferred to #161): ingest/seed.py → polyfetch → NHS ODS
-  (TRUD bulk, OGL) → CF D1 (schema + one view per corpus in worker/migrations/; ADR 0002). The D1
-  store is provisioned + bound but EMPTY until #161 seeds it, so today the live data source is the
-  committed data/{demo,care,wander}/*.json via the not-yet-seeded fail-safe (#171).
+  LIVE, out of band (016/P1 #183): weekly ingest.yml → ingest/seed.py (pure stdlib parsers, pytest)
+  → five keyless OGL sources (postcodes.io · NHLE ArcGIS · OS Greenspace GeoPackage · CQC directory
+  CSV · FHRS) → normalised artifacts on the rolling `corpus-data` release → daily Worker cron
+  (scheduled(), 04:47 UTC) → D1 shadow → validate (min-rows + registry-attribution licence gate) →
+  atomic swap → corpus_meta stamp. Gazetteer seeded (6,656 units); per-corpus views swap in as each
+  phase lands (P2 wander, P3 care, P4 food hygiene) — until then a corpus serves its committed
+  data/{demo,care,wander}/*.json via the fail-safes (#171 empty gazetteer; empty view ⇒ bundled).
+  NHS ODS/TRUD (#161) stays an additive enrichment path.
 ```
 
 Open data sources available for future workflows are cataloged (machine-readable) in
@@ -113,10 +117,12 @@ sets the next run's `?demo=1` intent; the chip reports what the last run actuall
   0.0.57 · vitest 4 + jsdom.
 - **Worker:** Wrangler 4 (compat ≈ 2026-06-24) · raw `fetch` → OpenRouter directly (CF **AI Gateway** is
   read via `env.AI_GATEWAY_URL` but not yet configured in prod, #29) · no KV — the corpus store is CF
-  **D1** behind a `CorpusSource` seam (ADR 0002; **provisioned + bound, EMPTY until #161 seeds it** —
-  the bundled JSON serves via the not-yet-seeded fail-safe, #171) · injectable **Arize** emitter
-  (console default, key-gated).
-- **Ingest:** Python/uv + **polyfetch** (3-tier httpx→curl_cffi→Patchright) — **PLANNED**, not built yet.
+  **D1** behind a `CorpusSource` seam (ADR 0002; **gazetteer seeded by the daily ingest cron** (016/P1),
+  per-corpus views swap in per phase; bundled JSON serves via the fail-safes, #171 + empty-view) ·
+  injectable **Arize** emitter (console default, key-gated).
+- **Ingest:** Python **stdlib-only** (`ingest/parsers.py` + `seed.py`, pytest) — LIVE since 016/P1
+  (#183): weekly Action → `corpus-data` release → daily Worker cron → D1. polyfetch stays an
+  exploration tool, not a pipeline dependency.
 - **No Docker, no devcontainer** — serverless; the ingest's Chromium is a CI step, not a shipped image.
 
 ## Platform notes
