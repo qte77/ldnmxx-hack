@@ -210,6 +210,42 @@ def run_axe(page, name):
     return len(critical), len(serious)
 
 
+# The three London accent variants (ADR 0005) x the two colour schemes. Contrast is THE
+# variant-sensitive axe rule — every variant swaps --color-primary, which paints links, the CTA and
+# the status chips — so scanning only the default would leave five of six combinations unverified.
+# (P1 caught fo's dark indigo at 3.89:1 this way, before it ever shipped.)
+VARIANTS = ("thames", "indigo", "green")
+SCHEMES = ("light", "dark")
+
+
+def set_appearance(page, variant, scheme):
+    """Drive the same two attributes the app's own init scripts + toggles write."""
+    page.evaluate(
+        "([v, s]) => { const r = document.documentElement; "
+        "r.setAttribute('data-variant', v); r.setAttribute('data-theme', s); }",
+        [variant, scheme],
+    )
+    page.wait_for_timeout(150)  # let the repaint land before axe reads computed styles
+
+
+def axe_matrix(page, out, name):
+    """Full WCAG scan per accent-variant x scheme combination, with a screenshot of each so the
+    appearance is reviewable and not just the pass/fail. Returns summed (critical, serious)."""
+    crit = ser = 0
+    for variant in VARIANTS:
+        for scheme in SCHEMES:
+            set_appearance(page, variant, scheme)
+            try:
+                page.screenshot(path=f"{out}/{name}-variant-{variant}-{scheme}.png")
+            except Exception as e:
+                print(f"    shot {variant}/{scheme}: {e}")
+            print(f"    -- variant={variant} scheme={scheme}")
+            c, s = run_axe(page, f"{name}-{variant}-{scheme}")
+            crit += c
+            ser += s
+    return crit, ser
+
+
 def summarize(cons, net):
     """Print the per-config console/network summary; return (model_host_hits, openrouter/401 lines)."""
     errs = [c for c in cons if c[0] in ("error", "pageerror")]
@@ -252,7 +288,10 @@ def run_config(pw, name, kw, video):
     axe_crit, axe_ser = 0, 0
     if name == "desktop":
         snapshot_a11y(page)
-    if name in ("desktop", "mobile-portrait"):  # WCAG scan on both orientations of the content-rich state
+        # Desktop carries the full 3-variant x 2-scheme matrix (017 P1); mobile-portrait keeps a
+        # single scan so the narrow-viewport layout is still gated without 6x the runtime.
+        axe_crit, axe_ser = axe_matrix(page, OUT, name)
+    elif name == "mobile-portrait":
         axe_crit, axe_ser = run_axe(page, name)
     mh, unf = summarize(cons, net)
     close_context(context, browser, page, video)
@@ -274,12 +313,14 @@ def report(model_hits, unf, broken, a11y_crit, a11y_ser):
         ok = False
     if a11y_crit or a11y_ser:
         print(f"FAIL: axe-core found {a11y_crit} critical + {a11y_ser} serious WCAG 2 A/AA "
-              f"violation(s) across desktop+mobile (see results/{LABEL}/axe-<config>.json).")
+              f"violation(s) across the desktop variant x scheme matrix + mobile "
+              f"(see results/{LABEL}/axe-<config>.json).")
         ok = False
     if not ok:
         return 1
     print("PASS: no browser→model-host request, no openrouter/401 console line, every corpus flow "
-          "rendered, and 0 critical/serious axe violations across desktop + mobile.")
+          "rendered, and 0 critical/serious axe violations across all 3 accent variants x "
+          "light/dark on desktop, plus mobile.")
     return 0
 
 

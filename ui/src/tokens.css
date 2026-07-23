@@ -1,80 +1,124 @@
 /*
- * tokens.css — qte77 EyeRest brand design tokens, VENDORED (Tailwind v4 @theme).
+ * tokens.css — sortmy.london design tokens (Tailwind v4 @theme). PROJECT-OWNED — see ADR 0005.
  *
- * Source: qte77/brand · ui-kit/tailwind/tokens.css (@qte77/ui-theme@0.2.0, commit b36e045),
- * generated from brand/DESIGN.md. Vendored here (NOT the npm package) so the sortmy.london build
- * stays independent of the @qte77 private registry — no ui/.npmrc, no NODE_AUTH_TOKEN (see #82).
+ * History: this file was VENDORED byte-identical from qte77/brand (EyeRest: amber on parchment) and
+ * its old header said "do not hand-tune — re-vendor upstream". Arc 017 P1 deliberately ENDS that:
+ * the app now owns its theme, built on the fo `linear.css` system (near-black/white neutrals, one
+ * accent, one glow) adapted to London via three trademark-safe accent variants. A future session
+ * must NOT "fix" this by re-vendoring EyeRest — read ADR 0005 first.
  *
- * Colors / fonts / --shadow-card below are byte-identical to upstream (light + dark). Deltas from
- * upstream, intentional: the app uses --radius-card (== brand --radius-lg); the brand's data-variant
- * palettes (green / blublock / dusk / saas) and its --radius-sm/md scale are omitted (unused here).
- * DO NOT hand-tune values — edit brand/DESIGN.md upstream and re-vendor when the brand tokens change.
+ * Token NAMES are unchanged from the vendored file (plus two additions), so every Tailwind utility
+ * already in use — bg-bg, text-primary, border-border, text-data-negative, … — keeps working.
+ *
+ * Every colour pair below is WCAG-measured, not eyeballed (P1, 2026-07-23). Three results forced
+ * deviations from the upstream palettes; each is marked MEASURED with its ratio:
+ *   1. fo's dark indigo #5e6ad2 is 3.89:1 on the dark card surface — fails AA as text.
+ *   2. fo's semantic trio (#e5484d / #0ca30c / #e5a50a) is tuned for dark UI and fails AA on the
+ *      light neutrals (3.59 / 3.08 / 1.98), so light mode carries deepened equivalents.
+ *   3. fo's hairline --border is ~1.4:1 — correct for a decorative card edge, but a form control's
+ *      border IS its affordance (WCAG 1.4.11 needs 3:1), hence --color-border-strong.
  *
  * Consumed by index.css:  @import "tailwindcss"; @import "./tokens.css";
- * @theme registers the utilities (bg-bg, bg-surface, text-primary, border-border, font-sans, …); the
- * dark overrides swap the variables at runtime via html[data-theme="dark"] or system preference.
  */
 @theme {
-  --color-bg: #ece8d8;
-  --color-surface: #e2dec8;
-  --color-border: #c8c4b0;
-  --color-text: #2c2818;
-  --color-text-muted: #686040;
-  --color-primary: #7a6010; /* deepened from #8a7018 for WCAG AA on primary-on */
-  --color-primary-on: #ece8d8;
+  /* Neutrals — fo linear.css, light scheme. Dark swaps at runtime in the two blocks below. */
+  --color-bg: #fcfcfd;
+  --color-surface: #f4f5f7;
+  /* Cards sit on --surface-lift: in light it is the page's near-white lifted a step (separation
+   * comes from the hairline); in dark the lift itself is the separation. This IS fo's surface
+   * model and it is why cards no longer lean on a drop shadow. */
+  --color-surface-lift: #ffffff;
+  --color-border: #cfd3da;
+  /* Interactive-control borders only (inputs, toggles) — 3.84:1 light / 3.31:1 dark. MEASURED. */
+  --color-border-strong: #767c88;
+  --color-text: #0d0e0f;
+  --color-text-muted: #4b515b;
 
-  /* zero-blue categorical data arc (event/status accents) */
-  --color-data-positive: #4a6818;
-  --color-data-caution: #787010;
-  --color-data-negative: #983828;
-  --color-data-alt: #587818;
+  /* Accent — variant A "Thames Teal", the default. B/C swap the pair via [data-variant] below.
+   * 4.96:1 on the card surface, 5.28:1 for the button label on the accent. MEASURED. */
+  --color-primary: #0e7581;
+  --color-primary-on: #fcfcfd;
+  --color-glow: rgb(14 117 129 / 0.07);
 
-  /* Inter (UI/prose) + JetBrains Mono (code/numeric), loaded via @fontsource in main.tsx */
+  /* Semantic status accents (event/status chips, error alerts). Light values are DEEPENED from
+   * fo's — see header note 2. Light: 5.38 / 5.43 / 5.15. MEASURED. */
+  --color-data-positive: #157347;
+  --color-data-caution: #8a5a00;
+  --color-data-negative: #c62828;
+
+  /* Inter (UI/prose) + JetBrains Mono (numerals/code), self-hosted via @fontsource in main.tsx. */
   --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  /* Card elevation/radius — functional-elevation primitives used by the A2UI surface theming in
-   * index.css. --radius-card == the brand's --radius-lg (12px). --shadow-card is DESIGN.md's single
-   * permitted functional shadow (not decoration); the dark value swaps via the runtime scheme below. */
   --radius-card: 12px;
-  --shadow-card: 0 1px 2px rgba(28, 26, 20, 0.06), 0 4px 12px rgba(28, 26, 20, 0.08);
+  /* fo's depth is a whisper, not a drop shadow — the hairline + lift do the separating. */
+  --shadow-card: 0 1px 2px rgb(13 14 15 / 0.04), 0 1px 3px rgb(13 14 15 / 0.06);
+}
+
+/*
+ * The three London accent variants. Each rule sets ONLY the accent PAIR (light + dark) — the
+ * scheme blocks below pick from the pair — so a variant is two colours, never a duplicated palette.
+ * Default (no attribute) is A Thames Teal, already literal in @theme above.
+ * Read before first paint by ui/public/variant-init.js: ?variant= › localStorage › default.
+ */
+:root {
+  color-scheme: light dark;
+  --accent-l: #0e7581;
+  --accent-d: #2ea9b6;
+  --accent-rgb: 14 117 129;
+}
+/* B "Heritage Indigo". Dark is #7b86e3, NOT fo's #5e6ad2 — see header note 1. 5.77 / 5.54. */
+:root[data-variant="indigo"] {
+  --accent-l: #4b53c4;
+  --accent-d: #7b86e3;
+  --accent-rgb: 75 83 196;
+  --color-primary: var(--accent-l);
+}
+/* C "Westminster Green". 5.49 light / 6.99 dark on the card surface. MEASURED. */
+:root[data-variant="green"] {
+  --accent-l: #2f6f4f;
+  --accent-d: #4fae82;
+  --accent-rgb: 47 111 79;
+  --color-primary: var(--accent-l);
 }
 
 /*
  * Dark scheme, twice: once for system-dark when no explicit light is forced, once for the explicit
- * html[data-theme="dark"] attribute (set by the toggle / anti-FOUC guard). Mirrors qte77 eyerest.css.
+ * html[data-theme="dark"] attribute (set by the toggle / anti-FOUC guard). Both carry (0,2,0)
+ * specificity — the SAME as a [data-variant] rule — so they must stay AFTER the variant blocks:
+ * source order is what makes dark+variant resolve to the variant's dark accent.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-bg: #1c1a14;
-    --color-surface: #242018;
-    --color-border: #383428;
-    --color-text: #d8d0b8;
-    --color-text-muted: #a89878;
-    --color-primary: #c8a858;
-    --color-primary-on: #1c1a14;
-    --color-data-positive: #8aa860;
-    --color-data-caution: #c8b868;
-    --color-data-negative: #c08060;
-    --color-data-alt: #a8b870;
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.55);
+    --color-bg: #08090a;
+    --color-surface: #0f1011;
+    --color-surface-lift: #141516;
+    --color-border: #23252a;
+    --color-border-strong: #62666e;
+    --color-text: #f7f8f8;
+    --color-text-muted: #8a8f98;
+    --color-primary: var(--accent-d);
+    --color-primary-on: #08090a;
+    --color-glow: rgb(var(--accent-rgb) / 0.1);
+    --color-data-positive: #4cc38a;
+    --color-data-caution: #e5a50a;
+    --color-data-negative: #f2555a;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
   }
 }
 :root[data-theme="dark"] {
-  --color-bg: #1c1a14;
-  --color-surface: #242018;
-  --color-border: #383428;
-  --color-text: #d8d0b8;
-  --color-text-muted: #a89878;
-  --color-primary: #c8a858;
-  --color-primary-on: #1c1a14;
-  --color-data-positive: #8aa860;
-  --color-data-caution: #c8b868;
-  --color-data-negative: #c08060;
-  --color-data-alt: #a8b870;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.55);
-}
-
-:root {
-  color-scheme: light dark;
+  --color-bg: #08090a;
+  --color-surface: #0f1011;
+  --color-surface-lift: #141516;
+  --color-border: #23252a;
+  --color-border-strong: #62666e;
+  --color-text: #f7f8f8;
+  --color-text-muted: #8a8f98;
+  --color-primary: var(--accent-d);
+  --color-primary-on: #08090a;
+  --color-glow: rgb(var(--accent-rgb) / 0.1);
+  --color-data-positive: #4cc38a;
+  --color-data-caution: #e5a50a;
+  --color-data-negative: #f2555a;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
 }

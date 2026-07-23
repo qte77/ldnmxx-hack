@@ -80,7 +80,13 @@ const USECASES = [
 const USECASE_IDS = USECASES.map((u) => u.id);
 const FLAGSHIP_ID = "sort-my-care";
 
-// Minimal light/dark toggle: flips the `data-theme` attribute the EyeRest theme + anti-FOUC script read.
+// Shared chrome-control styling: border-border-strong (not the decorative hairline) because a
+// control's border IS its affordance — WCAG 1.4.11 wants 3:1, which only the strong token meets.
+const CONTROL_CLASS =
+  "px-2 py-1 rounded border border-border-strong text-text-muted hover:border-primary " +
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+// Minimal light/dark toggle: flips the `data-theme` attribute the theme + anti-FOUC script read.
 type Theme = "light" | "dark";
 function readTheme(): Theme {
   const attr = document.documentElement.getAttribute("data-theme");
@@ -105,9 +111,52 @@ function ThemeToggle() {
       onClick={toggle}
       title="Toggle light / dark"
       aria-label="Toggle light or dark theme"
-      className="px-2 py-1 rounded border border-border text-sm text-text-muted hover:border-primary"
+      className={`${CONTROL_CLASS} text-sm`}
     >
       {theme === "dark" ? "☀" : "☾"}
+    </button>
+  );
+}
+
+// Accent variants (ADR 0005): three trademark-safe London accents. This control mirrors ThemeToggle
+// exactly — cycle, persist, set the attribute — and the [data-variant] blocks in tokens.css do the
+// rest. ui/public/variant-init.js applies the stored choice before first paint.
+const VARIANTS = [
+  { id: "thames", label: "Thames Teal" },
+  { id: "indigo", label: "Heritage Indigo" },
+  { id: "green", label: "Westminster Green" },
+] as const;
+type Variant = (typeof VARIANTS)[number]["id"];
+
+function readVariant(): Variant {
+  const attr = document.documentElement.getAttribute("data-variant");
+  const match = VARIANTS.find((v) => v.id === attr);
+  return match ? match.id : "thames";
+}
+function VariantToggle() {
+  const [variant, setVariant] = useState<Variant>(readVariant);
+  const current = VARIANTS.find((v) => v.id === variant) ?? VARIANTS[0];
+  const cycle = useCallback(() => {
+    const i = VARIANTS.findIndex((v) => v.id === variant);
+    const next = VARIANTS[(i + 1) % VARIANTS.length] ?? VARIANTS[0];
+    document.documentElement.setAttribute("data-variant", next.id);
+    try {
+      localStorage.setItem("qte77-variant", next.id);
+    } catch {
+      /* storage disabled — non-fatal */
+    }
+    setVariant(next.id);
+  }, [variant]);
+  return (
+    <button
+      type="button"
+      onClick={cycle}
+      title={`Accent: ${current.label} — click to change`}
+      // The swatch is decorative, so the accessible name has to carry the state in words.
+      aria-label={`Accent colour: ${current.label}. Change accent colour.`}
+      className={`${CONTROL_CLASS} flex items-center`}
+    >
+      <span aria-hidden="true" className="block w-3.5 h-3.5 rounded-full bg-primary" />
     </button>
   );
 }
@@ -215,7 +264,7 @@ function Dashboard() {
               type="button"
               onClick={() => setShowKey((v) => !v)}
               title="Bring your own model key (optional; kept in memory only)"
-              className="px-2 py-1 rounded border border-border text-xs text-text-muted hover:border-primary"
+              className={`${CONTROL_CLASS} text-xs`}
             >
               ⚙ Key
             </button>
@@ -225,11 +274,12 @@ function Dashboard() {
               type="button"
               onClick={() => setDevMode(false)}
               title="Exit dev mode (Ctrl+K / Ctrl+I)"
-              className="px-2 py-1 rounded border border-border text-xs text-text-muted hover:border-primary"
+              className={`${CONTROL_CLASS} text-xs`}
             >
               dev ✕
             </button>
           )}
+          <VariantToggle />
           <ThemeToggle />
         </div>
       </header>
@@ -241,14 +291,14 @@ function Dashboard() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="OpenRouter API key (optional, in-memory only)"
-            className="flex-1 min-w-48 px-2 py-1 rounded border border-border bg-bg text-text text-sm"
+            className="flex-1 min-w-48 px-2 py-1 rounded border border-border-strong bg-bg text-text text-sm"
           />
           <input
             type="text"
             value={model}
             onChange={(e) => setModel(e.target.value)}
             placeholder="model, e.g. anthropic/claude-haiku-4.5"
-            className="w-72 px-2 py-1 rounded border border-border bg-bg text-text text-sm"
+            className="w-72 px-2 py-1 rounded border border-border-strong bg-bg text-text text-sm"
           />
         </div>
       )}
@@ -270,13 +320,13 @@ function Dashboard() {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={active.placeholder}
               autoComplete="off"
-              className="flex-1 px-3 py-2 rounded border border-border bg-bg text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="flex-1 px-3 py-2 rounded border border-border-strong bg-bg text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             />
             {isRunning ? (
               <button
                 type="button"
                 onClick={stop}
-                className="px-4 py-2 rounded border border-border text-text-muted hover:border-primary"
+                className={`${CONTROL_CLASS} px-4 py-2`}
               >
                 Stop
               </button>
@@ -346,7 +396,10 @@ function Dashboard() {
         >
           Built to WCAG 2.1 AA — report an accessibility issue
         </a>
-        . <span title="deployed release" className="whitespace-nowrap">v{__APP_VERSION__}</span>
+        .{" "}
+        <span title="deployed release" className="whitespace-nowrap font-mono">
+          v{__APP_VERSION__}
+        </span>
       </footer>
     </div>
   );

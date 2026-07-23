@@ -51,24 +51,10 @@ body {
   border: 0;
 }
 
-/* Width-sizer: reserve the widest label ("System") so cycling never reflows. */
-#theme-toggle .theme-label {
-  display: inline-block;
-  text-align: left;
-}
-#theme-toggle .theme-label::before {
-  content: "System"; /* keep in sync with WIDEST_LABEL in theme.ts */
-  display: block;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-}
-
-/* Visible focus — never rely on color alone. */
-#theme-toggle:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
+/* (017 P1) The #theme-toggle width-sizer + focus rules that used to sit here were DEAD: they were
+ * ported from a sibling repo whose toggle carries id="theme-toggle" and a theme.ts WIDEST_LABEL,
+ * neither of which exists here. Both toggles now carry their focus ring as a utility (CONTROL_CLASS
+ * in App.tsx), so the focus affordance is real rather than aspirational. */
 
 /* Honor reduced-motion globally. */
 @media (prefers-reduced-motion: reduce) {
@@ -85,7 +71,7 @@ body {
 /* ---- A2UI surface theming (ported from qte77/agenthud-agui-a2ui PR #168 + #169) ------------
  * The @a2ui catalog ships class maps that resolve to CSS vars this app never defines, so the
  * rendered surface is unstyled. theme/a2uiTheme.ts routes Card/Button/Tabs/Text/Image to the
- * qte-* hooks below, styled with the EyeRest @theme tokens above (already dark/light-aware).
+ * qte-* hooks below, styled with the @theme tokens in tokens.css (scheme- AND variant-aware).
  * Scoped under .a2ui-surface (the library's reset root) so nothing leaks; our unlayered rules
  * override the library's zero-specificity :where() reset. --radius-card / --shadow-card live
  * with the other tokens in the @theme + dark blocks above. */
@@ -96,9 +82,11 @@ body {
   color: var(--color-text);
 }
 
-/* Card — elevated, padded, rounded surface. */
+/* Card — fo's surface model (017 P1): the card sits on --surface-lift and is separated by a
+ * hairline, not by a drop shadow. In light the lift is a step up from the page; in dark the lift
+ * IS the separation and the hairline merely sharpens the edge. */
 .a2ui-surface .qte-card {
-  background-color: var(--color-surface);
+  background-color: var(--color-surface-lift);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
@@ -116,6 +104,12 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.05s ease;
+}
+/* fo's one glow, in its one place: a soft accent halo on hover/focus rather than a colour change.
+ * --color-glow is derived from the active variant's accent, so it follows A/B/C automatically. */
+.a2ui-surface .qte-button:hover,
+.a2ui-surface .qte-button:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-glow);
 }
 .a2ui-surface .qte-button:hover {
   opacity: 0.9;
@@ -194,21 +188,14 @@ body {
  * (the incorporate how-to-pack card's verified gov.uk / Companies House links rely on this). A direct
  * colour on the anchor overrides the muted caption colour it usually sits inside. */
 .a2ui-surface a {
-  /* a11y (#154): the brand primary (--color-primary = #7a6010) is 4.42:1 on the card surface
-   * (--color-surface #e2dec8) — just under WCAG AA 1.4.3. Deepen to #725810 (4.98:1) for LIGHT mode
-   * only, WITHOUT hand-tuning the vendored token (tokens.css); dark's #c8a858 on #242018 already
-   * passes and is restored below. Links live inside cards, so the card surface is the worst case. */
-  color: #725810;
+  /* a11y: links live inside cards, so --surface-lift is the worst case. Every variant's accent
+   * clears AA there in BOTH schemes (measured in P1: 5.41/6.50 teal, 6.30/5.54 indigo, 5.99/6.71
+   * green), which retires the #154 workaround — this rule used to hardcode a deepened #725810
+   * because the vendored EyeRest amber was 4.42:1 and the token could not be touched. The theme is
+   * project-owned now (ADR 0005), so the fix lives in tokens.css and NO hex belongs here. */
+  color: var(--color-primary);
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-:root[data-theme="dark"] .a2ui-surface a {
-  color: var(--color-primary);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .a2ui-surface a {
-    color: var(--color-primary);
-  }
 }
 .a2ui-surface a:hover {
   text-decoration-thickness: 2px;

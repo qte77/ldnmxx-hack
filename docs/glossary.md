@@ -108,7 +108,9 @@ flag corrections in a PR.
 | AA | (WCAG conformance level AA) | The a11y bar (e.g. 4.5:1 contrast). | WCAG, a11y |
 | a11y | accessibility | sr-only h1, aria-live, focus rings, axe gate. | WCAG, AA |
 | CTA | Call to Action | The one primary action above the fold. | UX, UI |
-| FOUC | Flash of Unstyled Content | Prevented by a CSP-safe external theme-init script. | CSP, UX |
+| FOUC | Flash of Unstyled Content | Prevented by CSP-safe external theme-init + variant-init scripts. | CSP, UX |
+| variant | (accent variant) | One of three London accents — Thames Teal (default) / Heritage Indigo / Westminster Green — selected by `[data-variant]` and `?variant=`. Orthogonal to light/dark. | ADR 0005, AA |
+| CVD | Colour Vision Deficiency | Why accents are chosen for contrast + hue separation, not hue alone. | AA, a11y |
 | SEO | Search Engine Optimisation | Meta/OG tags on the landing page. | OG |
 | OG | Open Graph | Social-share meta tags. | SEO |
 | LCP | Largest Contentful Paint | Core Web Vital measured on the deploy. | FCP, INP, CLS |

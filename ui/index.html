@@ -1,14 +1,17 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Anti-FOUC theme init — external (not inline) so the page CSP stays strict (script-src 'self').
-         Blocking in <head>, so it still runs before first paint. -->
+    <!-- Anti-FOUC theme + accent-variant init — external (not inline) so the page CSP stays strict
+         (script-src 'self'). Blocking in <head>, so both still run before first paint. -->
     <script src="/theme-init.js"></script>
+    <script src="/variant-init.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="https://sortmy.london/" />
-    <meta name="theme-color" content="#7a6010" />
+    <!-- The one hex that cannot be a token: a meta attribute takes no var(). Keep in sync with
+         --color-primary's default (variant A Thames Teal) in ui/src/tokens.css. -->
+    <meta name="theme-color" content="#0e7581" />
     <title>sortmy.london — find the official public service you need</title>
     <meta
       name="description"
