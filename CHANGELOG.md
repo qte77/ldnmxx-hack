@@ -4,6 +4,18 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 018 — post-launch polish · P5b: no-match card — "type this" vs "open this" (#223)
+
+- **The no-match discovery card now offers an honest affordance per workflow.** It listed every
+  workflow, but routable ones showed `e.g. <keywords>` while the never-auto-routed `founders-copilot`/
+  `sort-my-route` showed a bare title — and giving those two a typed example would advertise an input
+  that itself no-matches (they carry no keywords ON PURPOSE — the same SE1 trap as P2). Now
+  `buildNoMatchCards` renders two kinds (RED-first in `worker/test/cards.test.ts`): a **routable**
+  workflow leads with its `blurb` (018 P4) and "Try typing: &lt;its example&gt;"; a **never-auto-routed**
+  one leads with its blurb and an **`[Open … →](?usecase=<id>)` link** — discoverable, never a fake
+  keyword. Server-rendered A2UI, no client change; `tests/e2e/flows.json` asserts the open link, not a
+  keyword line.
+
 ### Plan 018 — post-launch polish · P4: one shared usecase catalog (#223)
 
 - **The workflow catalog is now a single source of truth.** `id`/`title` were authored in both

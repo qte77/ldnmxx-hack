@@ -1,6 +1,7 @@
 import opportunitiesJson from "../../../data/demo/opportunities.sample.json";
 import routeJson from "../../../data/demo/route.sample.json";
 import { appendIncorporate } from "../../../shared/incorporate";
+import type { CatalogEntry } from "../usecases";
 
 interface Opportunity {
   id: string;
@@ -171,20 +172,26 @@ export function buildRouteCards(r: Route = route): unknown[] {
 // The no-match card (017 P2, ADR 0004): when the router can't confidently place a free-text ask, we
 // NEVER fall back to a flagship — we render a deterministic "here's what I can help with" card + the
 // discovery list, so a first-time visitor learns the app's scope instead of getting a wrong answer.
-// The catalog is register-derived (usecaseCatalog()) and INCLUDES founders/route as explicit
-// suggestions — offered, never auto-routed. Each option shows a few of its own keywords as an example;
-// a workflow without keywords (founders, route) shows just its title. No model, no hardcoded per-usecase
-// copy — pure data, so a new workflow appears here automatically.
-export function buildNoMatchCards(catalog: { id: string; title: string; keywords?: string[] }[]): unknown[] {
+// The catalog is register-derived (usecaseCatalog()) and INCLUDES founders/route as explicit suggestions.
+//
+// 018 P5b: TWO affordances, honest to reachability. A ROUTABLE workflow (has keywords) invites TYPING —
+// it shows its own working `example`, since the single input can route to it. A NEVER-auto-routed one
+// (founders/route, no keywords) instead gets an "open →" `?usecase=` link: typing its example would
+// no-match (it carries no keywords ON PURPOSE — the SE1 trap), so a typed hint there would be a lie.
+// Each option leads with its own `blurb` (018 P4). Pure data — a new workflow appears here automatically.
+export function buildNoMatchCards(catalog: CatalogEntry[]): unknown[] {
   const header: CardSpec = {
     key: "nomatch",
     title: "I didn't understand that",
-    lines: ["Here's what sortmy.london can help with — try naming one of these:"],
+    lines: ["Here's what sortmy.london can help with:"],
   };
   const options: CardSpec[] = catalog.map((u) => ({
     key: `opt-${u.id}`,
     title: u.title,
-    lines: u.keywords && u.keywords.length > 0 ? [`e.g. ${u.keywords.slice(0, 3).join(", ")}`] : [],
+    lines:
+      u.keywords.length > 0
+        ? [u.blurb, `Try typing: "${u.example}"`]
+        : [u.blurb, `[Open ${u.title} →](?usecase=${u.id})`],
   }));
   return cardsBatch([header, ...options]);
 }

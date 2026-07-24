@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildOpportunityCards, withIncorporate } from "../src/a2ui/cards";
+import { buildNoMatchCards, buildOpportunityCards, withIncorporate } from "../src/a2ui/cards";
 
 interface Component {
   id: string;
@@ -94,5 +94,49 @@ describe("withIncorporate", () => {
     const before = JSON.stringify(oddBatch);
     const out = withIncorporate(oddBatch);
     expect(JSON.stringify(out)).toBe(before);
+  });
+});
+
+// 018 P5b: the no-match discovery card offers TWO affordances — a routable workflow invites TYPING (it
+// is reachable from the single input), while a never-auto-routed one (founders/route, no keywords) gets
+// an "open →" ?usecase= link, NEVER a fake typed keyword that would itself no-match (the SE1 trap).
+describe("buildNoMatchCards", () => {
+  const routable = {
+    id: "sort-my-care",
+    title: "Sort My Care",
+    keywords: ["gp", "nhs"],
+    example: "GP near E8 3GT",
+    blurb: "Find NHS and public health services near a postcode.",
+  };
+  const nonRoutable = {
+    id: "founders-copilot",
+    title: "Founder's Copilot",
+    keywords: [],
+    example: "an AI copilot for London founders",
+    blurb: "A demo copilot for London startup founders.",
+  };
+
+  it("is a self-contained batch: the header + one option per usecase, each showing its blurb", () => {
+    const batch = buildNoMatchCards([routable, nonRoutable]) as Batch[];
+    assertSelfContained(batch);
+    expect(rootList(batch)).toEqual(["card-nomatch", "card-opt-sort-my-care", "card-opt-founders-copilot"]);
+    const json = JSON.stringify(batch);
+    expect(json).toContain("I didn't understand");
+    expect(json).toContain(routable.blurb);
+    expect(json).toContain(nonRoutable.blurb);
+  });
+
+  it("invites TYPING a routable workflow's own example — and never a ?usecase= bypass link for it", () => {
+    const json = JSON.stringify(buildNoMatchCards([routable]));
+    expect(json).toContain("GP near E8 3GT");
+    expect(json).not.toContain("?usecase=");
+  });
+
+  it("offers a never-auto-routed workflow an OPEN ?usecase= link, never its (unroutable) example", () => {
+    const json = JSON.stringify(buildNoMatchCards([nonRoutable]));
+    expect(json).toContain("?usecase=founders-copilot");
+    expect(json).toContain("Open Founder's Copilot");
+    // its example must NOT be shown as something to type — typing it would no-match (no keywords).
+    expect(json).not.toContain("an AI copilot for London founders");
   });
 });
