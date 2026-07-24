@@ -49,6 +49,10 @@ const corpora: Record<string, CorpusDef> = {
       attribution: [
         "Care locations: using CQC information © Care Quality Commission, licensed under the Open Government Licence v3.0. Ratings are not shown — check each service's official CQC page.",
       ],
+      // care's lastUpdated is the CQC directory's "produced on" snapshot date (genuine freshness, one
+      // date for the whole pull; the per-location "last checked" lives in `why`) — so "data as of" is
+      // honest. (P3 #225)
+      dateLabel: "asOf",
     },
   },
   wander: {
@@ -78,6 +82,10 @@ const corpora: Record<string, CorpusDef> = {
         "Listed buildings: © Historic England 2026 (NHLE). Contains Ordnance Survey data © Crown copyright and database right 2026.",
         "Green spaces: contains OS data © Crown copyright and database right 2026 (OS Open Greenspace).",
       ],
+      // wander UNIONs NHLE (listing dates ~1949) + greenspace (OS version date); "oldest across shown
+      // rows" is usually a heritage listing year — a record's own age, not our freshness — so make NO
+      // date claim rather than a misleading one. (P3 #225)
+      dateLabel: "omit",
     },
   },
   "food-hygiene": {
@@ -100,6 +108,9 @@ const corpora: Record<string, CorpusDef> = {
       attribution: [
         "Food hygiene ratings: Food Standards Agency data © Crown copyright, licensed under the Open Government Licence v3.0. Ratings can be 6–18 months old — each card shows its inspection date.",
       ],
+      // FHRS lastUpdated is the establishment's own inspection (RatingDate), not our ingest freshness —
+      // word it "inspected {date}", never "data as of". (P3 #225)
+      dateLabel: "inspected",
     },
   },
 };

@@ -4,6 +4,7 @@
 // Frozen deliberately: W4/W5 ingest real data against exactly this record shape (and a D1 view per
 // corpus projects onto it), so changing it is a breaking change for the ingest pipeline.
 import type { Coords } from "../geo";
+import type { DateLabelMode } from "../dates";
 
 // One row of a bundled corpus: the public display fields plus lat/lng for the proximity sort.
 // Coords + any extra source columns are INTERNAL — they never reach the render (see CorpusRow).
@@ -29,6 +30,11 @@ export interface CorpusLabels {
   // data-supplied. Empty for a bundled-sample corpus; the ingest cron REFUSES to swap real data
   // into a corpus whose attribution is empty (obligation as a hard gate, not convention).
   attribution: string[];
+  // P3 (#225): how this corpus's `asOf` (oldest lastUpdated) is worded — honest to what the date
+  // ACTUALLY means for THIS source (freshness vs a record's own listing/inspection age). Required, so
+  // every corpus present and future declares its date semantics consciously instead of inheriting a
+  // wrong default. See dates.ts `formatDateLabel`.
+  dateLabel: DateLabelMode;
 }
 
 // A row handed to the render. `line` is the retrieval-specific secondary line, PRE-FORMATTED by the

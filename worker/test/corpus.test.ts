@@ -20,6 +20,7 @@ const def: CorpusDef = {
     emptyInvalidHint: "Try a London postcode like SW9 9SL.",
     emptyUnknownHint: "We don't have sample data for that postcode yet.",
     attribution: [],
+    dateLabel: "asOf",
   },
 };
 

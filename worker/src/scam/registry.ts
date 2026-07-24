@@ -40,4 +40,7 @@ export const scamLabels: CorpusLabels = {
   // P1 (#182): empty while the corpus serves the bundled synthetic sample (FCA register data is
   // redistribute_ok: "no" — see data/sources.json — so real attribution never lands here).
   attribution: [],
+  // Type-compliance only: scam's own render (scam/render.ts) hardcodes its date line and never reads
+  // this field. Its lastUpdated is a register-check freshness date, so "asOf" is the honest value. (P3)
+  dateLabel: "asOf",
 };

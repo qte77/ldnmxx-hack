@@ -22,3 +22,18 @@ export function oldestIsoDate(dates: readonly string[]): string | null {
   if (valid.length === 0) return null;
   return valid.reduce((min, d) => (d < min ? d : min));
 }
+
+// How a corpus's `asOf` (its oldest lastUpdated) should be WORDED — honest to what that date actually
+// means for the source (P3, #225). A record's own age (a heritage listing year) must never be dressed
+// up as data freshness; a corpus whose "oldest date" mixes record-ages sets "omit" rather than mislead.
+export type DateLabelMode = "asOf" | "listedYear" | "inspected" | "omit";
+
+// The per-corpus date CLAIM for the summary line. "" = no claim at all; the caller (render.ts) must
+// drop the " · " separator too, never print a dangling "summaryLine · ". Static/editorial per corpus —
+// never inferred from ingested row data (the repo-wide data-honesty rule).
+export function formatDateLabel(mode: DateLabelMode, isoDate: string | null): string {
+  if (mode === "omit" || isoDate === null) return "";
+  if (mode === "listedYear") return `listed ${isoDate.slice(0, 4)}`;
+  if (mode === "inspected") return `inspected ${isoDate}`;
+  return `data as of ${isoDate}`; // mode === "asOf"
+}
