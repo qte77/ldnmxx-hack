@@ -6,12 +6,14 @@ Groundwork runs fully on Cloudflare: the **SPA on Cloudflare Pages** at `sortmy.
 ## One-time setup
 
 1. **Zone:** add `sortmy.london` to the Cloudflare account (move its nameservers to Cloudflare).
-2. **API token** — scopes **Cloudflare Pages·Edit + Workers Scripts·Edit + Zone·Read + Zone·DNS·Edit**
-   (+ Workers AI·Read for the `AI` binding), **Zone Resources = `sortmy.london`**. Put it + the **account
-   id** in a gitignored repo-root **`.env`** (copy `.env.example`; `provision_cf.sh` / `finish_cf.sh`
-   auto-source it), or `~/.cf-token` / `~/.cf-acct`, or export `CLOUDFLARE_API_TOKEN` /
-   `CLOUDFLARE_ACCOUNT_ID`. *(Editing a token's permissions keeps its value; **rolling** it changes the
-   secret — update `.env` if you roll.)*
+2. **API token** — minimal scopes: **Account** = Pages·Edit, Workers Scripts·Edit, D1·Edit and
+   Workers AI·Read; **Zone (`sortmy.london`)** = Workers Routes·Edit and Zone·Read. (First-time domain
+   attach via `finish_cf.sh` additionally needs Zone·DNS·Edit.) Put **only the token** in a gitignored
+   repo-root **`.env`** (copy `.env.example`) — creds are **repo-self-contained** (no `~/.cf-token`);
+   `provision_cf.sh` / `finish_cf.sh` auto-source `.env`, and CI can pass `CLOUDFLARE_API_TOKEN` via the
+   environment. The **account id** is pinned in `worker/wrangler.toml` (not secret), so
+   `CLOUDFLARE_ACCOUNT_ID` is not needed. *(Editing a token's permissions keeps its value; **rolling** it
+   changes the secret — update `.env` if you roll.)*
 3. **Worker secrets** (unchanged): `cd worker && npx wrangler secret put OPENROUTER_KEY` (+ `ARIZE_*` if used).
 
 ## Deploy

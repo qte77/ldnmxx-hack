@@ -9,26 +9,25 @@
 #   PROJECT        Pages project name       (default sortmy-london)
 #   DOMAIN         apex domain (+ www)      (default sortmy.london)
 #   TARGET         CNAME target             (default <PROJECT>.pages.dev)
-#   CF_TOKEN_FILE  API-token file           (default ~/.cf-token)
-#   CF_ACCT_FILE   account-id file          (default ~/.cf-acct)
 # Token needs: Pages·Edit + Zone·Read + Zone·DNS·Edit (Zone Resources = the domain).
+# Credentials are REPO-SELF-CONTAINED: CLOUDFLARE_API_TOKEN from the gitignored repo-root .env; the
+# account id comes from worker/wrangler.toml (or CLOUDFLARE_ACCOUNT_ID if pre-exported). No ~/.cf-* files.
 #
 # Run WITH BASH:  DOMAIN=sortmy.london bash scripts/finish_cf.sh
 set -euo pipefail
 
-# Auto-load a gitignored repo-root .env (CLOUDFLARE_API_TOKEN / _ACCOUNT_ID) if present + not already set.
+# Load the gitignored repo-root .env (CLOUDFLARE_API_TOKEN) unless already exported.
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 [ -f "$ROOT/.env" ] && [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && { set -a; . "$ROOT/.env"; set +a; }
 
 PROJECT="${PROJECT:-sortmy-london}"
 DOMAIN="${DOMAIN:-sortmy.london}"
 TARGET="${TARGET:-$PROJECT.pages.dev}"
-CF_TOKEN_FILE="${CF_TOKEN_FILE:-$HOME/.cf-token}"
-CF_ACCT_FILE="${CF_ACCT_FILE:-$HOME/.cf-acct}"
-TOKEN="${CLOUDFLARE_API_TOKEN:-$(cat "$CF_TOKEN_FILE" 2>/dev/null || true)}"
-ACCT="${CLOUDFLARE_ACCOUNT_ID:-$(cat "$CF_ACCT_FILE" 2>/dev/null || true)}"
-[ -n "$TOKEN" ] || { echo "!! no token in $CF_TOKEN_FILE"; exit 1; }
-[ -n "$ACCT" ]  || { echo "!! no account id in $CF_ACCT_FILE"; exit 1; }
+TOKEN="${CLOUDFLARE_API_TOKEN:-}"
+# account id: prefer a pre-exported env, else read the pinned account_id from worker/wrangler.toml.
+ACCT="${CLOUDFLARE_ACCOUNT_ID:-$(sed -n 's/^account_id = "\([0-9a-f]\{1,\}\)".*/\1/p' "$ROOT/worker/wrangler.toml")}"
+[ -n "$TOKEN" ] || { echo "!! no CLOUDFLARE_API_TOKEN — add it to the repo-root .env (see .env.example)"; exit 1; }
+[ -n "$ACCT" ]  || { echo "!! no account id — set account_id in worker/wrangler.toml (or export CLOUDFLARE_ACCOUNT_ID)"; exit 1; }
 API="https://api.cloudflare.com/client/v4"
 AUTH="Authorization: Bearer $TOKEN"
 
