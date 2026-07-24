@@ -2,6 +2,7 @@
   "id": "sort-my-wander",
   "title": "Sort My Wander",
   "render": { "mode": "corpus" },
+  "keywords": ["wander", "park", "green space", "heritage", "garden", "stroll", "nature reserve", "listed building", "historic site", "places to walk", "things to do"],
   "stages": [
     {
       "name": "plan",

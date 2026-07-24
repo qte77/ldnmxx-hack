@@ -47,10 +47,14 @@ export interface UsecaseDef {
   title: string;
   render: RenderDef;
   stages: StageDef[];
+  // Auto-router keywords (017 P2, ADR 0004): the words that route a free-text ask to this workflow.
+  // Register-only DATA so adding a routable workflow stays a one-file change (correction 3). ABSENT ⇒
+  // never auto-routed (sort-my-route, founders-copilot) — the absence IS the "never-auto-routed" property.
+  keywords?: string[];
 }
 
 // Allow-lists for the strict load guard below. Keep in sync with UsecaseDef / StageDef.
-const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages"];
+const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages", "keywords"];
 const STAGE_KEYS: readonly string[] = ["name", "kind", "events", "exec", "corpus"];
 
 // Narrow to unknown[] (not the any[] that Array.isArray infers, which would defeat the type-safety lints).
@@ -111,6 +115,15 @@ function assertRenderMode(id: string, render: unknown): void {
   }
 }
 
+// Optional router keywords, if present, must be a string array — an authoring slip (a bare string, or
+// non-string entries) would otherwise silently mis-route or crash the heuristic. Absent is fine.
+function assertKeywords(id: string, keywords: unknown): void {
+  if (keywords === undefined) return;
+  if (!isArray(keywords) || !keywords.every((k) => typeof k === "string")) {
+    throw new Error(`usecase ${id}: keywords must be a string array when present`);
+  }
+}
+
 // Tiny load-time guard. Usecases are trusted, build-time JSON (bundled like data/demo/*.json), so this
 // is not external-input validation — it just turns an authoring slip into a clear startup error.
 // Checks the shared workflow-definition/v1 contract core first (id, non-empty ordered stages[].name —
@@ -133,6 +146,7 @@ export function assertUsecaseDef(x: unknown): asserts x is UsecaseDef {
     throw new Error(`usecase ${id}: title must be a string`);
   }
   assertRenderMode(id, d.render);
+  assertKeywords(id, (d as { keywords?: unknown }).keywords);
   assertStageShapes(id, d.stages);
 }
 
@@ -154,4 +168,14 @@ export const usecaseIds: string[] = Object.keys(registry);
 
 export function getUsecase(id: string): UsecaseDef | undefined {
   return registry[id];
+}
+
+// The register-only router catalog (017 P2): every workflow that carries keywords, as the {id, title,
+// keywords} shape the auto-router consumes. A workflow WITHOUT keywords (sort-my-route, founders-copilot)
+// is absent here and so is never auto-routed — the router hard-codes no ids and reachability is DATA.
+export function routableUsecases(): { id: string; title: string; keywords: string[] }[] {
+  return usecaseIds
+    .map((id) => registry[id])
+    .filter((def): def is UsecaseDef => def !== undefined && (def.keywords?.length ?? 0) > 0)
+    .map((def) => ({ id: def.id, title: def.title, keywords: def.keywords ?? [] }));
 }

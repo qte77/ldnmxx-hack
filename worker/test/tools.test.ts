@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { ASSESS_STAGE_TOOL, isValidAssessResult } from "../../shared/assessTool";
 import { SEARCH_OPPORTUNITIES_TOOL, isValidSearchResult } from "../../shared/searchTool";
+import { ROUTE_TOOL, ROUTE_NONE, isValidRouteResult } from "../../shared/routerTool";
 
 describe("assess_stage tool", () => {
   it("exposes a forced-tool schema named assess_stage", () => {
@@ -54,5 +55,32 @@ describe("search_opportunities tool", () => {
   it("rejects a non-object match element without throwing", () => {
     expect(isValidSearchResult({ reasoning: "x", matches: [null] }, ids)).toBe(false);
     expect(isValidSearchResult({ reasoning: "x", matches: ["demo-001"] }, ids)).toBe(false);
+  });
+});
+
+describe("route_query tool", () => {
+  const ids = ["sort-my-care", "sort-my-wander", "sort-my-food-hygiene"];
+
+  it("exposes a forced-tool schema named route_query", () => {
+    expect(ROUTE_TOOL.function.name).toBe("route_query");
+  });
+  it("accepts a pick whose id is in the allowed set", () => {
+    expect(isValidRouteResult({ reasoning: "a care query", usecase: "sort-my-care" }, ids)).toBe(true);
+  });
+  it("accepts the sentinel 'none'", () => {
+    expect(isValidRouteResult({ reasoning: "nothing fits", usecase: ROUTE_NONE }, ids)).toBe(true);
+  });
+  it("rejects an id outside the allowed set (never invent a route)", () => {
+    expect(isValidRouteResult({ reasoning: "x", usecase: "sort-my-route" }, ids)).toBe(false);
+    expect(isValidRouteResult({ reasoning: "x", usecase: "founders-copilot" }, ids)).toBe(false);
+  });
+  it("rejects missing or mistyped fields", () => {
+    expect(isValidRouteResult({ usecase: "sort-my-care" }, ids)).toBe(false); // no reasoning
+    expect(isValidRouteResult({ reasoning: "x" }, ids)).toBe(false); // no usecase
+    expect(isValidRouteResult({ reasoning: "x", usecase: 3 }, ids)).toBe(false); // usecase not a string
+  });
+  it("rejects a non-object result without throwing", () => {
+    expect(isValidRouteResult(null, ids)).toBe(false);
+    expect(isValidRouteResult("sort-my-care", ids)).toBe(false);
   });
 });

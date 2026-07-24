@@ -2,6 +2,7 @@
   "id": "sort-my-care",
   "title": "Sort My Care",
   "render": { "mode": "corpus" },
+  "keywords": ["gp", "nhs", "clinic", "pharmacy", "chemist", "hospital", "dentist", "doctor", "health service", "care home", "a&e"],
   "stages": [
     {
       "name": "plan",

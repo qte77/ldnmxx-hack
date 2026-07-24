@@ -2,6 +2,7 @@
   "id": "sort-my-food-hygiene",
   "title": "Sort My Food Hygiene",
   "render": { "mode": "corpus" },
+  "keywords": ["food hygiene", "hygiene rating", "food safety", "restaurant", "takeaway", "food rating", "fhrs", "cafe", "eatery", "food inspection"],
   "stages": [
     {
       "name": "plan",
