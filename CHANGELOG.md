@@ -4,6 +4,23 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 018 — post-launch polish · P4: one shared usecase catalog (#223)
+
+- **The workflow catalog is now a single source of truth.** `id`/`title` were authored in both
+  `ui/src/App.tsx` and `usecases/*.json`, `example` lived only in the UI, and there was no home at all
+  for the no-match card's `blurb`. Now each `usecases/*.json` carries `example` + `blurb`, and a new
+  **`shared/usecaseCatalog.ts`** (RED-first: `worker/test/usecaseCatalog.test.ts`) loads + validates them
+  and derives `usecaseCatalog()` / `routableUsecases()`, consumed by BOTH the Worker
+  (`worker/src/usecases.ts` now re-exports them) and the SPA (`App.tsx` drops its hardcoded array).
+  `routable` is DERIVED (`keywords.length > 0`), never re-declared; `sort-my-route`/`founders-copilot`
+  stay never-auto-routed by the ABSENCE of keywords (ADR 0004 register-only preserved end to end).
+- **Honest accounting:** adding a workflow is ONE *data* file — but still two *wiring* lines (its worker
+  `registry` entry and its `shared/usecaseCatalog.ts` `CATALOG` entry), unchanged from before and one
+  fewer than the old UI-array touch. The `shared/` list can't derive from the worker registry without
+  breaking the one-way import direction (the SPA must never pull in worker-only modules). `example`/
+  `blurb` are optional on the engine `UsecaseDef` (so the inline test fixtures need no edits) but
+  required on `CatalogEntry` — two schemas, one per concern.
+
 ### Plan 018 — post-launch polish · P3: record-date honesty (#225)
 
 - **The date line now matches each corpus's date SEMANTICS** instead of always saying "data as of". The

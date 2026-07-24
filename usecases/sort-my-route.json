@@ -1,6 +1,8 @@
 {
   "id": "sort-my-route",
   "title": "Sort My Route",
+  "example": "step-free from E8 3GT to Westminster",
+  "blurb": "Plan a step-free public transport route between two London places.",
   "render": { "mode": "route" },
   "stages": [
     {

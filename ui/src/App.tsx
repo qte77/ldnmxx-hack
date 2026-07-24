@@ -5,20 +5,13 @@ import { matchesToggle, readDevMode, writeDevMode } from "./devmode";
 import { readUsecase } from "./usecase";
 import { useAgentSSE, type Byok, type RunStatus } from "./agent/useAgentSSE";
 import type { EventLogEntry } from "./agent/applyA2UIEvent";
+import { usecaseCatalog } from "../../shared/usecaseCatalog";
 
-// 017 P3: ONE input, no manual switcher. The Worker's auto-router picks the workflow from the typed
-// ask, so the UI keeps only what the single input still needs: the id→label map (to name the resolved
-// workflow and validate a ?usecase= deep link) plus an `example` to prefill when a deep link names a
-// workflow directly. The no-match discovery card + its use-case list are rendered SERVER-side from the
-// registry (worker usecaseCatalog), so the per-workflow hero copy that used to live here is gone.
-const USECASES = [
-  { id: "sort-my-care", label: "Sort My Care", example: "GP near E8 3GT" },
-  { id: "sort-my-route", label: "Sort My Route", example: "step-free from E8 3GT to Westminster" },
-  { id: "sort-my-wander", label: "Sort My Wander", example: "parks to wander near SW9 9SL" },
-  { id: "sort-my-food-hygiene", label: "Sort My Food Hygiene", example: "food hygiene near SW9 9SL" },
-  { id: "sort-my-scam-check", label: "Sort My Scam Check", example: "is Thames Capital Partners a scam" },
-  { id: "founders-copilot", label: "Founder's Copilot", example: "an AI copilot for London founders" },
-] as const;
+// 018 P4: the workflow catalog is now ONE shared source of truth (shared/usecaseCatalog.ts, read by the
+// Worker too) — no second, drifting UI copy. The UI needs only id→title (to name the resolved workflow +
+// validate a ?usecase= deep link) and `example` (to prefill on a deep-link bypass). The no-match
+// discovery card + its list are rendered SERVER-side from the same catalog.
+const USECASES = usecaseCatalog();
 
 const USECASE_IDS = USECASES.map((u) => u.id);
 
@@ -230,7 +223,7 @@ function Dashboard() {
 
   // The workflow name to announce: the router's pick on a prompt-only run, or the bypass label on a
   // deep link. Drives the aria-live announcement + the visible "Showing …" heading above the results.
-  const activeTitle = resolved?.title ?? bypassDef?.label;
+  const activeTitle = resolved?.title ?? bypassDef?.title;
   const announce = activeTitle ? `Showing: ${activeTitle}` : "";
 
   const onSubmit = useCallback(
