@@ -27,7 +27,10 @@ and the load-guard rejects an unregistered `corpus` id at startup. The query sea
 (W6 #162, ADR [`0002`](adr/0002-real-data-store.md)): a corpus flagged with a `d1View` reads the CF **D1**
 store when the binding is bound, the bundled JSON stays the fallback (unbound, FAILING, or **not yet
 seeded** — an empty gazetteer degrades rather than answering empty, #171), and serving from the
-store is **licence-gated** (`data/sources.json` `redistribute_ok`).
+store is **licence-gated** (`data/sources.json` `redistribute_ok`). The D1 read is **bbox-bounded**
+(017 P2b): a bound-parameter `WHERE lat/lng BETWEEN … LIMIT` (static SQL, ADR 0002 whitelist intact)
+seeks a `(lat, lng)` index (migration `0005`) instead of scanning the whole view, with a
+widen-radius retry so results never shrink — one food-hygiene ask reads hundreds, not 66,871 rows.
 
 **Match-shaped workflows** are a fifth shape, shipped by **Sort My Scam Check** (#140): a firm name/FCA
 number **lookup**, not a nearest-N over coordinates, so it does NOT fit the frozen geo `CorpusRecord` and

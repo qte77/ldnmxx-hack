@@ -88,3 +88,18 @@ time of writing); until a source is cleared `redistribute_ok: true`, it is link-
   until one lands).
 - **−** Licence verification is per-source manual diligence: `license` + `last_checked` must be kept
   current, and some sources need a lawyer's confirmation before `redistribute_ok: true`.
+
+## Consequence — bounded reads (017 P2b, #201)
+
+The read seam started as one fully-unbounded statement per view (`SELECT … FROM <view>`), which
+`nearestN` ranked in JS after reading **every** row (66,871 for food-hygiene). D1 bills rows
+**scanned**, so at 5M/day that is ~75 asks/day — untenable once P2 opens free-text asking. P2b bounds
+each corpus read to a **bbox prefilter** around the resolved origin: a bound-parameter
+`WHERE lat/lng BETWEEN … ORDER BY <proximity> LIMIT` appended to the view's **static** base select
+(two static constants concatenated — no user data in the SQL string, so the closed-statement
+whitelist this ADR prizes is intact), with a widen-radius retry (5 → 15 km → unbounded) so results
+never silently shrink and the empty-view fallback still fires on the final unbounded read. The win
+requires the companion `(lat, lng)` indexes (`0005_geo_indexes.sql`): without them a bare `WHERE`
+still scans the table. This is an implementation of the seam, **not** a new decision — recorded here
+rather than as its own ADR. Proven live via `meta.rows_read` / `EXPLAIN QUERY PLAN` (a mock cannot
+model scanning).

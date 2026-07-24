@@ -4,6 +4,24 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 017 — one input, London-themed · P2b: bounded corpus reads (#201)
+
+- **Corpus D1 reads are now bounded by a bbox prefilter** instead of scanning the whole view. A pure
+  `bboxAround(origin, km)` (`worker/src/geo.ts`) feeds a bound-parameter `WHERE lat/lng BETWEEN …
+  ORDER BY <proximity> LIMIT` (static SQL — the ADR 0002 whitelist is preserved), with a
+  **widen-radius retry** (5 km → 15 km → unbounded) so results never silently shrink and the #182
+  empty-view fallback still fires on the final unbounded read. `nearestN` re-ranks the bounded set by
+  exact haversine, so results are identical to the old full-scan path for the demo postcodes.
+- **New migration `0005_geo_indexes.sql`** — a `(lat, lng)` index per raw corpus table
+  (`cqc_locations`, `nhle_places`, `greenspace_places`, `fhrs_establishments`). **This is the half
+  that makes the prefilter real:** D1 bills rows *scanned*, so without the index a bare `WHERE` still
+  scans the whole table (PR #206). Pre-staged unapplied; apply + measure once credentials land.
+- **Why:** one food-hygiene ask read all 66,871 rows against D1's 5M row-reads/day (~75 asks/day).
+  P2's free-text input invites exploratory asking, so the reads had to be bounded before the P3 UI
+  ships. The row-read *win* is proven live (`meta.rows_read`, `EXPLAIN QUERY PLAN`) — a mocked D1
+  can't model scanning — via the `d1-verify` CI workflow (`bbox_plan` / `bbox_rows_read`); **owed
+  until the Cloudflare secret is added.** No new ADR: an implementation consequence of ADR 0002.
+
 ### Plan 017 — one input, London-themed · P2: query-driven auto-routing (#201)
 
 - **One input, no manual switcher.** A prompt-only `POST /api/run` (no `?usecase=`) now auto-routes
