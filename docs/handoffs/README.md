@@ -2,14 +2,15 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0+P1 shipped, next P2
+## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0/P1/P2 shipped, next P2b
 
 Arc 017 is open: query-driven auto-routing (one free-text input picks the workflow) + the fo
-`linear.css` theme with three London accent variants. **P0 and P1 are merged** (plan, handoff, ADRs
-0003/0004/0005, tracker #201; theme + variants in #208). **Next = P2 (auto-router)** — the last
-phase that needs no credentials. ⚠ **Cloudflare credentials are missing in the devcontainer**, which
-blocks every live verification including P2b's done-when: see the plan's _Arc-start access
-checklist_. Predecessor 016 is CLOSED — five real corpora live in D1, v1.7.0 deployed.
+`linear.css` theme with three London accent variants. **P0, P1 and P2 are merged** (theme + variants
+in #208; the auto-router core in #212 + wiring in #213; ADRs 0003/0004/0005 accepted; tracker #201).
+**Next = P2b (bounded corpus reads)** — its done-when is a live `meta.rows_read` measurement, so it
+⚠ **needs the Cloudflare credential** the devcontainer lacks (the CI `d1-verify` workflow is
+pre-staged for it). See the plan's _Arc-start access checklist_. Predecessor 016 is CLOSED — five
+real corpora live in D1, v1.7.0 deployed.
 
 ## Index
 
