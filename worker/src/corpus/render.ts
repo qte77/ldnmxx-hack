@@ -1,5 +1,6 @@
 import { cardsBatch, appendDisclaimer, type CardSpec } from "../a2ui/cards";
 import type { CorpusQuery } from "./contract";
+import { formatDateLabel } from "../dates";
 
 // Build the A2UI batch for ANY deterministic corpus workflow from its query result. Reuses cardsBatch
 // (one card builder, every workflow) + appendDisclaimer (the "confirm with the official source"
@@ -19,10 +20,14 @@ export function buildCorpusCards(q: CorpusQuery): unknown[] {
     return appendDisclaimer(cardsBatch([empty]), labels.officialLink, labels.attribution);
   }
   const count = q.rows.length;
+  // P3 (#225): word the date claim per THIS corpus's date semantics (a genuine freshness date vs a
+  // record's own listing/inspection age), and drop the " · " separator entirely when there is no
+  // honest claim — never a dangling "summaryLine · data as of ".
+  const dateClaim = formatDateLabel(labels.dateLabel, q.asOf);
   const summary: CardSpec = {
     key: "summary",
     title: `${String(count)} ${labels.noun}${count > 1 ? "s" : ""} near ${q.query ?? ""}`,
-    lines: [`${labels.summaryLine} · data as of ${q.asOf ?? ""}`],
+    lines: [dateClaim ? `${labels.summaryLine} · ${dateClaim}` : labels.summaryLine],
   };
   const cards: CardSpec[] = q.rows.map((r) => ({
     key: r.id,

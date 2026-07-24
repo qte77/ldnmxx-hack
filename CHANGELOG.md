@@ -4,6 +4,20 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 018 — post-launch polish · P3: record-date honesty (#225)
+
+- **The date line now matches each corpus's date SEMANTICS** instead of always saying "data as of". The
+  summary rendered the oldest `lastUpdated` across shown rows under "data as of"; for **wander** (NHLE
+  listing dates ~1949, UNIONed with fresh greenspace) that surfaced a heritage listing year as if it
+  were data freshness — the reported "data as of 1974" bug. A new **required** `CorpusLabels.dateLabel`
+  with a pure `formatDateLabel` (`worker/src/dates.ts`, RED-first) words it honestly per corpus: **care
+  → "data as of"** (the CQC directory's production/snapshot date, verified against `parse_cqc_directory`),
+  **wander → omitted** (a single "as of" over mixed record-ages is inherently misleading), **food-hygiene
+  → "inspected {date}"** (FHRS `RatingDate` is a per-record inspection date, not our freshness). Also
+  drops the dangling "data as of " when there is no valid date. `tests/e2e/flows.json` sweep markers
+  updated to match (wander drops the marker, food-hygiene → "inspected"). Scam's separate render is
+  untouched.
+
 ### Plan 018 — post-launch polish · scam-check input forgiveness (found by the P1 live sweep)
 
 - **"is &lt;firm&gt; a scam" now resolves.** The first live sweep caught that `Sort My Scam Check`

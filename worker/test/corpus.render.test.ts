@@ -44,6 +44,7 @@ const labels: CorpusLabels = {
   emptyInvalidHint: "Try a London postcode like SW9 9SL.",
   emptyUnknownHint: "We don't have sample data for that postcode yet — try SW9 9SL, E1 6AN or N1 9GU.",
   attribution: [],
+  dateLabel: "asOf",
 };
 
 const sample: CorpusQuery = {
@@ -139,5 +140,22 @@ describe("buildCorpusCards", () => {
     const json = JSON.stringify(batch);
     expect(json).toContain("No sample services near N1 9GU");
     expect(json).toContain("We don't have sample data for that postcode yet");
+  });
+
+  // P3 (#225): wander sets dateLabel "omit" — its NHLE listing dates (~1949) are a record's own age,
+  // not freshness — so the summary must carry NO "data as of" claim, only the summary line.
+  it("omits the date claim entirely when dateLabel is 'omit' (wander's mixed NHLE/Greenspace dates)", () => {
+    const mixed: CorpusQuery = { ...sample, labels: { ...labels, dateLabel: "omit" } };
+    const json = JSON.stringify(buildCorpusCards(mixed));
+    expect(json).not.toContain("data as of");
+    expect(json).toContain(labels.summaryLine); // the summary line still renders, just without a date
+  });
+
+  // P3 (#225): when there's no valid asOf, drop the " · " separator too — never a dangling "data as of ".
+  it("drops the ' · ' separator when there is no date claim (no dangling 'data as of')", () => {
+    const noDate: CorpusQuery = { ...sample, asOf: null };
+    const json = JSON.stringify(buildCorpusCards(noDate));
+    expect(json).not.toContain("data as of");
+    expect(json).toContain(labels.summaryLine);
   });
 });
