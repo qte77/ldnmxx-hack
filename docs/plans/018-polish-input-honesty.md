@@ -22,7 +22,7 @@ the widen at 0.5 km) but the *claim* was wrong; P1 corrects both the code and th
 
 | # | Phase | TDD boundary | Status |
 |---|---|---|---|
-| P0 | Mint arc (plan + handoff + tracker + issues) | docs | ☐ |
+| P0 | Mint arc (plan + handoff + tracker + issues) | docs | ☑ #226 (tracker #223, bugs #224/#225) |
 | P1 | **Row-read correction** — widen starts at 0.5 km; correct the false ≥10× claim; re-measure LIVE | constant + LIVE measure (no new unit test); docs | ☐ |
 | P2 | **Input forgiveness — outward postcodes** (SE1, E8): the broken-example bug | **MODULE** `shared/sanitize` → RED-first · gazetteer data (ingest + samples) | ☐ |
 | P3 | **Record-date honesty** — heritage shows a listing date, not "data as of 1974" | render label + per-corpus `CorpusLabels` (light module) → RED-first for the label chooser | ☐ |
