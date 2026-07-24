@@ -69,10 +69,11 @@ describe("queryCorpusDef", () => {
 // --- W6 (#13, ADR 0002): the D1-backed corpus source ---------------------------------------------
 
 // Minimal D1 stub routed by METHOD shape, not SQL: the origin lookup goes .bind().first(), the
-// seeded-probe goes .first() unbound, the view read goes .all(). The unknown-cast is test
-// scaffolding only, never production narrowing.
+// seeded-probe goes .first() unbound, the view read goes .all() (unbounded) or .bind().all() (the
+// P2b bbox prefilter). The stub returns the SAME rows for bounded + unbounded reads, so behaviour is
+// unchanged. The unknown-cast is test scaffolding only, never production narrowing.
 interface StubStmt {
-  bind: () => { first: () => Promise<unknown> };
+  bind: () => { first: () => Promise<unknown>; all: () => Promise<unknown> };
   first: () => Promise<unknown>;
   all: () => Promise<unknown>;
 }
@@ -84,15 +85,17 @@ function stubDb(opts: {
   gazetteerEmpty?: boolean;
 }): D1Database {
   const down = (): Promise<never> => Promise.reject(new Error("d1 down"));
+  const view = (): Promise<unknown> => (opts.fail ? down() : Promise.resolve({ results: opts.rows ?? [] }));
   const stmt: StubStmt = {
     bind: () => ({
       first: () => (opts.fail ? down() : Promise.resolve(opts.origin ?? null)),
+      all: view, // the bbox-bounded view read
     }),
     first: () =>
       opts.fail
         ? down()
         : Promise.resolve(opts.gazetteerEmpty ? null : { postcode: "probe" }),
-    all: () => (opts.fail ? down() : Promise.resolve({ results: opts.rows ?? [] })),
+    all: view, // the unbounded view read
   };
   return { prepare: () => stmt } as unknown as D1Database;
 }

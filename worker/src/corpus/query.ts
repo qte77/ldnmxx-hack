@@ -1,5 +1,5 @@
 import { normalisePostcode } from "../../../shared/sanitize";
-import { nearestN, type Coords } from "../geo";
+import { bboxAround, nearestN, type Coords } from "../geo";
 import { oldestIsoDate } from "../dates";
 import type { CorpusLabels, CorpusQuery, CorpusRecord, CorpusRow } from "./contract";
 import { bundledSource, d1Source, type CorpusSource, type QueryCtx } from "./source";
@@ -41,6 +41,24 @@ export function queryCorpusDef(def: CorpusDef, prompt: string, n = 3): CorpusQue
   return { query: postcode, ...corpusRows(origin, def.records, n), labels };
 }
 
+// P2b (017): read the corpus bounded to a bbox around the origin, WIDENING the radius until at least
+// `n` rows are in view, then falling back to the full unbounded read. The widen guarantees results
+// never silently shrink (a sparse corpus far from the origin still answers), and the unbounded final
+// read is where source.ts's not-yet-swapped empty-view guard fires. The bundled source ignores the
+// bbox (in-memory) so its first bounded call returns everything — no behaviour change off D1.
+const WIDEN_KM = [5, 15];
+async function readWithinWidening(
+  source: CorpusSource,
+  origin: Coords,
+  n: number
+): Promise<CorpusRecord[]> {
+  for (const km of WIDEN_KM) {
+    const recs = await source.records(bboxAround(origin, km), origin);
+    if (recs.length >= n) return recs;
+  }
+  return source.records(); // unbounded — never fewer results than today; also the empty-view guard point
+}
+
 // One source-driven query: resolve the origin, then rank. Shared by the bundled + D1 paths. A
 // gazetteer MISS is a real "unknown postcode" answer, not a failure — it does not trigger fallback.
 async function querySource(
@@ -51,7 +69,7 @@ async function querySource(
 ): Promise<CorpusQuery> {
   const origin = await source.origin(postcode);
   if (!origin) return { query: postcode, rows: [], asOf: null, labels };
-  return { query: postcode, ...corpusRows(origin, await source.records(), n), labels };
+  return { query: postcode, ...corpusRows(origin, await readWithinWidening(source, origin, n), n), labels };
 }
 
 export interface QueryCorpusInput {
