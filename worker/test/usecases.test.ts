@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { assertUsecaseDef, type UsecaseDef } from "../src/usecases";
+import { assertUsecaseDef, routableUsecases, type UsecaseDef } from "../src/usecases";
 import { runUsecase } from "../src/worker";
 import type { Emitter } from "../src/trace/arize";
 
@@ -87,9 +87,38 @@ describe("usecases guard", () => {
         id: "x",
         title: "X",
         render: { mode: "corpus" },
+        keywords: ["gp", "pharmacy"],
         stages: [{ name: "query", kind: "tool", exec: "query_corpus", corpus: "care", events: [] }],
       })
     ).not.toThrow();
+  });
+
+  // Router keywords are register-only DATA on the usecase def (plan 017, correction 3) — so adding a
+  // routable workflow is a one-file change and "never auto-routed" is the absence of the field.
+  it("accepts an optional keywords string array", () => {
+    expect(() => assertUsecaseDef({ ...validDef, keywords: ["scam", "fca"] })).not.toThrow();
+  });
+  it("rejects keywords that are not a string array", () => {
+    expect(() => assertUsecaseDef({ ...validDef, keywords: "scam" })).toThrow(/keywords/);
+    expect(() => assertUsecaseDef({ ...validDef, keywords: [1, 2] })).toThrow(/keywords/);
+  });
+});
+
+describe("routableUsecases — the register-only router catalog", () => {
+  it("yields only defs that carry keywords, with id/title/keywords", () => {
+    const routables = routableUsecases();
+    for (const r of routables) {
+      expect(typeof r.id).toBe("string");
+      expect(typeof r.title).toBe("string");
+      expect(Array.isArray(r.keywords) && r.keywords.length > 0).toBe(true);
+    }
+    const ids = routables.map((r) => r.id);
+    // The corpus + scam workflows are routable…
+    expect(ids).toContain("sort-my-care");
+    expect(ids).toContain("sort-my-food-hygiene");
+    // …but route + founders are NEVER auto-routed (they carry no keywords by design).
+    expect(ids).not.toContain("sort-my-route");
+    expect(ids).not.toContain("founders-copilot");
   });
 });
 

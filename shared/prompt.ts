@@ -38,3 +38,15 @@ export const SEARCH_SYSTEM = `You are Groundwork's Founder's Copilot. Given a fo
 export function searchUser(idea: string, opps: unknown): string {
   return `Idea: ${idea || "(not provided)"}\n\nCandidate opportunities (JSON):\n${JSON.stringify(opps)}\n\nRank the matches, using only these ids.`;
 }
+
+// Auto-router (017 P2). Only reached when the keyless keyword heuristic is unsure, so the model is the
+// tie-breaker, not the first line. It must copy an id VERBATIM or answer "none" — never invent a route;
+// the routerTool validator enforces this, but instructing it up front avoids wasted fallbacks.
+export const CLASSIFY_SYSTEM = `You are the router for sortmy.london, a free assistant that signposts Londoners to official public services. Given a user's free-text request and a JSON list of available workflows (each with an id, a title, and example keywords), call the \`route_query\` tool with a one-sentence \`reasoning\` and the single best-matching workflow \`id\`, copied VERBATIM. If none genuinely fits, set \`usecase\` to "none" — choose "none" rather than a weak or guessed match. Return exactly one id.`;
+
+// `catalog` is the routable workflow list (id/title/keywords), passed in to stay dependency-free like
+// searchUser. `hasPostcode` reuses shared/sanitize.normalisePostcode's signal — a UK postcode is a
+// strong hint the ask is a location lookup (care / wander / food-hygiene) rather than a firm check.
+export function classifyUser(prompt: string, catalog: unknown, hasPostcode: boolean): string {
+  return `User request: ${prompt || "(empty)"}\nContains a UK postcode: ${hasPostcode ? "yes" : "no"}\n\nAvailable workflows (JSON):\n${JSON.stringify(catalog)}\n\nChoose the single best workflow id, or "none".`;
+}

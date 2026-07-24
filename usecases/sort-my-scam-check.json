@@ -2,6 +2,7 @@
   "id": "sort-my-scam-check",
   "title": "Sort My Scam Check",
   "render": { "mode": "scam" },
+  "keywords": ["scam", "fraud", "fca", "frn", "authorised firm", "fca register", "is this firm", "legit", "legitimate", "rip off", "ripoff"],
   "stages": [
     {
       "name": "plan",
