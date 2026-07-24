@@ -2,15 +2,16 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0/P1/P2 shipped, next P2b
+## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0/P1/P2/P2b shipped, next P3
 
 Arc 017 is open: query-driven auto-routing (one free-text input picks the workflow) + the fo
-`linear.css` theme with three London accent variants. **P0, P1 and P2 are merged** (theme + variants
-in #208; the auto-router core in #212 + wiring in #213; ADRs 0003/0004/0005 accepted; tracker #201).
-**Next = P2b (bounded corpus reads)** — its done-when is a live `meta.rows_read` measurement, so it
-⚠ **needs the Cloudflare credential** the devcontainer lacks (the CI `d1-verify` workflow is
-pre-staged for it). See the plan's _Arc-start access checklist_. Predecessor 016 is CLOSED — five
-real corpora live in D1, v1.7.0 deployed.
+`linear.css` theme with three London accent variants. **P0, P1, P2 and P2b (code) are merged**
+(theme #208; auto-router core #212 + wiring #213; bbox-bounded corpus reads + geo indexes #215; ADRs
+0003/0004/0005 accepted, 0002 extended; tracker #201). **Next = P3 (single-input UI + wording)** —
+agent-runnable and keyless. ⚠ **The Cloudflare credential the devcontainer lacks still gates THREE
+owed verifications** (deploy — prod is still v1.7.0 — + P1's remote sweep + P2b's live `rows_read`);
+the CI `deploy`/`d1-verify` workflows are pre-staged for them. See the plan's _Arc-start access
+checklist_. Predecessor 016 is CLOSED — five real corpora live in D1.
 
 ## Index
 
