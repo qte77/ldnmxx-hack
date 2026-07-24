@@ -4,6 +4,31 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 017 — one input, London-themed · P2: query-driven auto-routing (#201)
+
+- **One input, no manual switcher.** A prompt-only `POST /api/run` (no `?usecase=`) now auto-routes
+  the free-text ask to a workflow (**ADR 0004**). A keyless keyword heuristic decides the common
+  cases with no model call; a genuinely unsure ask escalates to the existing free chain; an
+  unconfident result renders a deterministic **no-match card** listing what the app can do — **never
+  a silent flagship fallback**. **No new env or secret** — the router reuses the keyless free chain.
+- **`?usecase=` remains an explicit bypass** (deep links + the founders demo) — it skips the router
+  entirely and emits no `USECASE_RESOLVED`.
+- **New SSE event `USECASE_RESOLVED{usecase,title}`** — emitted once before `RUN_STARTED` on an
+  auto-routed run so the client can announce the chosen workflow (the UI consumes it in P3; the
+  event is additive and older clients ignore it).
+- **`sort-my-route` and `founders-copilot` are never auto-routed** — they carry no router `keywords`,
+  so the router literally cannot reach them; both stay offered as suggestions on the no-match card
+  and reachable via `?usecase=`. `route`'s canned, origin-agnostic render would otherwise answer a
+  real journey with a fabricated one (ADR 0004 records this).
+- **Security:** the router gates user text through `detectInjection` before any model call, mirroring
+  `resolveRun`. **No agent framework** was added (**ADR 0003**): a single forced-tool call over the
+  existing `callModelTool`/`runChain`/zod plumbing.
+- **Telemetry:** one `route` span per auto-routed request (`routed_to`, `source`), so we can see
+  empirically whether the model tier ever beats the heuristic (ADR 0003's revisit trigger).
+- Internals: `worker.ts` reads the POST body ONCE and threads it into both the router and
+  `resolveRun` (the classifier needs `prompt` before the usecase resolves); router `keywords` are
+  register-only DATA on `UsecaseDef`.
+
 ### Plan 017 — CI deploy + credential-free D1 verification (#201)
 
 - **New workflow `Deploy (Cloudflare)`** (`workflow_dispatch`, `production` Environment) — runs

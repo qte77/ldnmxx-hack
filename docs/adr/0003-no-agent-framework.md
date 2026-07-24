@@ -1,6 +1,6 @@
 ---
 title: "ADR 0003 — no agent framework: a single LLM call with structured output"
-status: proposed
+status: accepted
 date: 2026-07-23
 ---
 
@@ -8,8 +8,10 @@ date: 2026-07-23
 
 ## Status
 
-Proposed (2026-07-23), to be accepted with **plan 017 · P2** (the query-driven auto-router). Scope:
-every model call this app makes — the founders assess/search stages and the new intent classifier.
+**Accepted** (2026-07-23), shipped with **plan 017 · P2** (the query-driven auto-router: the intent
+classifier is one forced-tool call over the existing chain via `shared/routerTool.ts` —
+`worker/src/agent/router.ts`). Scope: every model call this app makes — the founders assess/search
+stages and the intent classifier.
 
 ## Context
 

@@ -83,6 +83,9 @@ flag corrections in a PR.
 | AG-UI | Agent–User Interaction (protocol) | The other half of the protocol stack. **Not a sponsor.** | A2UI, A2A |
 | A2A | Agent-to-Agent | Deferred agent-interop endpoint. | A2UI, AG-UI |
 | LLM | Large Language Model | Backs only the `founders` render mode; civic flows are model-free. | RAG, BYOK, HUD |
+| auto-routing | (query-driven routing) | One free-text input picks the workflow (017 P2, ADR 0004); heuristic-first, `?usecase=` bypasses it. | classifier, no-match |
+| classifier | (intent classifier) | The model tier of the router — a one-shot forced-tool call, reached only when the keyword heuristic is unsure. | auto-routing, LLM |
+| no-match | (no-match card) | The deterministic "here's what I can help with" card shown when the router is unconfident — never a silent flagship fallback. | auto-routing |
 | RAG | Retrieval-Augmented Generation | Not used — civic flows are deterministic corpus retrieval, not RAG. | LLM |
 | BYOK | Bring Your Own Key | Removed from the browser; keys are Worker secrets only. | LLM |
 | HUD | Heads-Up Display | The honest `USAGE mode:demo` status indicator. | LLM |

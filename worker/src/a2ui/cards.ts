@@ -168,6 +168,27 @@ export function buildRouteCards(r: Route = route): unknown[] {
   return cardsBatch([summary, ...legs]);
 }
 
+// The no-match card (017 P2, ADR 0004): when the router can't confidently place a free-text ask, we
+// NEVER fall back to a flagship — we render a deterministic "here's what I can help with" card + the
+// discovery list, so a first-time visitor learns the app's scope instead of getting a wrong answer.
+// The catalog is register-derived (usecaseCatalog()) and INCLUDES founders/route as explicit
+// suggestions — offered, never auto-routed. Each option shows a few of its own keywords as an example;
+// a workflow without keywords (founders, route) shows just its title. No model, no hardcoded per-usecase
+// copy — pure data, so a new workflow appears here automatically.
+export function buildNoMatchCards(catalog: { id: string; title: string; keywords?: string[] }[]): unknown[] {
+  const header: CardSpec = {
+    key: "nomatch",
+    title: "I didn't understand that",
+    lines: ["Here's what sortmy.london can help with — try naming one of these:"],
+  };
+  const options: CardSpec[] = catalog.map((u) => ({
+    key: `opt-${u.id}`,
+    title: u.title,
+    lines: u.keywords && u.keywords.length > 0 ? [`e.g. ${u.keywords.slice(0, 3).join(", ")}`] : [],
+  }));
+  return cardsBatch([header, ...options]);
+}
+
 // Founder's Copilot — the incorporate "how-to pack" now lives in dependency-free shared/incorporate.ts so the
 // browser-BYOK founders render appends the SAME verified card. withIncorporate stays the Worker's entry
 // point (re-export): append the deterministic incorporate card to a founders batch (stub OR model).

@@ -1,10 +1,11 @@
 import { makeEmitter, exportSpans, MAX_TRACE_SPANS, type Emitter, type Span } from "./trace/arize";
-import { withIncorporate } from "./a2ui/cards";
+import { withIncorporate, buildNoMatchCards } from "./a2ui/cards";
 import { runIngest } from "./corpus/ingest";
 import { registry } from "./workflows";
 import { callRenderModel, extractToolArgs, type ToolSpec } from "./agent/model";
 import { buildProviders, renderFree, runChain, type Provider } from "./agent/providers";
-import { getUsecase, usecaseIds, type UsecaseDef, type RenderDef, type AgentEvent, type StageExec } from "./usecases";
+import { classifyUsecase } from "./agent/router";
+import { getUsecase, usecaseIds, routableUsecases, usecaseCatalog, type UsecaseDef, type RenderDef, type AgentEvent, type StageExec } from "./usecases";
 import {
   FOUNDERS_SYSTEM,
   foundersUser,
@@ -193,13 +194,38 @@ function resolvePace(env: Env, hasModel: boolean): number {
 // Resolve model access + the span attrs + pacing. Keyed (paid) path = a BYOK header only; our
 // OPENROUTER_KEY feeds the keyless free chain (:free ids) instead of a paid call, so the Worker never
 // spends. A demo/auto-run or a flagged prompt forces the deterministic stub.
-async function resolveRun(
+// Resolve which workflow a request runs (017 P2, ADR 0004 — the single routing resolution point).
+// `?usecase=` is an explicit BYPASS (deep links + the founders demo): use it verbatim, no router, no
+// USECASE_RESOLVED. Absent ⇒ auto-route the free-text prompt via the keyless free chain (heuristic-only
+// under ?demo=1 so a demo run never calls a model), emitting ONE `route` span. `routed` is true only for
+// an auto-routed run; an unknown `?usecase=` returns `unknownUsecase` so fetch() can 400 before streaming.
+async function resolveTarget(
+  usecaseParam: string,
+  prompt: string,
+  demo: boolean,
+  env: Env,
+  emitter: Emitter
+): Promise<{ def?: UsecaseDef | undefined; routed: boolean; unknownUsecase?: string }> {
+  if (usecaseParam) {
+    const def = getUsecase(usecaseParam);
+    return def ? { def, routed: false } : { routed: false, unknownUsecase: usecaseParam };
+  }
+  const route = await classifyUsecase(prompt, demo ? [] : freeChain(env), routableUsecases());
+  emitter.span({ name: "route", attrs: { routed_to: route.id ?? "none", source: route.source } });
+  const def = route.id ? getUsecase(route.id) : undefined;
+  return { def, routed: def !== undefined };
+}
+
+// `prompt`/`bodyModel` are the pre-parsed POST body, threaded in from fetch() so the body is read ONCE
+// (a Request body can't be read twice) and the router can see `prompt` BEFORE the usecase resolves (P2).
+function resolveRun(
   request: Request,
   env: Env,
   def: UsecaseDef,
-  demo: boolean
-): Promise<{ modelCtx: ModelCtx; runAttrs: Record<string, unknown>; paceMs: number }> {
-  const { prompt, bodyModel } = await readRunBody(request);
+  demo: boolean,
+  prompt: string,
+  bodyModel: string
+): { modelCtx: ModelCtx; runAttrs: Record<string, unknown>; paceMs: number } {
   const byokKey = readBearer(request);
   // Prompt-injection guard: a flagged prompt (or a demo/auto-run) forces the deterministic stub — never
   // worse than today, and page loads / bots can't drive any model.
@@ -291,6 +317,14 @@ interface UsageEvent extends AgentEvent {
   totalTokens: number;
 }
 
+// Emitted ONCE before RUN_STARTED on an AUTO-ROUTED run (never on a ?usecase= bypass): tells the client
+// which workflow the router chose so it can announce it (aria-live) + reflect the active flow. The client
+// tolerates unknown event types, so this is additive; the UI consumes it in P3.
+interface UsecaseResolvedEvent extends AgentEvent {
+  usecase: string;
+  title: string;
+}
+
 interface TokenTotals { promptTokens: number; completionTokens: number; totalTokens: number }
 
 // Fold one stage/render usage into the running totals (each field is optional per provider → default 0).
@@ -358,6 +392,20 @@ async function playStage(
   await playCanned(stage, write, paceMs);
   emitter.span({ name: stage.name, attrs: { kind: stage.kind, latencyMs: Date.now() - t0 } });
   return {};
+}
+
+// No-match stream (017 P2): the router couldn't confidently place the ask, so instead of a fabricated
+// route we stream the deterministic discovery card. Mirrors runUsecase's terminal envelope (RUN_STARTED
+// → render_ui → USAGE(demo) → RUN_FINISHED) but has no def/stages — a no-match is honestly "demo", model-
+// free, zero tokens. The route span (with routed_to:"none") is emitted by the caller.
+function streamNoMatch(write: (e: AgentEvent) => void, emitter: Emitter): void {
+  emitter.span({ name: "run", attrs: { usecase: "(none)" } });
+  write({ type: "RUN_STARTED" });
+  write({ type: "TOOL_CALL_END", text: "render_ui", a2uiMessages: buildNoMatchCards(usecaseCatalog()) });
+  emitter.span({ name: "render", attrs: { kind: "render" } });
+  const usage: UsageEvent = { type: "USAGE", mode: "demo", promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+  write(usage);
+  write({ type: "RUN_FINISHED" });
 }
 
 // The data-driven interpreter: play each stage (a model-backed stage runs its forced tool and streams the
@@ -435,25 +483,36 @@ export default {
       return new Response(null, { status: 202, headers: cors });
     }
 
-    const usecase = url.searchParams.get("usecase") ?? "";
-    const def = getUsecase(usecase);
-    if (!def) {
+    // Read the POST body ONCE here (a Request body can't be read twice) and thread it into BOTH the
+    // router and resolveRun — the classifier needs `prompt` BEFORE the usecase resolves (017 P2 gotcha).
+    const { prompt, bodyModel } = await readRunBody(request);
+    const demo = url.searchParams.get("demo") === "1";
+    const emitter = makeEmitter(env);
+    const target = await resolveTarget(url.searchParams.get("usecase") ?? "", prompt, demo, env, emitter);
+    if (target.unknownUsecase !== undefined) {
       return new Response(
-        JSON.stringify({ error: `unknown usecase: ${usecase || "(none)"}; valid: ${usecaseIds.join(", ")}` }),
+        JSON.stringify({ error: `unknown usecase: ${target.unknownUsecase}; valid: ${usecaseIds.join(", ")}` }),
         { status: 400, headers: { ...cors, "content-type": "application/json" } }
       );
     }
+    const { def, routed } = target;
 
-    const demo = url.searchParams.get("demo") === "1";
-    const { modelCtx, runAttrs, paceMs } = await resolveRun(request, env, def, demo);
-    const emitter = makeEmitter(env);
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         const write = (e: AgentEvent): void => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
         };
-        await runUsecase(def, emitter, write, runAttrs, modelCtx, paceMs);
+        if (def) {
+          if (routed) {
+            const resolved: UsecaseResolvedEvent = { type: "USECASE_RESOLVED", usecase: def.id, title: def.title };
+            write(resolved);
+          }
+          const { modelCtx, runAttrs, paceMs } = resolveRun(request, env, def, demo, prompt, bodyModel);
+          await runUsecase(def, emitter, write, runAttrs, modelCtx, paceMs);
+        } else {
+          streamNoMatch(write, emitter);
+        }
         controller.close();
       },
     });

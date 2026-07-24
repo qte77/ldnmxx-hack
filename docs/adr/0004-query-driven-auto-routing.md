@@ -1,6 +1,6 @@
 ---
 title: "ADR 0004 — query-driven auto-routing: one input, hybrid heuristic-first classifier"
-status: proposed
+status: accepted
 date: 2026-07-23
 ---
 
@@ -8,8 +8,10 @@ date: 2026-07-23
 
 ## Status
 
-Proposed (2026-07-23), to be accepted with **plan 017 · P2/P3**. Supersedes the manual
-usecase-switcher UX shipped through plan 015/016.
+**Accepted** (2026-07-23). The routing engine, no-match card, `?usecase=` bypass, `USECASE_RESOLVED`
+event and `route` span shipped in **plan 017 · P2**; the UI side that consumes the event (switcher
+removal + aria-live announcement) lands in **P3**. Supersedes the manual usecase-switcher UX shipped
+through plan 015/016.
 
 ## Context
 
@@ -37,11 +39,15 @@ and `resolveRun`.
 
 ### 2. Hybrid, heuristic-first
 
-`classifyHeuristic` (pure) runs first: `normalisePostcode` (`shared/sanitize.ts`) plus keyword sets
-→ care / wander / food-hygiene / route / scam. It is free, zero-latency and works with **no model
-at all** (keyless-first). Only when it is ambiguous (zero or multiple hits) do we escalate to a
-one-shot model classifier (ADR 0003's pattern). User text is gated through `detectInjection`
-(`shared/guard.ts`) before any model call.
+`classifyHeuristic` (pure, `worker/src/agent/router.ts`) runs first: case-insensitive keyword
+scoring over the **register-only `keywords`** each workflow carries (`UsecaseDef`, surfaced by
+`routableUsecases()`), so care / wander / food-hygiene / scam-check route with **no model at all**
+(keyless-first). A unique top scorer wins; a zero-hit or a TIE returns `null` and escalates to a
+one-shot model classifier (ADR 0003's pattern), whose allowed labels are those same routable ids —
+so it can never invent a route either. `sort-my-route` / `founders-copilot` carry **no** keywords, so
+neither tier can reach them (the never-auto-routed property is the *absence* of data, not a hardcoded
+exclusion). `normalisePostcode` (`shared/sanitize.ts`) supplies a location hint to the model
+escalation. User text is gated through `detectInjection` (`shared/guard.ts`) before any model call.
 
 ### 3. No silent default — an honest no-match
 
@@ -58,9 +64,9 @@ An explicit param skips the router entirely, so deep links and the founders demo
 ### 5. The client learns the choice
 
 The Worker emits `USECASE_RESOLVED{usecase,title}` before `RUN_STARTED` — additive to the existing
-event contract (`applyA2UIEvent` already tolerates unknown types). The UI updates its active
-workflow from it and **announces it in an aria-live region** so the routing decision is not
-sighted-only.
+event contract (`applyA2UIEvent` already tolerates unknown types, verified). In **P2** the Worker
+emits it; in **P3** the UI updates its active workflow from it and **announces it in an aria-live
+region** so the routing decision is not sighted-only.
 
 ## Consequences
 
