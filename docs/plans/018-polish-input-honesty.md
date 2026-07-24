@@ -28,6 +28,7 @@ the widen at 0.5 km) but the *claim* was wrong; P1 corrects both the code and th
 | P3 | **Record-date honesty** — heritage shows a listing date, not "data as of 1974" | render label + per-corpus `CorpusLabels` (light module) → RED-first for the label chooser | ☐ |
 | P4 | **Config/code separation** — one shared usecase catalog (kills the UI `routable`/`example` drift) | **MODULE**/data → RED-first for the loader/validator | ☐ |
 | P5 | **Visual/UX pass** — hierarchy, density, distances, glyphs, chips, rotating placeholder | CSS/copy/glue → **e2e + axe** (no unit tests) | ☐ |
+| P5b | **No-match card — "type this" vs "open this"** — founders/route get a blurb + `?usecase=` link, not a fake keyword | render + copy → e2e | ☐ |
 | P6 | **Release v1.9.0** (or fold the v1.8.0 tag here — see owner gate) | docs · issues | ☐ |
 
 ## LIVE measurements (2026-07-24, prod food_hygiene = 66,871 rows) — the P1 evidence
@@ -73,10 +74,21 @@ on a SMALL first box. **No cell column needed** (KISS): 0.5 km clears the ADR-00
 - **P4 Config/code separation — one usecase catalog.** Today the worker registry (`usecases/*.json` +
   keywords) and the UI (`App.tsx` `USECASES`: label/example/`routable`) are TWO sources that drift —
   the `routable` flag literally duplicates keyword-presence. **Fix:** a single shared catalog
-  (`{id, title, keywords, example}`) in `shared/` or `data/`, consumed by BOTH the worker
-  `routableUsecases`/`usecaseCatalog` and the UI. **MODULE (RED-first):** the shared loader + validator.
-  **Done-when:** no duplicated usecase config; `routable` is derived (keywords present), not re-declared;
-  adding a workflow is ONE edit; register-only property (ADR 0001) preserved end to end.
+  (`{id, title, keywords, example, blurb}`) in `shared/` or `data/`, consumed by BOTH the worker
+  `routableUsecases`/`usecaseCatalog` and the UI. Note `blurb` is carried for EVERY usecase (incl. the
+  never-auto-routed `founders-copilot`/`sort-my-route`), for the no-match card (P5). **MODULE
+  (RED-first):** the shared loader + validator. **Done-when:** no duplicated usecase config; `routable`
+  is derived (keywords present), not re-declared; adding a workflow is ONE edit; register-only property
+  (ADR 0001) preserved end to end.
+
+- **P5b No-match discovery card — "type this" vs "open this".** The card lists every workflow, but the
+  never-auto-routed ones (`founders-copilot`, `sort-my-route`) currently show a BARE title while the
+  routable ones show `e.g. <keywords>`. Giving the bare two a typed `e.g.` example would advertise an
+  input that no-matches (the SE1 trap) — they have no keywords ON PURPOSE. **Fix:** render two kinds —
+  routable → `type: <keywords>`; non-routable → its `blurb` (P4) + a **`?usecase=` link** ("open →").
+  Server-rendered A2UI (`worker/src/a2ui/cards.ts` `buildNoMatchCards`), so a markdown link is enough;
+  no client change. **Done-when:** founders/route are discoverable from the no-match card via an
+  accurate "open" affordance, never a fake typed keyword; e2e asserts the link, not a keyword line.
 
 - **P5 Visual/UX pass** (the "dull + complicated" critique — CSS/copy/glue, so **e2e + axe are the test,
   no unit tests**). Address, roughly in impact order: (a) human distances (`0 km` → `<50 m` / `~2-min
