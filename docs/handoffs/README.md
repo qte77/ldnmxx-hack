@@ -2,16 +2,16 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — P0/P1/P2/P2b shipped, next P3
+## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — ALL code shipped (P0–P3), next P4 release (gated)
 
-Arc 017 is open: query-driven auto-routing (one free-text input picks the workflow) + the fo
-`linear.css` theme with three London accent variants. **P0, P1, P2 and P2b (code) are merged**
-(theme #208; auto-router core #212 + wiring #213; bbox-bounded corpus reads + geo indexes #215; ADRs
-0003/0004/0005 accepted, 0002 extended; tracker #201). **Next = P3 (single-input UI + wording)** —
-agent-runnable and keyless. ⚠ **The Cloudflare credential the devcontainer lacks still gates THREE
-owed verifications** (deploy — prod is still v1.7.0 — + P1's remote sweep + P2b's live `rows_read`);
-the CI `deploy`/`d1-verify` workflows are pre-staged for them. See the plan's _Arc-start access
-checklist_. Predecessor 016 is CLOSED — five real corpora live in D1.
+Arc 017: query-driven auto-routing (one free-text input picks the workflow) + the fo `linear.css`
+theme with three London accent variants. **Every code phase is merged** — P1 theme #208; auto-router
+core #212 + wiring #213; bbox-bounded reads + geo indexes #215; single-input UI #217; ADRs
+0003/0004/0005 accepted, 0002 extended; tracker #201. **Next = P4 (release v1.8.0), which is the
+credential-gated Phase B and CANNOT run keyless:** deploy (prod is still v1.7.0) → apply migration
+`0005` → the owed verifications (P2b `rows_read`, remote sweep, 016 `corpus_meta`) → bump/tag/release.
+⚠ The owner must add `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (D1:Edit) as repo secrets; the
+`deploy`/`d1-verify` workflows are pre-staged. Full sequence in the handoff. Predecessor 016 CLOSED.
 
 ## Index
 
