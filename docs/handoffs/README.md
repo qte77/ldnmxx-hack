@@ -2,22 +2,22 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [017 — one input, London-themed](017-single-input-london-theme.md) — ALL code shipped (P0–P3), next P4 release (gated)
+## ▶ Resume point: [018 — post-launch polish](018-polish-input-honesty.md) — start at P1 (row-read correction)
 
-Arc 017: query-driven auto-routing (one free-text input picks the workflow) + the fo `linear.css`
-theme with three London accent variants. **Every code phase is merged** — P1 theme #208; auto-router
-core #212 + wiring #213; bbox-bounded reads + geo indexes #215; single-input UI #217; ADRs
-0003/0004/0005 accepted, 0002 extended; tracker #201. **Next = P4 (release v1.8.0), which is the
-credential-gated Phase B and CANNOT run keyless:** deploy (prod is still v1.7.0) → apply migration
-`0005` → the owed verifications (P2b `rows_read`, remote sweep, 016 `corpus_meta`) → bump/tag/release.
-⚠ The owner adds just `CLOUDFLARE_API_TOKEN` as a repo secret (account_id is now in `wrangler.toml`); the
-`deploy`/`d1-verify` workflows are pre-staged. Full sequence in the handoff. Predecessor 016 CLOSED.
+Arc 017 **shipped + DEPLOYED** to `sortmy.london` (single-input UX + auto-router + fo Linear theme;
+PRs #208/#212/#213/#215/#217, deploy + migration `0005` live). Live testing found a coherent
+polish/honesty backlog → **arc 018**: **P1** correct P2b's over-claimed row-read
+(prod is ~1.2×; fix = 0.5 km widen, measured 17.5×), **P2** outward-postcode input forgiveness (the
+`food hygiene near SE1` self-example bug), **P3** the `data as of 1974` heritage-date honesty, **P4** one
+shared usecase catalog (kills the UI/worker drift), **P5** the visual/UX pass. **Owner gate: the v1.8.0
+tag** (default = hold until P1–P3). Predecessor 016 CLOSED.
 
 ## Index
 
 | # | Handoff | State |
 |---|---|---|
-| 017 | [One input, London-themed](017-single-input-london-theme.md) | **OPEN** — P0 shipped, next P1 |
+| 018 | [Post-launch polish](018-polish-input-honesty.md) | **OPEN** — start at P1 |
+| 017 | [One input, London-themed](017-single-input-london-theme.md) | closed — shipped + deployed; polish → 018 |
 | 016 | [Keyless real data — pipeline + 3 real corpora](016-keyless-real-data.md) | closed — P0–P5 shipped |
 | 015 | [Civic usecase expansion + real data](015-civic-usecase-expansion.md) | closed (≈90%; remainder → 016) |
 | 014 | [Civic landing + strictness + perf](014-civic-landing-strictness-perf.md) | superseded |
