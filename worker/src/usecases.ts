@@ -51,10 +51,15 @@ export interface UsecaseDef {
   // Register-only DATA so adding a routable workflow stays a one-file change (correction 3). ABSENT ⇒
   // never auto-routed (sort-my-route, founders-copilot) — the absence IS the "never-auto-routed" property.
   keywords?: string[];
+  // 018 P4: deep-link prefill example + no-match-card blurb. OPTIONAL on the engine type (the many
+  // inline UsecaseDef test fixtures don't carry them); the shared catalog (CatalogEntry) REQUIRES both
+  // and is the single authored source of truth. See shared/usecaseCatalog.ts.
+  example?: string;
+  blurb?: string;
 }
 
 // Allow-lists for the strict load guard below. Keep in sync with UsecaseDef / StageDef.
-const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages", "keywords"];
+const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages", "keywords", "example", "blurb"];
 const STAGE_KEYS: readonly string[] = ["name", "kind", "events", "exec", "corpus"];
 
 // Narrow to unknown[] (not the any[] that Array.isArray infers, which would defeat the type-safety lints).
@@ -124,6 +129,16 @@ function assertKeywords(id: string, keywords: unknown): void {
   }
 }
 
+// 018 P4: `example` (deep-link prefill) + `blurb` (no-match card) are OPTIONAL on the engine def; if
+// present they must be non-empty strings. The shared catalog enforces them as REQUIRED — two schemas,
+// one per concern (see shared/usecaseCatalog.ts `assertCatalogEntry`).
+function assertOptionalNonEmptyString(id: string, field: string, val: unknown): void {
+  if (val === undefined) return;
+  if (typeof val !== "string" || val.length === 0) {
+    throw new Error(`usecase ${id}: ${field} must be a non-empty string when present`);
+  }
+}
+
 // Tiny load-time guard. Usecases are trusted, build-time JSON (bundled like data/demo/*.json), so this
 // is not external-input validation — it just turns an authoring slip into a clear startup error.
 // Checks the shared workflow-definition/v1 contract core first (id, non-empty ordered stages[].name —
@@ -147,6 +162,8 @@ export function assertUsecaseDef(x: unknown): asserts x is UsecaseDef {
   }
   assertRenderMode(id, d.render);
   assertKeywords(id, (d as { keywords?: unknown }).keywords);
+  assertOptionalNonEmptyString(id, "example", (d as { example?: unknown }).example);
+  assertOptionalNonEmptyString(id, "blurb", (d as { blurb?: unknown }).blurb);
   assertStageShapes(id, d.stages);
 }
 
@@ -170,23 +187,9 @@ export function getUsecase(id: string): UsecaseDef | undefined {
   return registry[id];
 }
 
-// The register-only router catalog (017 P2): every workflow that carries keywords, as the {id, title,
-// keywords} shape the auto-router consumes. A workflow WITHOUT keywords (sort-my-route, founders-copilot)
-// is absent here and so is never auto-routed — the router hard-codes no ids and reachability is DATA.
-export function routableUsecases(): { id: string; title: string; keywords: string[] }[] {
-  return usecaseIds
-    .map((id) => registry[id])
-    .filter((def): def is UsecaseDef => def !== undefined && (def.keywords?.length ?? 0) > 0)
-    .map((def) => ({ id: def.id, title: def.title, keywords: def.keywords ?? [] }));
-}
-
-// The FULL usecase catalog (017 P2): every workflow's id/title (+ keywords when present), for the
-// no-match card's discovery list. Unlike routableUsecases() this INCLUDES the never-auto-routed
-// workflows (sort-my-route, founders-copilot) — they are offered as explicit suggestions, just never
-// picked automatically. Still register-only: the list is derived from the registry, not hand-kept.
-export function usecaseCatalog(): { id: string; title: string; keywords?: string[] }[] {
-  return usecaseIds
-    .map((id) => registry[id])
-    .filter((def): def is UsecaseDef => def !== undefined)
-    .map((def) => (def.keywords ? { id: def.id, title: def.title, keywords: def.keywords } : { id: def.id, title: def.title }));
-}
+// The register-only router catalog + the full discovery catalog (017 P2) are now DERIVED from the ONE
+// shared catalog (shared/usecaseCatalog.ts), which the SPA (ui/src/App.tsx) reads too — no second,
+// drifting copy (018 P4). Re-exported (not re-implemented) so worker.ts's existing named imports of
+// these need zero changes; routable stays register-only (keywords present, never hard-coded ids), and
+// usecaseCatalog still INCLUDES the never-auto-routed workflows for the no-match discovery list.
+export { routableUsecases, usecaseCatalog, type Routable, type CatalogEntry } from "../../shared/usecaseCatalog";

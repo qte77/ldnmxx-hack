@@ -1,6 +1,8 @@
 {
   "id": "founders-copilot",
   "title": "Founder's Copilot",
+  "example": "an AI copilot for London founders",
+  "blurb": "A demo copilot matching London startup founders to funding and incorporation steps.",
   "render": { "mode": "founders" },
   "stages": [
     {

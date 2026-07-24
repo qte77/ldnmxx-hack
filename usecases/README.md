@@ -34,6 +34,11 @@ Schema (guarded at load):
 {
   "id": "sort-my-route",
   "title": "Sort My Route",
+  // 018 P4: example (deep-link prefill) + blurb (no-match card), both REQUIRED. The shared catalog
+  // (shared/usecaseCatalog.ts) reads id/title/example/blurb + optional keywords; the UI + Worker both
+  // consume it, so there is no second drifting copy. keywords ABSENT here ⇒ never auto-routed.
+  "example": "step-free from E8 3GT to Westminster",
+  "blurb": "Plan a step-free public transport route between two London places.",
   "render": { "mode": "founders" | "route" | "corpus" | "scam" },
   "stages": [
     { "name": "plan", "kind": "plan", "events": [ { "type": "STEP_STARTED", "text": "…" } ] },

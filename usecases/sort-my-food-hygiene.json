@@ -1,6 +1,8 @@
 {
   "id": "sort-my-food-hygiene",
   "title": "Sort My Food Hygiene",
+  "example": "food hygiene near SW9 9SL",
+  "blurb": "Look up official food hygiene ratings for restaurants and takeaways near a postcode.",
   "render": { "mode": "corpus" },
   "keywords": ["food hygiene", "hygiene rating", "food safety", "restaurant", "takeaway", "food rating", "fhrs", "cafe", "eatery", "food inspection"],
   "stages": [
