@@ -46,6 +46,13 @@ describe("matchFirms", () => {
     expect(matchFirms("nonesuch-firm", firms, 5)).toEqual([]);
     expect(matchFirms("a", firms, 1).length).toBeLessThanOrEqual(1);
   });
+  // 018: the single free-text input invites the QUESTION form ("is X a scam"), not a bare firm name.
+  it("matches a firm named inside a natural-language ask (018: 'is X a scam')", () => {
+    const ids = matchFirms("is thames capital partners a scam", firms, 5)
+      .map((r) => r.id)
+      .sort();
+    expect(ids).toEqual(["auth", "clone"]);
+  });
 });
 
 describe("queryScamDef", () => {
@@ -60,6 +67,12 @@ describe("queryScamDef", () => {
     const q = queryScamDef(firms, scamLabels, "Zzz Nonesuch");
     expect(q.query).toBe("Zzz Nonesuch");
     expect(q.rows).toEqual([]);
+  });
+
+  it("resolves a natural-language ask so the summary renders (the live-sweep scam case, 018)", () => {
+    const q = queryScamDef(firms, scamLabels, "is Thames Capital Partners a scam");
+    expect(q.rows.length).toBe(2);
+    expect(q.query).toBe("is Thames Capital Partners a scam");
   });
 
   it("a hit carries the facts, NEVER a verdict, and always routes to the FCA register", () => {
