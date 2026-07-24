@@ -26,7 +26,7 @@ source" disclaimer in the render. `src/dates.ts` validates the `asOf` freshness 
 date only), and `src/agent/model.ts`'s `callModelTool` retries once on a transient HTTP status before
 falling back. No new env or CLI switch beyond `?usecase=<id>` (postcode/query passed as the run `prompt`).
 
-**Run:** `npm run dev` (or `make dev-worker`); tests via `npm run test` (plain-vitest `worker.fetch()`);
+**Run:** `npm run dev` (or `make dev_worker`); tests via `npm run test` (plain-vitest `worker.fetch()`);
 lint via `npm run lint` (strictTypeChecked, matching `ui/`).
 
 **Switches:** `?demo=1` forces the keyless stub even with a model key present; BYOK via

@@ -10,4 +10,4 @@ Calls `POST /api/run?usecase=<id>` (SSE) and renders the A2UI cards (Column / Ca
 `src/usecase.ts` (`?usecase=` routing, tested), `src/agent/useAgentSSE.ts` (SSE transport),
 `src/A2UISurface.tsx` (render seam), `src/EventStream.tsx` (dev-only event log).
 
-**Run:** `npm run dev` (or `make dev-ui`). Scripts: `dev`, `build`, `typecheck`, `lint`, `test`, `size`.
+**Run:** `npm run dev` (or `make dev_ui`). Scripts: `dev`, `build`, `typecheck`, `lint`, `test`, `size`.
