@@ -28,6 +28,7 @@ from parsers import (
     parse_greenspace,
     parse_nhle,
     parse_postcodes,
+    with_outcodes,
 )
 
 UA = "sortmy-london-ingest/1.0 (https://github.com/qte77/ldnmxx-hack)"
@@ -194,7 +195,7 @@ def main() -> int:
     )
     try:
         gazetteer = geocode(universe)
-        artifacts["postcodes"] = sorted(gazetteer.values(), key=lambda r: r["postcode"])
+        artifacts["postcodes"] = sorted(with_outcodes(list(gazetteer.values())), key=lambda r: r["postcode"])
         artifacts["cqc"] = attach_coords(artifacts["cqc"], gazetteer)
     except Exception as e:
         failures.append(f"postcodes: {e}")

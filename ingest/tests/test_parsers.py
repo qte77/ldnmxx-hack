@@ -19,6 +19,7 @@ from parsers import (
     parse_greenspace,
     parse_nhle,
     parse_postcodes,
+    with_outcodes,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -93,6 +94,35 @@ class TestParsePostcodes:
     def test_dedupes_across_batches(self):
         doubled = parse_postcodes([fixture_json("postcodesio-bulk.json")] * 2)
         assert len(doubled) == len(self.rows())
+
+
+class TestWithOutcodes:
+    """018 P2 #224: append one AVG(lat,lng) centroid per outward code, so a bare outcode (SE1, E8, N1,
+    SW1A) resolves through the same gazetteer a full postcode does — durable across the daily cron swap
+    (the postcodes table is rebuilt from this artifact, so the outcodes must live in it, not only in
+    migration 0006)."""
+
+    def test_appends_one_averaged_centroid_per_outward_code(self):
+        rows = [
+            {"postcode": "SE1 7PB", "lat": 51.50, "lng": -0.11},
+            {"postcode": "SE1 9SG", "lat": 51.52, "lng": -0.09},
+            {"postcode": "E8 3GT", "lat": 51.54, "lng": -0.07},
+        ]
+        out = with_outcodes(rows)
+        by_pc = {r["postcode"]: r for r in out}
+        # Every original full postcode is preserved unchanged.
+        assert by_pc["SE1 7PB"] == rows[0]
+        assert by_pc["E8 3GT"] == rows[2]
+        # One centroid row per outward code, coordinates AVERAGED over its members.
+        assert by_pc["SE1"]["lat"] == (51.50 + 51.52) / 2
+        assert by_pc["SE1"]["lng"] == (-0.11 + -0.09) / 2
+        assert by_pc["E8"]["lat"] == 51.54  # single member -> its own point
+        # Outcode keys carry NO space, so migration 0006's self-referential INSERT can never re-aggregate
+        # them (its WHERE needs a space) and they can never collide with a full-postcode key.
+        assert all(" " not in oc for oc in ("SE1", "E8"))
+
+    def test_empty_gazetteer_returns_empty(self):
+        assert with_outcodes([]) == []
 
 
 # --- NHLE ArcGIS GeoJSON -> wander records --------------------------------------------------------
