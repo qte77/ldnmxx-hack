@@ -26,6 +26,10 @@ correctness + honesty first (P1–P3), then config-separation (P4) and the visua
 - 🔴 **Two shipped-but-wrong things to own in P1–P2:** (1) P2b's docs claim ≥10× but prod is ~1.2×
   (fix = start widen at 0.5 km, LIVE-measured 17.5×); (2) `food hygiene near SE1` FAILS though "SE1" is
   the app's own placeholder (outward codes unsupported).
+- 🟡 **Two owed 017 verifications carried into P1's deploy ritual** (never run — don't strand them): the
+  first LIVE remote `ui_sweep.py` (variant×scheme axe + typed-ask + `runs.jsonl` line) and the 016
+  `corpus_meta` freshness check. Post-deploy only a lightweight liveness/MIME check ran. See the plan's
+  "Carried from 017" section.
 - **NEXT = P1 (row-read correction)** — one-line `WIDEN_KM` → `[0.5,2,8]` + correct the docs + re-measure
   live. Then P2 (outward postcodes, the SE1 bug) → P3 (the `data as of 1974` heritage-date honesty) →
   P4 (single shared usecase catalog) → P5 (visual/UX pass) → P6 (release).
