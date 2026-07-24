@@ -23,15 +23,26 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
 - **Live:** v1.7.0 on `sortmy.london`; 5 corpora in D1; daily ingest cron batched under the
   subrequest cap (#197); tier3 monitor green.
 - ☑ **P0 shipped** (#202/#203/#204/#205) · ☑ **P1 shipped** (#208) + two plan corrections banked
-  (#206 P2b index, #207 router-keyword home).
-- 🔴 **BLOCKER, new: no Cloudflare credentials in this devcontainer.** `wrangler dev` fails at boot
-  ("No credentials found, non-interactive"), so **deploy, the remote sweep, the 016 `corpus_meta`
-  cron check and P2b's `rows_read` measurement are ALL blocked** until `CLOUDFLARE_API_TOKEN` lands
-  in the root `.env` / `~/.cf-token`. See the plan's **Arc-start access checklist**. P1's theme was
-  verified credential-free (below); P2b **cannot** be — its done-when IS a live measurement.
-- **NEXT = P2 (auto-router)**, which is fully agent-runnable without credentials (pure modules +
-  vitest). Then **P2b** (needs the credential) → P3 UI/wording → P4 release v1.8.0. **Owe P1 a
-  remote sweep** the moment credentials land.
+  (#206 P2b index, #207 router-keyword home) · ☑ **CI deploy + D1-verify pre-staged** (#210/#211,
+  `production` env created with a required review) · ☑ **P2 shipped** (#212 router core + #213
+  wire): prompt-only `/api/run` auto-routes, `?usecase=` bypass, `USECASE_RESOLVED` event, no-match
+  card, `route` span; ADR 0003/0004 accepted; **no new env**.
+- 🔴 **BLOCKER, still open: no Cloudflare credentials in this devcontainer.** `wrangler dev` fails at
+  boot ("No credentials found, non-interactive"), so **deploy, the remote sweep, the 016
+  `corpus_meta` cron check and P2b's `rows_read` measurement are ALL blocked** until the owner adds
+  `CLOUDFLARE_API_TOKEN` (+ `CLOUDFLARE_ACCOUNT_ID`, D1:Edit scope) as **repo Actions secrets** — the
+  workflows are pre-staged and inert until then (dispatch `d1-verify` `bbox_rows_read` for P2b). See
+  the plan's **Arc-start access checklist**.
+- **NEXT = P2b (bounded corpus reads: index migration + bbox prefilter).** Its done-when is a LIVE
+  `meta.rows_read` measurement (a mocked D1 can't model scanning — see the #206 correction), so it
+  **needs the credential**. The pure `bboxAround` + widen-retry planner CAN be built + unit-tested
+  now (RED-first, keyless); only the final measurement gates on the token. Then P3 UI/wording → P4
+  release v1.8.0. **Two verifications are OWED the moment credentials land: P1's remote sweep AND
+  P2b's before/after row-read numbers.**
+- **P3 must finish what P2 started (UI side):** POST prompt-only (drop `?usecase=` from
+  `useAgentSSE.runWorkerPath`), consume `USECASE_RESOLVED` (set `active` + aria-live announce),
+  remove the switcher control, README hero rewrite + document the `USECASE_RESOLVED` event. The
+  router is API-reachable now but the UI still sends `?usecase=`, so P2 is invisible to users until P3.
 - **P2b is a hard prerequisite for P3, not an optimisation.** Corpus queries read the WHOLE view
   today (66,871 rows for food-hygiene) against D1's 5M row-reads/day ⇒ ~75 asks/day. P3's free-text
   input invites exploratory asking, so the bbox prefilter must land BEFORE the UI ships.
