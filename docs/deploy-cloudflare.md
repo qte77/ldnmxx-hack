@@ -33,14 +33,27 @@ work into Actions:
 | **D1 Verify (read-only)** `.github/workflows/d1-verify.yml` | one of four **static** SELECTs — `corpus_meta` freshness, `row_counts`, and P2b's `bbox_plan` / `bbox_rows_read` | `workflow_dispatch` only — **no Environment gate**, so measurement stays self-service |
 | **Tier-3 Monitor** `.github/workflows/tier3-monitor.yml` | the full e2e sweep against the live site | none — credential-free |
 
-**Setup (once):** add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets
+**Setup (once):** add **`CLOUDFLARE_API_TOKEN`** as a **repository** secret
 (`gh secret set CLOUDFLARE_API_TOKEN --repo qte77/ldnmxx-hack` prompts for hidden input — never paste
-a token into a shell history or a chat). Keep them **repository** secrets, not Environment secrets,
-so the ungated `d1-verify` can read them. The `production` Environment already requires a review from
-`qte77` and only allows protected branches, so a deploy is an approval rather than a button (note
-GitHub's default `can_admins_bypass: true`). **`d1-verify` additionally needs Account > D1 > Edit**
-on the token — Cloudflare has no read-only D1 scope. Both workflows fail fast with a readable message
-while the secrets are absent.
+a token into a shell history or a chat). That is now the **only** secret needed: `account_id` is pinned
+in `worker/wrangler.toml` (it is not secret — account ids appear in dashboard URLs), so
+`CLOUDFLARE_ACCOUNT_ID` is optional (the workflows still pass it, but the toml value wins). Keep the
+token a **repository** secret, not an Environment secret, so the ungated `d1-verify` can read it. The
+`production` Environment already requires a review from `qte77` and only allows protected branches, so
+a deploy is an approval rather than a button (note GitHub's default `can_admins_bypass: true`). Both
+workflows fail fast with a readable message while the token is absent.
+
+**Minimal token scopes** (ongoing redeploy + D1 verify — the custom domain is already attached, so the
+DNS scopes `finish_cf.sh` needed are no longer required and can be dropped):
+
+- **Account** (this account): **Workers Scripts** · Edit · **Cloudflare Pages** · Edit · **D1** · Edit
+  (`d1-verify` + migrations; no read-only D1 scope exists) · **Workers AI** · Read (optional — the
+  binding works at runtime without it).
+- **Zone** (`sortmy.london`): **Workers Routes** · Edit (assert `sortmy.london/api/*`) · **Zone** · Read
+  (resolve the route's `zone_name`).
+- **Drop:** DNS · Read/Edit and Zone DNS Settings · Read/Edit — only `finish_cf.sh`'s first-time domain
+  attach used them. Editing a token's permissions **keeps its value**, so tightening does not require
+  re-setting the GitHub secret.
 
 The D1 statement set is **static and read-only by construction**: the dispatch takes a `choice`, not
 free-text SQL, mirroring how ADR 0002 keeps `VIEW_SQL` a closed whitelist.
