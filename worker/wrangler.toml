@@ -4,6 +4,12 @@ name = "ldnmxx-hack-worker"
 main = "src/worker.ts"
 compatibility_date = "2026-07-01"
 
+# Cloudflare account to deploy to (top-level; NOT secret — it appears in dashboard URLs). Paste the
+# 32-hex id from the dashboard (Workers & Pages -> Account ID), then UNCOMMENT the next line. Left
+# commented on purpose: an EMPTY account_id would win over the CLOUDFLARE_ACCOUNT_ID env the CI
+# workflows pass and break `wrangler deploy`, so an inert placeholder is safer than a blank value.
+# account_id = ""
+
 # Same-origin API on the Pages domain: sortmy.london/api/* -> this Worker (Worker routes win over Pages).
 # Requires sortmy.london to be a zone on the Cloudflare account before `wrangler deploy`.
 routes = [
