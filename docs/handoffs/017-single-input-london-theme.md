@@ -28,26 +28,29 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
   wire): prompt-only `/api/run` auto-routes, `?usecase=` bypass, `USECASE_RESOLVED` event, no-match
   card, `route` span; ADR 0003/0004 accepted · ☑ **P2b code shipped** (#215): bbox prefilter +
   `0005_geo_indexes.sql` (pre-staged unapplied) + widen-retry; ADR 0002 gains the bounded-reads
-  consequence. **No new env** across P2/P2b.
+  consequence · ☑ **P3 shipped** (#217): single input, no switcher — the SPA POSTs prompt-only and
+  shows the router's pick (`Showing: …` + aria-live); `readUsecase` = `?usecase=` bypass only; P3 copy
+  spec verbatim; struck claims gone from UI + `index.html`; the e2e sweep is now typed-ask.
+  **No new env** across the whole arc. **ALL CODE PHASES (P0–P3) ARE MERGED.**
 - 🔴 **BLOCKER, still open: no Cloudflare credentials in this devcontainer.** `wrangler dev` fails at
   boot ("No credentials found, non-interactive"). The owner must add `CLOUDFLARE_API_TOKEN`
   (+ `CLOUDFLARE_ACCOUNT_ID`, **D1:Edit** scope) as **repo Actions secrets**; the CI workflows are
   pre-staged and inert until then. See the plan's **Arc-start access checklist**.
-- **THREE verifications are OWED the moment credentials land** (none can run keyless): (1) **deploy**
-  P1+P2+P2b to prod — production is still v1.7.0 — via `gh workflow run deploy.yml` (gated by the
-  `production` review); (2) **P1's remote sweep** (`ui_sweep.py` — 3 variants × light/dark); (3)
-  **P2b's before/after `rows_read`** + `EXPLAIN QUERY PLAN` via `gh workflow run d1-verify.yml -f
-  check=bbox_rows_read` / `bbox_plan` — AND **apply `0005` first**
-  (`wrangler d1 migrations apply DB --remote`), else the prefilter still scans. Also carried: the
-  016 `corpus_meta` cron check (`d1-verify -f check=corpus_meta`).
-- **NEXT (agent-runnable, keyless) = P3 (single-input UI + wording).** P2b was the hard prerequisite
-  and its code is in, so P3 can proceed: POST prompt-only (drop `?usecase=` from
-  `useAgentSSE.runWorkerPath`), consume `USECASE_RESOLVED` (set `active` + aria-live announce),
-  remove the switcher control (keep the catalog as suggestion DATA), reword hero/blurb per the plan's
-  **P3 copy spec** (use VERBATIM), README hero + document the `USECASE_RESOLVED` event. Then P4
-  release v1.8.0 (needs deploy → the owed verifications).
-- **The router is API-reachable now but the UI still POSTs `?usecase=`, so P2/P2b are invisible to
-  users until P3 flips the UI to prompt-only.** That is P3's first job (above).
+- **NEXT = P4 (release v1.8.0) — this is the credential-gated Phase B; it CANNOT run keyless.** The
+  exact sequence once the secret lands:
+  1. **Deploy** P1+P2+P2b+P3 (prod is still v1.7.0): `gh workflow run deploy.yml` (gated by the
+     `production` review) — includes the #178 asset-MIME assert.
+  2. **Apply the migration** `worker/migrations/0005_geo_indexes.sql`:
+     `cd worker && ./node_modules/.bin/wrangler d1 migrations apply DB --remote --config wrangler.toml`.
+  3. **The owed verifications** (each has a pre-staged workflow): P2b `rows_read`/`EXPLAIN`
+     (`gh workflow run d1-verify.yml -f check=bbox_rows_read` and `-f check=bbox_plan` — must show the
+     index + a ≥10× row-read cut); the remote sweep (`ui_sweep.py` — now typed-ask, 3 variants ×
+     light/dark, routing markers, no-match); the carried 016 `corpus_meta` check
+     (`d1-verify -f check=corpus_meta`).
+  4. **`make bump VERSION=1.8.0`** → tag → GH release → sweep PASS → commit the `runs.jsonl` line.
+- **Honest FAIL in the meantime:** the tier-3 monitor now sweeps for the single-input UI, but prod is
+  still v1.7.0 (has the switcher), so scheduled runs FAIL until the deploy above. Expected + one
+  dedup-ed alert issue; clears on deploy. Do NOT "fix" it by reverting the sweep.
 
 ## Carried over from 016 — do this first, it is quick
 
