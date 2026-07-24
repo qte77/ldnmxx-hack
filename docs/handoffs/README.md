@@ -10,7 +10,7 @@ core #212 + wiring #213; bbox-bounded reads + geo indexes #215; single-input UI 
 0003/0004/0005 accepted, 0002 extended; tracker #201. **Next = P4 (release v1.8.0), which is the
 credential-gated Phase B and CANNOT run keyless:** deploy (prod is still v1.7.0) → apply migration
 `0005` → the owed verifications (P2b `rows_read`, remote sweep, 016 `corpus_meta`) → bump/tag/release.
-⚠ The owner must add `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (D1:Edit) as repo secrets; the
+⚠ The owner adds just `CLOUDFLARE_API_TOKEN` as a repo secret (account_id is now in `wrangler.toml`); the
 `deploy`/`d1-verify` workflows are pre-staged. Full sequence in the handoff. Predecessor 016 CLOSED.
 
 ## Index

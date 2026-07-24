@@ -33,9 +33,11 @@ three trademark-safe **London accent variants**, light + dark, everything self-h
   spec verbatim; struck claims gone from UI + `index.html`; the e2e sweep is now typed-ask.
   **No new env** across the whole arc. **ALL CODE PHASES (P0–P3) ARE MERGED.**
 - 🔴 **BLOCKER, still open: no Cloudflare credentials in this devcontainer.** `wrangler dev` fails at
-  boot ("No credentials found, non-interactive"). The owner must add `CLOUDFLARE_API_TOKEN`
-  (+ `CLOUDFLARE_ACCOUNT_ID`, **D1:Edit** scope) as **repo Actions secrets**; the CI workflows are
-  pre-staged and inert until then. See the plan's **Arc-start access checklist**.
+  boot ("No credentials found, non-interactive"). The owner adds **just `CLOUDFLARE_API_TOKEN`** as a
+  **repo Actions secret** now (`account_id` is pinned in `worker/wrangler.toml`, so
+  `CLOUDFLARE_ACCOUNT_ID` is no longer needed). Minimal token scopes: Workers Scripts + Pages + D1
+  (+ Workers AI:Read) on the account, Workers Routes + Zone:Read on the `sortmy.london` zone — see
+  `docs/deploy-cloudflare.md`. The CI workflows are pre-staged and inert until the token lands.
 - **NEXT = P4 (release v1.8.0) — this is the credential-gated Phase B; it CANNOT run keyless.** The
   exact sequence once the secret lands:
   1. **Deploy** P1+P2+P2b+P3 (prod is still v1.7.0): `gh workflow run deploy.yml` (gated by the
