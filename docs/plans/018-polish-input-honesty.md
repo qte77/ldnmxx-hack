@@ -44,14 +44,26 @@ the widen at 0.5 km) but the *claim* was wrong; P1 corrects both the code and th
 (migration `0005`) works; a composite B-tree can only range the **leading** column, so the win depends
 on a SMALL first box. **No cell column needed** (KISS): 0.5 km clears the ADR-0002 ≥10× target.
 
+## Carried from 017 (owed live verifications — do in P1's deploy ritual)
+
+017 deployed but two verifications were never run and must not be stranded:
+
+- **First LIVE remote sweep** against `sortmy.london` — `ui_sweep.py` (typed-ask routing markers + the
+  3-variant × light/dark axe matrix + no-match flow), and **commit the `runs.jsonl` line** (honest
+  FAIL kept if any). Only a lightweight liveness/MIME check ran post-deploy; the full sweep is owed.
+- **016 `corpus_meta` freshness check** — `wrangler d1 execute DB --remote --config wrangler.toml
+  --command "SELECT * FROM corpus_meta" --json` (confirm the 04:47 UTC cron advanced `ingested_at`).
+
 ## Phases — TDD rule: load-bearing MODULES get RED-first tests; glue/config/copy/CSS are verified by e2e
 
 - **P1 Row-read correction.** `worker/src/corpus/query.ts` `WIDEN_KM` `[5,15]` → `[0.5, 2, 8]` (a tuning
   constant — existing `corpus.bbox.test.ts` still covers the widen logic; no new unit test). **Correct
   the docs** that over-claim (CHANGELOG P2b entry, ADR 0002 "bounded reads" consequence) to state the
-  real numbers + that the win comes from the small first box. **Done-when:** LIVE `d1-verify -f
+  real numbers + that the win comes from the small first box. Redeploy the Worker, then run the two
+  **carried 017 verifications above** as part of the deploy ritual. **Done-when:** LIVE `d1-verify -f
   check=bbox_rows_read` (or a direct `--remote` measure) on food-hygiene reads ≤ ~4k (≥10×); docs match
-  reality; sparse corpora still answer (widen).
+  reality; sparse corpora still answer (widen); the live sweep is committed to `runs.jsonl` and
+  `corpus_meta` is confirmed fresh.
 
 - **P2 Input forgiveness — outward postcodes** (the `food hygiene near SE1` bug — SE1 is the app's own
   placeholder, yet fails). **MODULE (RED-first):** extend `shared/sanitize.ts` to accept an OUTWARD-only
