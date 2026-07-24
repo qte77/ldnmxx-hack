@@ -28,9 +28,22 @@ export function matchFirms(query: string, records: readonly ScamRecord[], n: num
   const raw = query.trim();
   const q = raw.toLowerCase();
   if (q.length === 0 || n <= 0) return [];
-  const matched = records.filter(
-    (r) => r.name.toLowerCase().includes(q) || r.frn === raw || r.chNumber === raw
-  );
+  const matched = records.filter((r) => {
+    const name = r.name.toLowerCase();
+    // (1) user typed part of the name; (2) 018 #224: the firm's NAME-STEM (legal suffix stripped)
+    // appears inside a natural-language ask ("is Thames Capital Partners a scam") — the single free-text
+    // input invites the question form, not a bare name. Deterministic phrase containment, NOT a fuzzy
+    // guess (the catalog warns a fuzzy match can miss a close mimic). (3) exact FRN / CH number. A hit
+    // is only ever a FLAG that routes to the FCA register (render.ts), never a verdict — so the reverse
+    // direction can never turn "found" into "safe".
+    const stem = nameStem(name);
+    return (
+      name.includes(q) ||
+      (stem.length >= 3 && q.includes(stem)) ||
+      r.frn === raw ||
+      r.chNumber === raw
+    );
+  });
   return matched.slice(0, n);
 }
 

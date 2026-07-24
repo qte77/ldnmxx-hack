@@ -4,6 +4,16 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 018 — post-launch polish · scam-check input forgiveness (found by the P1 live sweep)
+
+- **"is &lt;firm&gt; a scam" now resolves.** The first live sweep caught that `Sort My Scam Check`
+  returned no match for the question form (e.g. "is Thames Capital Partners a scam") — `matchFirms`
+  only matched when the query was a *substring of* the firm name, so a natural-language ask (where the
+  firm name is a substring of the *query*) found nothing and the summary card never rendered.
+  `matchFirms` now also matches when the firm's **name-stem** (legal suffix stripped) appears inside the
+  query — deterministic phrase containment, not a fuzzy guess. A hit stays a **flag** routing to the FCA
+  register, never a verdict. RED-first tests in `worker/test/scam.query.test.ts`.
+
 ### Plan 018 — post-launch polish · P2: outward-postcode input forgiveness (#224)
 
 - **A bare outward code now resolves.** The app's own placeholder example, `food hygiene near SE1`,
