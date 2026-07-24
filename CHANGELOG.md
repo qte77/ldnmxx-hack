@@ -4,6 +4,18 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 018 — post-launch polish · P1: row-read correction (#223)
+
+- **Widen now starts at 0.5 km** (`WIDEN_KM` `[5, 15]` → `[0.5, 2, 8]` in `worker/src/corpus/query.ts`).
+  The 017 ship widened from 5 km, which barely helped dense central corpora — a composite `(lat, lng)`
+  index can only range its **leading** column, so a wide first box still scans most of the table.
+- **The real, LIVE-measured numbers** (`meta.rows_read` on prod food-hygiene, 66,871 rows): **5 km read
+  55,201 (1.2×)**, 1 km read 8,144 (8.2×), **0.5 km reads 3,810 (17.5×)**. The earlier P2b "≥10×" line
+  was a *projection*; these are measured. Docs corrected accordingly (this entry + ADR 0002 "bounded
+  reads"). No cell/geohash column needed (KISS) — a small first box clears the ≥10× target on its own.
+- No new unit test: `corpus.bbox.test.ts` already asserts the widen **behaviour** (results never
+  silently shrink), which is km-agnostic; only its stale "5 → 15 km" comment was refreshed.
+
 ### Plan 017 — one input, London-themed · P3: single-input UI + wording (#201)
 
 - **One input, no switcher.** The SPA now POSTs the typed ask **prompt-only** and the Worker's router
@@ -33,18 +45,18 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 - **Corpus D1 reads are now bounded by a bbox prefilter** instead of scanning the whole view. A pure
   `bboxAround(origin, km)` (`worker/src/geo.ts`) feeds a bound-parameter `WHERE lat/lng BETWEEN …
   ORDER BY <proximity> LIMIT` (static SQL — the ADR 0002 whitelist is preserved), with a
-  **widen-radius retry** (5 km → 15 km → unbounded) so results never silently shrink and the #182
-  empty-view fallback still fires on the final unbounded read. `nearestN` re-ranks the bounded set by
+  **widen-radius retry** (0.5 km → 2 km → 8 km → unbounded; corrected in 018 P1) so results never
+  silently shrink and the #182 empty-view fallback still fires on the final unbounded read. `nearestN` re-ranks the bounded set by
   exact haversine, so results are identical to the old full-scan path for the demo postcodes.
 - **New migration `0005_geo_indexes.sql`** — a `(lat, lng)` index per raw corpus table
   (`cqc_locations`, `nhle_places`, `greenspace_places`, `fhrs_establishments`). **This is the half
   that makes the prefilter real:** D1 bills rows *scanned*, so without the index a bare `WHERE` still
-  scans the whole table (PR #206). Pre-staged unapplied; apply + measure once credentials land.
+  scans the whole table (PR #206). Applied `--remote` and measured live in 018 P1 (see above).
 - **Why:** one food-hygiene ask read all 66,871 rows against D1's 5M row-reads/day (~75 asks/day).
   P2's free-text input invites exploratory asking, so the reads had to be bounded before the P3 UI
   ships. The row-read *win* is proven live (`meta.rows_read`, `EXPLAIN QUERY PLAN`) — a mocked D1
-  can't model scanning — via the `d1-verify` CI workflow (`bbox_plan` / `bbox_rows_read`); **owed
-  until the Cloudflare secret is added.** No new ADR: an implementation consequence of ADR 0002.
+  can't model scanning — via the `d1-verify` CI workflow (`bbox_plan` / `bbox_rows_read`); **measured
+  live in 018 P1** (5 km 1.2× → 0.5 km 17.5×). No new ADR: an implementation consequence of ADR 0002.
 
 ### Plan 017 — one input, London-themed · P2: query-driven auto-routing (#201)
 

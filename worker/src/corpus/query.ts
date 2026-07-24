@@ -46,7 +46,10 @@ export function queryCorpusDef(def: CorpusDef, prompt: string, n = 3): CorpusQue
 // never silently shrink (a sparse corpus far from the origin still answers), and the unbounded final
 // read is where source.ts's not-yet-swapped empty-view guard fires. The bundled source ignores the
 // bbox (in-memory) so its first bounded call returns everything — no behaviour change off D1.
-const WIDEN_KM = [5, 15];
+// Start SMALL: D1 bills rows SCANNED and the geo index can only range its LEADING column, so the
+// row-read win depends on a tight first box (LIVE food-hygiene: 5 km read 55,201 rows = 1.2×; 0.5 km
+// reads 3,810 = 17.5×, clearing ADR 0002's ≥10× target). Widen only when a sparse corpus needs it.
+const WIDEN_KM = [0.5, 2, 8];
 async function readWithinWidening(
   source: CorpusSource,
   origin: Coords,
