@@ -1,16 +1,16 @@
 .DEFAULT_GOAL := help
-.PHONY: help dev dev-ui dev-worker test deploy demo bump
+.PHONY: help dev dev_ui dev_worker test deploy demo bump
 
 help:  ## List targets
 	@grep -E '^[a-z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-11s %s\n",$$1,$$2}'
 
 dev:  ## Boot worker (:8787) + ui (:5173) together, keyless (Ctrl-C stops both)
-	$(MAKE) -j2 dev-worker dev-ui
+	$(MAKE) -j2 dev_worker dev_ui
 
-dev-ui:  ## Vite dev server (:5173), proxies /api -> :8787
+dev_ui:  ## Vite dev server (:5173), proxies /api -> :8787
 	cd ui && npm run dev
 
-dev-worker:  ## wrangler dev (:8787) — the /api engine + console Arize spans
+dev_worker:  ## wrangler dev (:8787) — the /api engine + console Arize spans
 	cd worker && npm run dev
 
 test:  ## Run ui + worker + ingest tests
