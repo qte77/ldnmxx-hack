@@ -1,11 +1,9 @@
-// Resolve which usecase runs from the ?usecase= query param. Falls back to the flagship
-// (Sort My Care) when the param is absent or names an unknown id — so the civic default stays
-// calm and single-purpose, while ?usecase=founders-copilot still reaches the engine demo.
-export function readUsecase(
-  search: string,
-  knownIds: readonly string[],
-  fallbackId: string,
-): string {
+// Resolve the ?usecase= BYPASS from the query string (017 P3). An explicit, known id skips the
+// server-side router (deep links + the founders demo keep working); anything else — absent, empty, or
+// unknown — returns null so the router decides from the typed prompt. There is NO mount-time flagship
+// fallback any more: the app has one input, and forcing a default workflow before the user asks would
+// re-introduce the silent default P2's no-match card exists to avoid.
+export function readUsecase(search: string, knownIds: readonly string[]): string | null {
   const requested = new URLSearchParams(search).get("usecase");
-  return requested !== null && knownIds.includes(requested) ? requested : fallbackId;
+  return requested !== null && knownIds.includes(requested) ? requested : null;
 }

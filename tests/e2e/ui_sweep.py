@@ -59,9 +59,10 @@ def click(page, name, exact=False, t=2500):
 
 
 # The civic flows this sweep drives live in flows.json (a DATA manifest), so a new workflow is a
-# manifest edit, not a change to this test source. Each entry carries a progressive-disclosure
-# `switchLabel` to reach it; the corpus flows add `postcode` + `cta` + `markers` to run and assert,
-# each including its own summary line so flows sharing one surface can't false-pass off a stale render.
+# manifest edit, not a change to this test source. P3 (017): each entry is a TYPED ask — `query` (with
+# a routing keyword), `markers` (rendered result incl. its own summary line so flows sharing one surface
+# can't false-pass off a stale render), and an optional `routedTo` (the workflow the Worker's router must
+# pick, asserted as "Showing: <title>"). There is no `switchLabel` any more — the router decides.
 def load_flows():
     with open(os.path.join(os.path.dirname(__file__), "flows.json"), encoding="utf-8") as fh:
         return json.load(fh)["flows"]
@@ -70,35 +71,39 @@ def load_flows():
 FLOWS = load_flows()
 
 
-def run_corpus_flow(page, out, tag, flow, query, cta, markers, shot_n):
-    """Type a REAL query (a postcode, or a firm name for the scam flow), run one deterministic flow,
-    and assert its cards rendered.
+def run_typed_flow(page, out, tag, flow, shot_n):
+    """Type a REAL free-text ask into the single input, submit, and assert the Worker BOTH routed it
+    to the right workflow (the "Showing: <title>" announcement) AND rendered that workflow's cards.
 
-    Load-bearing: clicking the CTA with an empty input only ever produces the "enter a valid …"
-    state, so without typing + asserting, a completely broken query exec / render would still pass
-    this sweep. Needs the Worker (`make dev`, or a deployed target) — a vite-only run serves the
-    landing page and will correctly fail here.
+    Load-bearing: submitting an empty input only ever yields the no-match / "enter a valid …" state,
+    so without typing + asserting both routing and markers, a broken router or render would still pass
+    this sweep. Needs the Worker (a deployed target) — a vite-only preview serves the static landing
+    page with no router, so the corpus flows will correctly fail there.
     """
+    name, query, markers = flow["name"], flow["query"], tuple(flow["markers"])
     try:
         page.fill("#civic-query", query)
     except Exception as e:
-        print(f"    !! {flow} fill: {e}")
+        print(f"    !! {name} fill: {e}")
         return False
-    if not click(page, cta, t=3000):
-        print(f"    !! {flow}: CTA {cta!r} not found")
+    if not click(page, "Find it", t=3000):
+        print(f"    !! {name}: CTA 'Find it' not found")
         return False
     page.wait_for_timeout(8000)
     try:
         page.screenshot(path=f"{out}/{tag}-{shot_n}.png")
         body = page.inner_text("body")
     except Exception as e:
-        print(f"    !! {flow} read: {e}")
+        print(f"    !! {name} read: {e}")
         return False
     missing = [m for m in markers if m not in body]
+    routed = flow.get("routedTo")
+    if routed and f"Showing: {routed}" not in body:
+        missing.append(f"routed→{routed}")
     if missing:
-        print(f"    !! {flow} did not render its cards; missing={missing}")
+        print(f"    !! {name} did not route/render; missing={missing}")
         return False
-    print(f"    {flow}: cards rendered for {query!r}")
+    print(f"    {name}: routed + rendered for {query!r}")
     return True
 
 
@@ -111,18 +116,12 @@ def sweep(page, out, tag):
 
     shot("01-load")
     (click(page, "☾", exact=True) or click(page, "☀", exact=True)) and shot("02-theme")
-    # Data-driven civic flows (014·U, from flows.json): switch to each via its progressive-disclosure
-    # label; entries with a cta+markers are run and asserted (the corpus flows), the rest are a
-    # switch-and-screenshot peek (e.g. the On It route). A corpus flow's own summary line is in its
-    # markers, so a leftover render from a prior flow can never false-pass a broken one.
+    # P3 (017): each flow is a TYPED ask into the one input; the Worker's router picks the workflow.
+    # A flow's own summary line is in its markers, so a leftover render from a prior flow can never
+    # false-pass a broken one; the no-match flow asserts the discovery card.
     ok = True
     for f in FLOWS:
-        click(page, f["switchLabel"]) and shot(f"switch-{f['name']}")
-        if "cta" not in f:
-            continue  # non-corpus peek — no deterministic corpus assertion
-        rendered = run_corpus_flow(
-            page, out, tag, f["name"], f["query"], f["cta"], tuple(f["markers"]), f"run-{f['name']}"
-        )
+        rendered = run_typed_flow(page, out, tag, f, f"run-{f['name']}")
         ok = ok and rendered
     return ok
 

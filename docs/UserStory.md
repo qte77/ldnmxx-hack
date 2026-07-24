@@ -1,9 +1,13 @@
 # User stories
 
-The users the one engine serves (distilled from the sibling `ldnmxx` briefs): the two hackathon demos
-(Founder's Copilot, Sort My Route), the four shipped civic flows — **Sort My Care** (flagship), **Sort My Route**
-(step-free routes), **Sort My Wander** (free heritage + green space), **Sort My Scam Check** (clone-firm
-flag) — and **Benefits Copilot**, the v1 productization target (plans 010/011, proposed).
+The users the one engine serves (distilled from the sibling `ldnmxx` briefs). **One input (017 P3):**
+every journey starts the same way — the Londoner **asks in their own words** in a single box, and the
+Worker's router (ADR 0004) picks the workflow and builds it; there is no manual switcher and no default
+flagship. An unrecognised ask returns an honest **no-match** card listing what the app can do (never a
+silently-wrong answer). The shipped civic flows — **Sort My Care**, **Sort My Wander** (free heritage +
+green space), **Sort My Food Hygiene**, **Sort My Scam Check** (clone-firm flag) — are all auto-routed;
+**Founder's Copilot** and the canned **Sort My Route** stay reachable via `?usecase=` (never
+auto-routed). **Benefits Copilot** is the v1 productization target (plans 010/011, proposed).
 
 ## Founder's Copilot — the early-stage London founder *(Build London)*
 

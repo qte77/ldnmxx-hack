@@ -180,4 +180,22 @@ describe("runWorkerPath — the only browser transport", () => {
     const headers = seen[0]?.init?.headers as Record<string, string>;
     expect(headers["authorization"]).toBeUndefined();
   });
+
+  // P3 (017): with no usecase (undefined), the browser POSTs prompt-only so the WORKER auto-routes —
+  // the URL must carry NO ?usecase= param. An explicit id still bypasses the router (?usecase=).
+  it("omits ?usecase= when no usecase is given (auto-routing)", async () => {
+    const seen: { url: string; init: RequestInit | undefined }[] = [];
+    vi.stubGlobal("fetch", fetchMock(seen));
+    await runWorkerPath(undefined, "food hygiene near SE1", undefined, false, () => undefined, new AbortController().signal);
+    expect(seen[0]?.url).toContain("/api/run");
+    expect(seen[0]?.url).not.toContain("usecase=");
+    expect(seen[0]?.init?.body).toContain("food hygiene near SE1");
+  });
+
+  it("still sends ?usecase= for an explicit bypass (deep link / founders demo)", async () => {
+    const seen: { url: string; init: RequestInit | undefined }[] = [];
+    vi.stubGlobal("fetch", fetchMock(seen));
+    await runWorkerPath("founders-copilot", "an idea", undefined, false, () => undefined, new AbortController().signal);
+    expect(seen[0]?.url).toContain("usecase=founders-copilot");
+  });
 });

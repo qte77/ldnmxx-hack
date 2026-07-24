@@ -1,17 +1,18 @@
 # Groundwork
 
-> **The honest, free way to find the official public service you need in London — and know it's current.**
-> A civic tool on a single **Cloudflare Worker**: the model paints a live **A2UI** interface (not just
-> text), and *swap a JSON, swap the app*. The default UI is task-first and **civic-clean**; the AG-UI/A2UI
-> dev console lives behind a **dev mode** (`?dev=1` or `Ctrl+K`).
+> **Ask in your own words. Get the official source.** A free civic assistant for London on a single
+> **Cloudflare Worker**: you type what you need, the app's router **picks the workflow** and the model
+> paints a live **A2UI** interface (not just text) — *swap a JSON, swap the app*. No sign-up, no cookies;
+> the AG-UI/A2UI dev console lives behind a **dev mode** (`?dev=1` or `Ctrl+K`).
 
-**[▶ sortmy.london](https://sortmy.london)** · one engine, many London workflows — Sort My Care (NHS
-wayfinder), Sort My Wander (free heritage + green space), Sort My Scam Check (clone-firm flag), a
-founder-funding copilot, step-free routing · Londonmaxxing 003.
+**[▶ sortmy.london](https://sortmy.london)** · one input, many London workflows — Sort My Care (NHS
+wayfinder), Sort My Wander (free heritage + green space), Sort My Food Hygiene, Sort My Scam Check
+(clone-firm flag), plus a founder-funding copilot and step-free routing via `?usecase=` ·
+Londonmaxxing 003.
 
-> The **product** is a civic wayfinder (a signpost to official services, never advice — always confirm at
-> the official source): a **task-first, progressive-disclosure landing** with **Sort My Care** as the
-> flagship, live at [sortmy.london](https://sortmy.london). The **engine** underneath (Groundwork) is the
+> The **product** is a single-input civic wayfinder (a signpost to official services, never advice —
+> always confirm at the official source): you ask in your own words and the Worker's router builds the
+> workflow, live at [sortmy.london](https://sortmy.london). The **engine** underneath (Groundwork) is the
 > reusable asset: add a workflow by dropping in a `usecases/*.json`.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-58f4c2.svg)](LICENSE)
@@ -25,21 +26,16 @@ founder-funding copilot, step-free routing · Londonmaxxing 003.
 ## What
 
 Groundwork is the **engine** — for **builders** who want agent apps as *config, not code*, and the
-Londoners each workflow serves (founders; step-free travellers). Two pillars: a **swappable workflow
-engine** (swap a JSON, swap the app — each workflow's stage choreography is a `usecases/*.json` read at
-runtime; render modes stay in code) and **generative UI** (the agent streams the interface, not just
-text). The two workflows below are **interchangeable examples**, selected via the `?usecase=` query
-param; add your own by dropping in a `usecases/*.json`.
+Londoners each workflow serves. Two pillars: a **swappable workflow engine** (swap a JSON, swap the app
+— each workflow's stage choreography is a `usecases/*.json` read at runtime; render modes stay in code)
+and **generative UI** (the agent streams the interface, not just text). One free-text input picks the
+workflow via the Worker's **auto-router** (ADR 0004); `?usecase=` is an explicit bypass for deep links;
+add your own workflow by dropping in a `usecases/*.json`.
 
 ```text
-                  ┌─ Founder's Copilot · usecase=founders-copilot
-   swap usecase ──┤  one toggle, same engine
-                  └─ Sort My Route · usecase=sort-my-route
-                  │
-                  ▼
-User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
-▲       AG-UI runUsecase  OpenRtr  A2UI + HUD       │
-└────────────── renders back to user ──────────────┘
+User types one ask ─▶ UI ─▶ POST /api/run (prompt) ─▶ router: heuristic → model → no-match
+                     ▲                                  resolved ─▶ runUsecase (plan → tool → render)
+                     └────── Generative UI (A2UI + HUD) streams back ──────────────────────────┘
 ```
 
 - **The engine:** one `POST /run?usecase=<id>` + a small `runUsecase` interpreter (plan → tool → render) —
@@ -49,11 +45,12 @@ User ─▶ UI ─▶ Workflow ─▶ Agent ─▶ Generative UI ──┐
   `corpus/registry.ts` entry + a JSON + a UI entry, no engine edit (open/closed).
 - **Generative UI:** the agent streams **AG-UI** events that render as built-in **A2UI cards** — it
   paints the interface, not just text (AG Grid deferred).
-- **Example workflow — Founder's Copilot (flagship):** describe your idea → the model **assesses your
-  stage** and **ranks matching grants** (two live model tools that stream their reasoning, #18),
-  qualify-first, plus a verified incorporate how-to pack. The live Companies House filing (#12) is planned.
+- **Example workflow — Founder's Copilot (model-backed; `?usecase=founders-copilot`, never auto-routed):**
+  describe your idea → the model **assesses your stage** and **ranks matching grants** (two live model
+  tools that stream their reasoning, #18), qualify-first, plus a verified incorporate how-to pack. The
+  live Companies House filing (#12) is planned.
 - **Example workflow — Sort My Route (interchange proof):** a step-free London route — same engine, one
-  `usecase` away (a canned stub today; live tools are planned).
+  `?usecase=` away (a canned stub today, so never auto-routed; live tools are planned).
 - **Civic pilot — Sort My Care:** a **deterministic** postcode → nearest-NHS-services signpost — model-free
   and fetch-free, with honest "data as of …" freshness and a "confirm with the official source" disclaimer.
   Proof that a new corpus workflow is register + a JSON, not an engine edit. `?usecase=sort-my-care`.

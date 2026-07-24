@@ -81,6 +81,17 @@ export function toStatus(event: AgentEvent): RunStatus {
   return { mode, model: u.model, tokens: u.totalTokens ?? 0 };
 }
 
+// The workflow the Worker's auto-router picked for a prompt-only run (017 P2/P3), read off the
+// USECASE_RESOLVED frame that precedes RUN_STARTED. Absent on a ?usecase= bypass and on no-match.
+export interface Resolved {
+  usecase: string;
+  title: string;
+}
+interface ResolvedFrame extends AgentEvent {
+  usecase?: string;
+  title?: string;
+}
+
 function buildHeaders(byok?: Byok): Record<string, string> {
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (byok?.apiKey) headers["authorization"] = `Bearer ${byok.apiKey}`;
@@ -111,23 +122,26 @@ async function readSSE(
 // The browser's ONLY transport: open the Worker `POST /api/run` SSE stream and dispatch each parsed
 // AG-UI event. A BYOK key (if any) rides as an Authorization header for the Worker to resolve
 // server-side (`resolveRun`) — the browser never calls a model host directly.
+// 017 P3: `usecase` is OPTIONAL — omit it (undefined) to POST prompt-only and let the Worker
+// auto-route; pass an explicit id only for the `?usecase=` bypass (deep links / founders demo).
 export async function runWorkerPath(
-  usecase: string,
+  usecase: string | undefined,
   prompt: string,
   byok: Byok | undefined,
   demo: boolean,
   dispatch: (e: AgentEvent) => void,
   signal: AbortSignal
 ): Promise<void> {
-  const res = await fetch(
-    `${WORKER_BASE}/api/run?usecase=${encodeURIComponent(usecase)}${demo ? "&demo=1" : ""}`,
-    {
-      method: "POST",
-      headers: buildHeaders(byok),
-      body: JSON.stringify({ prompt, model: byok?.model ?? "" }),
-      signal,
-    }
-  );
+  const params = new URLSearchParams();
+  if (usecase) params.set("usecase", usecase);
+  if (demo) params.set("demo", "1");
+  const qs = params.toString();
+  const res = await fetch(`${WORKER_BASE}/api/run${qs ? `?${qs}` : ""}`, {
+    method: "POST",
+    headers: buildHeaders(byok),
+    body: JSON.stringify({ prompt, model: byok?.model ?? "" }),
+    signal,
+  });
   if (!res.ok || !res.body) throw new Error(`Worker responded ${String(res.status)}`);
   await readSSE(res.body, dispatch);
 }
@@ -144,6 +158,7 @@ export function useAgentSSE() {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<RunStatus | null>(null);
+  const [resolved, setResolved] = useState<Resolved | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const render = useCallback(
@@ -154,12 +169,14 @@ export function useAgentSSE() {
   );
 
   const run = useCallback(
-    async (usecase: string, prompt: string, byok?: Byok, demo = false): Promise<void> => {
+    // 017 P3: prompt-first. `usecase` is the OPTIONAL ?usecase= bypass; omit it to let the Worker route.
+    async (prompt: string, byok?: Byok, demo = false, usecase?: string): Promise<void> => {
       if (isRunning) return;
       setIsRunning(true);
       setError(null);
       setEventLog([]);
       setStatus(null); // clear the last run's chip; the next USAGE frame sets the new one
+      setResolved(null); // clear the last run's routed workflow; USECASE_RESOLVED sets the new one
       clearSurfaces();
 
       const start = Date.now();
@@ -169,6 +186,10 @@ export function useAgentSSE() {
       const dispatch = (event: AgentEvent): void => {
         if (event.type === "RUN_ERROR") setError(event.text ?? "run error");
         if (event.type === "USAGE") setStatus(toStatus(event)); // terminal HUD frame → drive the chip
+        if (event.type === "USECASE_RESOLVED") {
+          const r = event as ResolvedFrame;
+          if (r.usecase && r.title) setResolved({ usecase: r.usecase, title: r.title });
+        }
         const entry = applyA2UIEvent(event, Date.now() - start, render);
         setEventLog((prev) => appendLogEntry(prev, entry));
       };
@@ -186,5 +207,5 @@ export function useAgentSSE() {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  return { eventLog, isRunning, error, run, stop, status };
+  return { eventLog, isRunning, error, run, stop, status, resolved };
 }
