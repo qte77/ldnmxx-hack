@@ -4,6 +4,23 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 018 — post-launch polish · P2: outward-postcode input forgiveness (#224)
+
+- **A bare outward code now resolves.** The app's own placeholder example, `food hygiene near SE1`,
+  used to fail because `SE1` is an outward-only code and the backend only accepted a full postcode.
+  `shared/sanitize.ts` `normalisePostcode` now falls back to a bounded outward-code parse (`\b`-anchored
+  `SE1`/`E8`/`N1`/`SW1A`) **only when no full postcode is present** — a full postcode always wins. The
+  token keys the SAME gazetteer a full postcode does, so no resolve-path code changed (RED-first tests in
+  `worker/test/sanitize.test.ts`). ADR-0002 fetch-free hot path intact — outcode centroids are
+  pre-computed data, never a live geocode.
+- **Outcode centroids in the shared gazetteer.** Migration `0006_outward_postcode_centroids.sql` seeds
+  one `AVG(lat,lng)` centroid per outward code over the real seeded postcodes (good on the LIVE store's
+  thousands of London rows); the bundled `data/*/postcodes.sample.json` gazetteers gain the four
+  placeholder outcodes by hand. `ingest/parsers.py` `with_outcodes` (pure, pytest-covered; called by
+  `seed.py`) bakes the same centroids into the published `postcodes.json` artifact so the daily 04:47
+  UTC cron swap keeps them (the migration alone would be wiped within 24h — the `postcodes` table is
+  DELETE+replaced each swap).
+
 ### Plan 018 — post-launch polish · P1: row-read correction (#223)
 
 - **Widen now starts at 0.5 km** (`WIDEN_KM` `[5, 15]` → `[0.5, 2, 8]` in `worker/src/corpus/query.ts`).
