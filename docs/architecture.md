@@ -56,9 +56,10 @@ now catches drift between the two. Closes ADR-0001's known "two sources of truth
 ## Data flow — one direction, one trust crossing
 
 ```
-user input → SPA useAgentSSE ──POST /api/run?usecase=<id>──▶ Worker  [TRUST BOUNDARY — secrets here]
-                                                          runUsecase: plan → tool → render
-                                 ◀── SSE {type,text,a2uiMessages} + terminal USAGE + RUN_FINISHED ──
+user input → SPA useAgentSSE ──POST /api/run  (prompt in body; ?usecase= optional)──▶ Worker  [TRUST BOUNDARY]
+                                    router (017 P2): heuristic → model → no-match ─┐  reads body ONCE
+                                                          resolved def → runUsecase: plan → tool → render
+                                 ◀─ SSE {type,text,a2uiMessages} + USECASE_RESOLVED + terminal USAGE + RUN_FINISHED ─
    SPA: parse frames → AgentEvent → applyA2UIEvent (validate vs contract.ts) → render seam
         → A2UI surface (built-in Column/Card render)  +  EventStream (live log)
 
@@ -71,6 +72,17 @@ user input → SPA useAgentSSE ──POST /api/run?usecase=<id>──▶ Worker 
   data/{demo,care,wander}/*.json via the fail-safes (#171 empty gazetteer; empty view ⇒ bundled).
   NHS ODS/TRUD (#161) stays an additive enrichment path.
 ```
+
+**Auto-routing — one input (017 P2, ADR 0004).** A prompt-only `POST /api/run` picks its workflow.
+`worker.ts` reads the body ONCE and threads `{prompt}` into both the router and `resolveRun` (the
+classifier needs `prompt` *before* the usecase resolves — a body can only be read once). The router
+(`worker/src/agent/router.ts`) is keyless-first: a pure keyword heuristic over each workflow's
+register-only `keywords` (`UsecaseDef`), escalating to a one-shot model classifier (ADR 0003) only on
+ambiguity, gated by `detectInjection` before any model call. No confident match ⇒ a deterministic
+**no-match card** (the workflow list), never a silent flagship. `?usecase=` bypasses the router
+(deep links + founders demo); `USECASE_RESOLVED{usecase,title}` precedes `RUN_STARTED` on a routed
+run; one `route` span records `{routed_to, source}`. `sort-my-route`/`founders-copilot` carry no
+keywords, so they are never auto-routed. The interpreter/registry are untouched (register-only).
 
 Open data sources available for future workflows are cataloged (machine-readable) in
 [`data/sources.json`](../data/sources.json); candidate workflows in [`data/usecase-catalog.json`](../data/usecase-catalog.json).

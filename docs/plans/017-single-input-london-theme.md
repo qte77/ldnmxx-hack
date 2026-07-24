@@ -34,7 +34,7 @@ agent loops / durable state.
 |---|---|---|---|
 | P0 | Arc mechanics: plan + handoff + tracker (#201) + ADR 0003/0004/0005 stubs | plan·handoff·tracker | ☐ |
 | P1 | Theme: `tokens.css` EyeRest→fo Linear + **A/B/C variants** (light+dark), JetBrains Mono self-hosted, variant control | ADR 0005 · CHANGELOG · README stack · glossary | ☑ merged (#208) · **live sweep owed** (see access checklist) |
-| P2 | Auto-router (modules, strict TDD): `agent/router.ts` + `shared/routerTool.ts` + prompt pair; `worker.ts` body-read-once; `USECASE_RESOLVED` event; **no-match suggestions card**; **Arize route span**; **`?usecase=` bypass** | ADR 0003+0004 · architecture · glossary | ☐ |
+| P2 | Auto-router (modules, strict TDD): `agent/router.ts` + `shared/routerTool.ts` + prompt pair; `worker.ts` body-read-once; `USECASE_RESOLVED` event; **no-match suggestions card**; **Arize route span**; **`?usecase=` bypass** | ADR 0003+0004 · architecture · glossary | ☑ merged (#212 core + wire PR) |
 | P2b | **Bounded corpus reads (index migration + bbox prefilter)** — every corpus query currently reads the WHOLE view (66,871 rows for food-hygiene) and the store has NO indexes. Must land BEFORE P3 exposes free-form asking | CHANGELOG · architecture (ADR 0002 consequence) | ☐ |
 | P3 | Single-input UI + wording: remove switcher **control** (keep catalog as suggestion DATA), aria-live resolved announcement, reword all strings | README hero · UserStory · index.html meta | ☐ |
 | P4 | Hardening + release v1.8.0: e2e (3 variants × light/dark), docs sync, issues, URL/env/CLI | CHANGELOG · all docs · issues | ☐ |

@@ -179,3 +179,14 @@ export function routableUsecases(): { id: string; title: string; keywords: strin
     .filter((def): def is UsecaseDef => def !== undefined && (def.keywords?.length ?? 0) > 0)
     .map((def) => ({ id: def.id, title: def.title, keywords: def.keywords ?? [] }));
 }
+
+// The FULL usecase catalog (017 P2): every workflow's id/title (+ keywords when present), for the
+// no-match card's discovery list. Unlike routableUsecases() this INCLUDES the never-auto-routed
+// workflows (sort-my-route, founders-copilot) — they are offered as explicit suggestions, just never
+// picked automatically. Still register-only: the list is derived from the registry, not hand-kept.
+export function usecaseCatalog(): { id: string; title: string; keywords?: string[] }[] {
+  return usecaseIds
+    .map((id) => registry[id])
+    .filter((def): def is UsecaseDef => def !== undefined)
+    .map((def) => (def.keywords ? { id: def.id, title: def.title, keywords: def.keywords } : { id: def.id, title: def.title }));
+}
