@@ -73,7 +73,8 @@ describe("queryCorpus D1 read — bbox prefilter (P2b)", () => {
 
   it("widens the radius when the tight box returns too few rows (results never silently shrink)", async () => {
     const rec: Recorded = { sqls: [], binds: [] };
-    // 5 km box: 1 row (too few for n=3) → widen to 15 km: 3 rows → used.
+    // first (tight) box: 1 row (too few for n=3) → widen once: 3 rows → used. Radii are a tuning
+    // constant (WIDEN_KM); this asserts the widen BEHAVIOUR, not the specific km, so it is km-agnostic.
     const db = recordingDb({
       origin: { lat: 51.5, lng: -0.1 },
       rowsByCall: [

@@ -97,9 +97,17 @@ The read seam started as one fully-unbounded statement per view (`SELECT … FRO
 each corpus read to a **bbox prefilter** around the resolved origin: a bound-parameter
 `WHERE lat/lng BETWEEN … ORDER BY <proximity> LIMIT` appended to the view's **static** base select
 (two static constants concatenated — no user data in the SQL string, so the closed-statement
-whitelist this ADR prizes is intact), with a widen-radius retry (5 → 15 km → unbounded) so results
-never silently shrink and the empty-view fallback still fires on the final unbounded read. The win
-requires the companion `(lat, lng)` indexes (`0005_geo_indexes.sql`): without them a bare `WHERE`
-still scans the table. This is an implementation of the seam, **not** a new decision — recorded here
-rather than as its own ADR. Proven live via `meta.rows_read` / `EXPLAIN QUERY PLAN` (a mock cannot
-model scanning).
+whitelist this ADR prizes is intact), with a widen-radius retry (**0.5 → 2 → 8 km → unbounded**) so
+results never silently shrink and the empty-view fallback still fires on the final unbounded read. The
+win requires the companion `(lat, lng)` indexes (`0005_geo_indexes.sql`, applied `--remote`): without
+them a bare `WHERE` still scans the table. This is an implementation of the seam, **not** a new
+decision — recorded here rather than as its own ADR.
+
+**The win depends on a SMALL first box, and was measured live (018 P1).** A composite `(lat, lng)`
+B-tree can only range its **leading** column, so a wide first box still scans most of the table. The
+initial 017 ship widened from **5 km**, which for dense central corpora barely helped —
+`meta.rows_read` on prod food-hygiene (66,871 rows): **5 km read 55,201 (only 1.2×)**, 1 km read 8,144
+(8.2×), **0.5 km reads 3,810 (17.5×)**. 018 P1 starts the widen at **0.5 km**, clearing this ADR's
+≥10× intent without a cell/geohash column (KISS). `EXPLAIN QUERY PLAN` confirms the index seek
+(`SEARCH … USING INDEX idx_fhrs_establishments_lat_lng`). Proven live via `meta.rows_read` — a mock
+cannot model scanning; the earlier "≥10×" figure was a projection, these are the measured numbers.
