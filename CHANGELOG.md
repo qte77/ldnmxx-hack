@@ -4,6 +4,30 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 017 — one input, London-themed · P3: single-input UI + wording (#201)
+
+- **One input, no switcher.** The SPA now POSTs the typed ask **prompt-only** and the Worker's router
+  picks the workflow (P2); the manual usecase switcher and its "Or: …" affordance are gone. The UI
+  reads `USECASE_RESOLVED` to show a **"Showing: &lt;workflow&gt;"** heading and announce it via
+  `aria-live`, so the routing decision is not sighted-only. `?usecase=` still bypasses the router
+  (deep links / founders demo) and prefills that workflow's example.
+- **Reworded to a distilled claim ladder** (verbatim from the P3 copy spec): eyebrow *"London public
+  services · free, no sign-up"*, H1 *"Ask in your own words. Get the official source."*, a dek that
+  says we hold a **weekly snapshot** of official registers (CQC, FSA, Historic England, OS) and links
+  to the live page, CTA **"Find it"**, and a de-risking microcopy line. `<title>`/OG inherit the H1 +
+  eyebrow. **Struck for good:** "the honest, free way", "know it's current" (FHRS/NHLE dates run
+  old), and any "live search" / "answers come from public registers" framing that would contradict
+  the fetch-free snapshot (ADR 0002). The footer states the handoff honestly: *"We find it. You sort
+  it."* — never a bare "Sort it" button.
+- **`readUsecase` shrinks to the `?usecase=` bypass** — no mount-time flagship fallback (an absent or
+  unknown param returns `null` so the router decides). `useAgentSSE.runWorkerPath` omits `?usecase=`
+  for a prompt-only run and exposes the resolved workflow.
+- **e2e sweep converted to typed asks** (`tests/e2e/flows.json` + `ui_sweep.py`): each flow types an
+  ask into the one input and asserts BOTH the route (`Showing: …`) and the rendered markers, plus a
+  gibberish→no-match flow. `sort-my-route` is dropped from the typed flows (never auto-routed).
+  **Until P3 is deployed, the tier-3 monitor sweeps the live v1.7.0 site and will FAIL (single input
+  not yet live)** — an expected, self-resolving honest FAIL that clears on deploy.
+
 ### Plan 017 — one input, London-themed · P2b: bounded corpus reads (#201)
 
 - **Corpus D1 reads are now bounded by a bbox prefilter** instead of scanning the whole view. A pure

@@ -1,22 +1,10 @@
 {
-  "_comment": "Civic flows the e2e sweep drives, kept as DATA so adding a workflow is a manifest edit, not a change to ui_sweep.py. Each entry: `switchLabel` = the progressive-disclosure button to reach it. A run+asserted flow adds `query` (the text typed into #civic-query) + `cta` + `markers`; an entry without a `cta` is a switch-and-screenshot peek. Each run flow's markers include its own summary line, so flows sharing one surface can't false-pass off a stale render.",
+  "_comment": "P3 (017): the sweep TYPES each ask into the single #civic-query input and clicks the one 'Find it' CTA; the WORKER's router picks the workflow — there is no manual switcher. Each entry: `query` (typed, must carry a routing keyword), `markers` (rendered result incl. its own summary line so flows can't false-pass off a stale surface), optional `routedTo` (the USECASE_RESOLVED title asserted as 'Showing: <title>'). The `no-match` flow asserts the discovery card. sort-my-route is NEVER auto-routed (it carries no keywords) — reachable only via ?usecase=, so it is not a typed flow here.",
   "flows": [
     {
-      "name": "route",
-      "switchLabel": "Step-free journeys",
-      "query": "step-free from E8 3GT to Westminster",
-      "cta": "Find a step-free route",
-      "markers": [
-        "Overground to Highbury & Islington",
-        "Victoria line to Victoria",
-        "Step-free"
-      ]
-    },
-    {
       "name": "care",
-      "switchLabel": "Care services near you",
-      "query": "SW9 9SL",
-      "cta": "Find care services",
+      "query": "GP near SW9 9SL",
+      "routedTo": "Sort My Care",
       "markers": [
         "Nearest public-service signposts",
         "near SW9 9SL",
@@ -28,9 +16,8 @@
     },
     {
       "name": "wander",
-      "switchLabel": "Places to wander",
-      "query": "SW9 9SL",
-      "cta": "Find places to wander",
+      "query": "parks to wander near SW9 9SL",
+      "routedTo": "Sort My Wander",
       "markers": [
         "Free places to wander near you",
         "near SW9 9SL",
@@ -42,9 +29,8 @@
     },
     {
       "name": "food-hygiene",
-      "switchLabel": "Food hygiene ratings",
-      "query": "SE1 7PB",
-      "cta": "Check food hygiene",
+      "query": "food hygiene near SE1 7PB",
+      "routedTo": "Sort My Food Hygiene",
       "markers": [
         "Food hygiene ratings near you",
         "near SE1 7PB",
@@ -56,14 +42,22 @@
     },
     {
       "name": "scam",
-      "switchLabel": "Check a firm",
-      "query": "Thames Capital Partners",
-      "cta": "Check this firm",
+      "query": "is Thames Capital Partners a scam",
+      "routedTo": "Sort My Scam Check",
       "markers": [
         "Register records matching your search",
         "Thames Capital Partners",
         "Check the FCA Financial Services Register",
         "Always confirm with the official source"
+      ]
+    },
+    {
+      "name": "no-match",
+      "query": "qwerty zxcvbn asdfghjkl",
+      "markers": [
+        "I didn't understand",
+        "Sort My Care",
+        "Founder's Copilot"
       ]
     }
   ]
