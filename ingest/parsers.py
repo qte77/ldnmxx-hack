@@ -145,6 +145,28 @@ def parse_postcodes(responses: list[dict]) -> list[dict]:
     return out
 
 
+def with_outcodes(rows: list[dict]) -> list[dict]:
+    """Gazetteer rows PLUS one AVG(lat)/AVG(lng) centroid per outward code (018 P2 #224).
+
+    So a bare outcode (SE1, E8, N1, SW1A) resolves through the SAME gazetteer a full postcode does.
+    Durability: migration 0006 seeds these once, but the daily cron rebuilds `postcodes` from the
+    published artifact, so the outcodes must live in it too or the next swap wipes them.
+    """
+    by_outcode: dict[str, list[dict]] = {}
+    for row in rows:
+        by_outcode.setdefault(row["postcode"].split(" ")[0], []).append(row)
+    out = list(rows)
+    for outcode, group in by_outcode.items():
+        out.append(
+            {
+                "postcode": outcode,
+                "lat": sum(r["lat"] for r in group) / len(group),
+                "lng": sum(r["lng"] for r in group) / len(group),
+            }
+        )
+    return out
+
+
 # --- NHLE ArcGIS GeoJSON -> wander records --------------------------------------------------------
 
 
