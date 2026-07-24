@@ -7,6 +7,10 @@ pairs_with: docs/plans/017-single-input-london-theme.md
 
 # Handoff 017 — resume point
 
+> **CLOSED 2026-07-24.** Arc 017 shipped + **deployed** to `sortmy.london` (single-input UX, the
+> auto-router, and the fo Linear theme). Live-testing polish/honesty findings and the v1.8.0 tag
+> decision migrated to **[arc 018](018-polish-input-honesty.md)** — start there. This file is historical.
+
 **Read [`docs/plans/017-single-input-london-theme.md`](../plans/017-single-input-london-theme.md)
 FIRST** — it carries the full **source map** (theme files, the single routing resolution point, the
 reuse points, e2e) with `file:line` refs, so do **NOT** re-map or re-gather context. Predecessor
