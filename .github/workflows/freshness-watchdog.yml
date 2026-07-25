@@ -89,6 +89,9 @@ jobs:
         if: steps.evaluate.outputs.stale == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          # This job has no actions/checkout (credential-free, curl-only), so gh has no local git repo
+          # to infer from — GH_REPO points the issue commands at the right repo without a checkout.
+          GH_REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           STALE_LIST: ${{ steps.evaluate.outputs.stale_list }}
         run: |
