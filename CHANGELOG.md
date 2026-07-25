@@ -4,6 +4,15 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 020 — UX overhaul · P3: re-show examples after a search (#3)
+
+- **The example chips no longer vanish for good.** They collapsed after the first search (018 P5) and
+  never returned. A pure `suggestionMode` gate (`ui/src/suggestions.ts`, mirroring `shouldRotate`) now
+  shows the full hero chips on the empty state, nothing while a run streams, and a compact **"Try another"**
+  row once results are in — so a user can always pivot to another workflow. Both surfaces reuse one
+  `SuggestionChips` component (DRY). RED-first `ui/tests/suggestions.test.ts`; the render is glue, verified
+  by the e2e sweep.
+
 ### Plan 020 — UX overhaul · P2: accept London place names (#1)
 
 - **Place-name input.** A query that names a London place instead of a postcode ("wander nearby tower",
