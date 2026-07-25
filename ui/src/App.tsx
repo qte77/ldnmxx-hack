@@ -7,6 +7,7 @@ import { useAgentSSE, type Byok, type RunStatus } from "./agent/useAgentSSE";
 import type { EventLogEntry } from "./agent/applyA2UIEvent";
 import { usecaseCatalog } from "../../shared/usecaseCatalog";
 import { useRotatingPlaceholder } from "./useRotatingPlaceholder";
+import { suggestionMode, type SuggestionMode } from "./suggestions";
 
 // 018 P4: the workflow catalog is now ONE shared source of truth (shared/usecaseCatalog.ts, read by the
 // Worker too) — no second, drifting UI copy. The UI needs only id→title (to name the resolved workflow +
@@ -223,6 +224,35 @@ function DevConsole(props: { show: boolean; status: RunStatus | null; events: Ev
 // 018 P5: the hero — eyebrow + H1 + the single input, plus (empty state only) the collapsible dek,
 // suggestion chips, and rotating example placeholder. Extracted from Dashboard so each component's
 // cyclomatic complexity stays in budget; owns the input-focus + rotating-placeholder state.
+// 020 P3: one chip row, reused for the empty-state "Try:" prompts and the post-results "Try another:"
+// pivot — so the example workflows are always one tap away, never hidden forever after the first search.
+function SuggestionChips({
+  label,
+  ariaLabel,
+  onPick,
+}: {
+  label: string;
+  ariaLabel: string;
+  onPick: (text: string) => void;
+}) {
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label={ariaLabel}>
+      <span className="text-xs text-text-muted">{label}</span>
+      {ROUTABLE.map((u) => (
+        <button key={u.id} type="button" onClick={() => onPick(u.example)} className={CHIP_CLASS}>
+          {u.example}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// The post-results pivot row — its own component so the mode branch lives here, not in Dashboard.
+function TryAnotherRow({ mode, onPick }: { mode: SuggestionMode; onPick: (text: string) => void }) {
+  if (mode !== "tryAnother") return null;
+  return <SuggestionChips label="Try another:" ariaLabel="Try another search" onPick={onPick} />;
+}
+
 function Hero({
   prompt,
   setPrompt,
@@ -230,7 +260,7 @@ function Hero({
   submitPrompt,
   isRunning,
   stop,
-  hasSearched,
+  showExamples,
 }: {
   prompt: string;
   setPrompt: (v: string) => void;
@@ -238,7 +268,7 @@ function Hero({
   submitPrompt: (text: string) => void;
   isRunning: boolean;
   stop: () => void;
-  hasSearched: boolean;
+  showExamples: boolean;
 }) {
   const [inputFocused, setInputFocused] = useState(false);
   const placeholder = useRotatingPlaceholder(ROUTABLE_EXAMPLES, inputFocused || prompt.length > 0);
@@ -248,7 +278,7 @@ function Hero({
       <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-text">
         Ask in your own words. Get the official source.
       </h1>
-      {!hasSearched && (
+      {showExamples && (
         <p className="mt-2 text-text-muted max-w-prose">
           Not a live search: we keep a snapshot of official registers — CQC, the Food Standards Agency,
           Historic England, Ordnance Survey — refreshed weekly. Every result shows the date on the record
@@ -284,16 +314,9 @@ function Hero({
         )}
       </form>
 
-      {!hasSearched && (
+      {showExamples && (
         <>
-          <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Try an example">
-            <span className="text-xs text-text-muted">Try:</span>
-            {ROUTABLE.map((u) => (
-              <button key={u.id} type="button" onClick={() => submitPrompt(u.example)} className={CHIP_CLASS}>
-                {u.example}
-              </button>
-            ))}
-          </div>
+          <SuggestionChips label="Try:" ariaLabel="Try an example" onPick={submitPrompt} />
           <p className="mt-3 text-xs text-text-muted max-w-prose">
             No account, no cookies — anonymous page-view counts only. We point you to the official record;
             confirm there before you act.
@@ -320,7 +343,9 @@ function Dashboard() {
   // ?dev=1 toggles it; the choice persists in localStorage (qte77-dev).
   const [devMode, setDevMode] = useState(() => readDevMode(location.search));
   // 018 P5: collapse the hero dek + suggestion chips once a search has happened, so results lead.
+  // 020 P3: the chips return as a compact "try another" row after results land, so a user can pivot.
   const hasSearched = isRunning || eventLog.length > 0;
+  const suggestions = suggestionMode({ hasSearched, isRunning });
 
   // The workflow name to announce: the router's pick on a prompt-only run, or the bypass label on a
   // deep link. Drives the aria-live announcement + the visible "Showing …" heading above the results.
@@ -392,7 +417,7 @@ function Dashboard() {
           submitPrompt={submitPrompt}
           isRunning={isRunning}
           stop={stop}
-          hasSearched={hasSearched}
+          showExamples={suggestions === "hero"}
         />
 
         {error && (
@@ -409,6 +434,8 @@ function Dashboard() {
         <div aria-live="polite" aria-busy={isRunning} className="mt-3">
           <A2UISurface />
         </div>
+
+        <TryAnotherRow mode={suggestions} onPick={submitPrompt} />
 
         <DevConsole show={devMode} status={status} events={eventLog} />
       </main>
