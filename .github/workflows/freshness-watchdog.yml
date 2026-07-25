@@ -1,13 +1,8 @@
 # Freshness watchdog (#199): alert if the 04:47 UTC ingest cron silently dies and D1 serves stale
-# data invisibly. Reads ONLY our own D1 corpus_meta.ingested_at (no external fetch — respects the
-# arc-019 owner constraint), so it needs the same CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID repo
-# secrets as d1-verify.yml. Mirrors tier3-monitor.yml's open-or-comment alert pattern: a stale corpus
-# fails the run and opens (or comments on) one alert issue. Recovery-close is deliberately NOT built
-# (KISS — matches tier3-monitor; a human closes the issue once the cron is healthy again).
-#
-# SAFETY: the D1 statement is a STATIC read-only SELECT (mirrors d1-verify.yml / ADR 0002). No
-# free-text SQL input exists. Actions are SHA-pinned (repo policy: selected + sha_pinning_required);
-# the trailing comment tracks the tag.
+# data invisibly. CREDENTIAL-FREE — it GETs the public read-only https://sortmy.london/api/freshness
+# endpoint (worker/src/freshness.ts) and never holds a Cloudflare token, mirroring tier3-monitor.yml
+# ("only hits the public URL"). A stale/missing corpus fails the run and opens (or comments on) one
+# alert issue; recovery-close is deliberately left to a human (KISS, matches tier3-monitor).
 name: Freshness Watchdog
 on:
   schedule:
@@ -28,37 +23,13 @@ jobs:
   freshness:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: worker
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       # Scheduled runs use the 48h default; a dispatch may override (e.g. 0 to prove the alert path).
       MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '48' }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: worker/package-lock.json
-      - run: npm ci
-
-      - name: Preflight — credentials present
-        run: |
-          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
-            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it as a repository secret."
-            echo "This check also needs Account > D1 > Edit (Cloudflare has no read-only D1 scope)."
-            exit 1
-          fi
-
-      - name: Read corpus_meta from D1
-        run: |
-          set -euo pipefail
-          ./node_modules/.bin/wrangler d1 execute DB --remote --config wrangler.toml \
-            --command "SELECT corpus, ingested_at FROM corpus_meta ORDER BY corpus" \
-            --json | tee /tmp/d1-freshness.json
+      - name: Fetch freshness from the public endpoint
+        # -sSf fails the step loudly on any non-2xx (endpoint/site down) rather than parsing an error body.
+        run: curl -sSf https://sortmy.london/api/freshness -o /tmp/freshness.json
 
       - name: Evaluate freshness
         id: evaluate
@@ -73,7 +44,7 @@ jobs:
           esac
           now="$(date -u +%s)"
           threshold=$(( MAX_AGE_HOURS * 3600 ))
-          count="$(jq '(.[0].results // []) | length' /tmp/d1-freshness.json)"
+          count="$(jq '(.corpora // []) | length' /tmp/freshness.json)"
 
           stale=""
           {
@@ -81,7 +52,7 @@ jobs:
             echo ""
             echo "Threshold: **${MAX_AGE_HOURS}h** · corpora tracked: **${count}**"
             echo ""
-            echo "| corpus | ingested_at (UTC) | age (h) | status |"
+            echo "| corpus | ingestedAt (UTC) | age (h) | status |"
             echo "| --- | --- | --- | --- |"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -91,7 +62,7 @@ jobs:
           else
             while IFS=$'\t' read -r corpus ingested; do
               if [ -z "$ingested" ] || [ "$ingested" = "null" ]; then
-                echo "| \`$corpus\` | (missing) | — | ❌ no ingested_at |" >> "$GITHUB_STEP_SUMMARY"
+                echo "| \`$corpus\` | (missing) | — | ❌ no ingestedAt |" >> "$GITHUB_STEP_SUMMARY"
                 stale="${stale:+$stale, }$corpus"
                 continue
               fi
@@ -104,7 +75,7 @@ jobs:
               else
                 echo "| \`$corpus\` | $ingested | ${age_h} | ✅ fresh |" >> "$GITHUB_STEP_SUMMARY"
               fi
-            done < <(jq -r '.[0].results[] | [.corpus, (.ingested_at // "null")] | @tsv' /tmp/d1-freshness.json)
+            done < <(jq -r '.corpora[] | [.corpus, (.ingestedAt // "null")] | @tsv' /tmp/freshness.json)
           fi
 
           if [ -n "$stale" ]; then

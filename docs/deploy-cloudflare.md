@@ -49,8 +49,9 @@ workflows fail fast with a readable message while the token is absent.
 DNS scopes `finish_cf.sh` needed are no longer required and can be dropped):
 
 - **Account** (this account): **Workers Scripts** · Edit · **Cloudflare Pages** · Edit · **D1** · Edit
-  (`d1-verify` + migrations; no read-only D1 scope exists) · **Workers AI** · Read (optional — the
-  binding works at runtime without it).
+  (migrations `apply` writes, so this shared deploy token needs Edit; `d1-verify`'s read-only SELECTs
+  alone would need only **D1 · Read**, which does exist as a distinct scope) · **Workers AI** · Read
+  (optional — the binding works at runtime without it).
 - **Zone** (`sortmy.london`): **Workers Routes** · Edit (assert `sortmy.london/api/*`) · **Zone** · Read
   (resolve the route's `zone_name`).
 - **Drop:** DNS · Read/Edit and Zone DNS Settings · Read/Edit — only `finish_cf.sh`'s first-time domain

@@ -26,15 +26,21 @@ the D1 gazetteer, so most London postcodes resolve to "no data").
 | P5 | **#150 jsx-a11y** — adopt once eslint-plugin-jsx-a11y supports ESLint 10 | BLOCKED (upstream) | ☐ watch |
 | P6 | **#8 Open311 read-only slice** — DEFERRED: needs a live fetch to council/FixMyStreet endpoints ("no live to others for now") | deferred | ☐ |
 
-### Session note (2026-07-25) — #199 shipped, new owner gate surfaced
+### Session note (2026-07-25) — #199 shipped credential-free; #168 assessed
 
-**#199 code is merged (#245) and its evaluate logic is verified offline** (fresh → ok, 100h → stale,
-null → stale). But its LIVE done-when is blocked: the repo has **no `CLOUDFLARE_API_TOKEN` secret**
-(only `NPM_READ_TOKEN`), so the D1 read fails at preflight — the *same* latent gate `d1-verify.yml`
-has silently carried since its 2026-07-23 failed run. **New owner gate (batch with the others):** add
-`CLOUDFLARE_API_TOKEN` (scope Account > D1 > Edit) + `CLOUDFLARE_ACCOUNT_ID` as **repo** secrets →
-unblocks both `freshness-watchdog` and `d1-verify`. Until then the daily watchdog run fails loudly at
-preflight (intended — a credential-less monitor must not report green). **#168** assessed: `sharp`
+**#199 watchdog merged (#245).** Its D1-read design first hit a gate: `CLOUDFLARE_API_TOKEN` is a
+**production-Environment secret** (used by `deploy.yml`), invisible to jobs without `environment:` — so
+`d1-verify.yml` (broken since 2026-07-23) and the watchdog both failed at preflight. Owner chose (after
+an explicit KISS/DRY/YAGNI challenge — do not re-litigate) to make the watchdog **credential-free**:
+
+- **#247 (merged):** public read-only `GET /api/freshness` (`worker/src/freshness.ts`; RED-first pure
+  builder + route; `no-store`) — exposes only corpus + ingest stamps + row counts.
+- **PR B:** the watchdog now `curl`s that endpoint (no CF token, no `uses:` actions) + wording fix
+  (Cloudflare **does** have a `D1 Read` scope; `d1-verify` needs only that, migrations need `D1 Edit`).
+
+**Remaining gate = a Worker deploy** (dispatch `deploy.yml`, production Environment — no new secret; the
+deploy token already lives there). The old "add a repo secret" gate is **gone**. `d1-verify` still wants
+its own token but only `D1 Read`, and it is dispatch-only (not blocking). **#168** assessed: `sharp`
 override, TS 7, and zod 4 are all still held for valid, re-verified upstream reasons — no change.
 
 ## ⚠ CONSTRAINT + OPEN DECISION (owner, 2026-07-25) — READ FIRST

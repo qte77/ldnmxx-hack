@@ -1,5 +1,5 @@
 ---
-title: "Handoff 019 — backlog clear. #199 SHIPPED (#245, live-gated on a CF CI secret) + #168 assessed (no change). OWNER CONSTRAINT (2026-07-25): no live external fetch → #185/#161/#8 blocked. #185 = owner picked A (needs the ONSPD file). NEW owner gate: add CLOUDFLARE_API_TOKEN repo secret (also unblocks d1-verify)."
+title: "Handoff 019 — backlog clear. #199 SHIPPED credential-free (watchdog #245 + public /api/freshness endpoint #247 + curl-rework PR B) + #168 assessed (no change). OWNER CONSTRAINT (2026-07-25): no live external fetch → #185/#161/#8 blocked. #185 = owner picked A (needs the ONSPD file). Remaining gate: dispatch deploy.yml to activate the endpoint (no new secret)."
 type: handoff
 updated: 2026-07-25
 pairs_with: docs/plans/019-backlog-clear.md
@@ -17,9 +17,11 @@ Arc 018 shipped v1.9.0 (released + deployed + live-verified). Arc 019 clears the
 live from other sources as of now" → the three DATA items are blocked: **#185** (ONSPD), **#161** (TRUD),
 **#8** (Open311) all need an external fetch. The repo is the SSOT; work e2e-unattended with the loop below.
 
-**Progress (2026-07-25 session):** **#199 SHIPPED** — `.github/workflows/freshness-watchdog.yml` merged
-in #245 (`cf4d22e`), evaluate logic verified offline; its LIVE run is **gated** on a repo
-`CLOUDFLARE_API_TOKEN` secret that does not exist yet (see owner gates — it also unblocks `d1-verify`).
+**Progress (2026-07-25 session):** **#199 SHIPPED, credential-free** — watchdog merged in #245
+(`cf4d22e`); then, rather than gate it on a CF token (which turned out to be a *production-Environment*
+secret invisible to non-environment jobs), added a public read-only `GET /api/freshness` endpoint (#247)
+and reworked the watchdog (PR B) to `curl` it with **zero credentials**. Evaluate logic verified offline
+against both shapes. LIVE run needs only a Worker **deploy** (see owner gates — no new secret).
 **#168 assessed** — `sharp` override + TS 7 + zod 4 all still correctly held for re-verified upstream
 reasons; no change (details on the issue). **#185:** owner picked **option A** (one-time committed ONSPD
 import) — still needs the owner to provide the ONSPD file (no live fetch). **#161/#8/#150** unchanged
@@ -47,10 +49,12 @@ import) — still needs the owner to provide the ONSPD file (no live fetch). **#
 ## Owner gates (batch into one sitting)
 
 1. **TRUD account + secret** for #161 (P4). 2. **#8 scope decision** (read-only slice vs own arc).
-3. **CF CI secret (NEW, 2026-07-25):** add `CLOUDFLARE_API_TOKEN` (scope Account > D1 > Edit) +
-   `CLOUDFLARE_ACCOUNT_ID` as **repo** secrets → activates the shipped **#199** watchdog AND fixes
-   `d1-verify.yml` (both fail at preflight without it). ~2-minute action. 4. **#185 ONSPD file** — owner
-   picked option A; hand over the ONSPD download once so the one-time committed import can be built.
+3. **Deploy the `/api/freshness` endpoint (2026-07-25):** dispatch `deploy.yml` (production Environment
+   — no new secret; the deploy token already lives there). Activates the shipped endpoint (#247) so the
+   credential-free watchdog (PR B) goes live. This **replaces** the earlier "add a CF repo secret" gate —
+   the watchdog no longer needs any Cloudflare token. (`d1-verify` still wants its own token, but only
+   `D1 Read`, and it's dispatch-only — not blocking.) 4. **#185 ONSPD file** — owner picked option A;
+   hand over the ONSPD download once so the one-time committed import can be built.
 
 ## The loop (per phase / PR)
 

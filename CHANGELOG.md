@@ -18,12 +18,13 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 ### Plan 019 — backlog clear · P2: freshness watchdog (#199)
 
 - **Freshness watchdog** (`.github/workflows/freshness-watchdog.yml`) — a scheduled (daily 06:37 UTC,
-  ~2h after the 04:47 UTC ingest cron) + dispatch Action that reads ONLY our own D1
-  `corpus_meta.ingested_at` (no external fetch — respects the arc-019 owner constraint) and opens (or
-  comments on) one alert issue if any corpus is more than 48h stale. Mirrors `tier3-monitor.yml`'s
-  open-or-comment alert and `d1-verify.yml`'s credential-free remote-D1 read (reuses the existing
-  `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` repo secrets); a `max_age_hours` dispatch input
-  exercises the stale/alert path (dispatch with `0`).
+  ~2h after the 04:47 UTC ingest cron) + dispatch Action that **`curl`s the public `GET /api/freshness`**
+  above and opens (or comments on) one alert issue if any corpus is more than 48h stale.
+  **Credential-free** — no Cloudflare token in CI, mirroring `tier3-monitor.yml` ("only hits the public
+  URL"); the job holds no secrets and uses no `uses:` actions. A `max_age_hours` dispatch input
+  exercises the stale/alert path (dispatch with `0`). Also corrected a stale claim in `d1-verify.yml`
+  and `docs/deploy-cloudflare.md` — Cloudflare **does** have a read-only **`D1 Read`** scope
+  (`d1-verify`'s SELECTs need only that; migrations still need `D1 Edit`).
 
 ## [1.9.0] - 2026-07-25
 
