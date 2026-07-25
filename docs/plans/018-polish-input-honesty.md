@@ -23,13 +23,14 @@ the widen at 0.5 km) but the *claim* was wrong; P1 corrects both the code and th
 | # | Phase | TDD boundary | Status |
 |---|---|---|---|
 | P0 | Mint arc (plan + handoff + tracker + issues) | docs | ☑ #226 (tracker #223, bugs #224/#225) |
-| P1 | **Row-read correction** — widen starts at 0.5 km; correct the false ≥10× claim; re-measure LIVE | constant + LIVE measure (no new unit test); docs | ☐ |
-| P2 | **Input forgiveness — outward postcodes** (SE1, E8): the broken-example bug | **MODULE** `shared/sanitize` → RED-first · gazetteer data (ingest + samples) | ☐ |
-| P3 | **Record-date honesty** — heritage shows a listing date, not "data as of 1974" | render label + per-corpus `CorpusLabels` (light module) → RED-first for the label chooser | ☐ |
-| P4 | **Config/code separation** — one shared usecase catalog (kills the UI `routable`/`example` drift) | **MODULE**/data → RED-first for the loader/validator | ☐ |
-| P5 | **Visual/UX pass** — hierarchy, density, distances, glyphs, chips, rotating placeholder | CSS/copy/glue → **e2e + axe** (no unit tests) | ☐ |
-| P5b | **No-match card — "type this" vs "open this"** — founders/route get a blurb + `?usecase=` link, not a fake keyword | render + copy → e2e | ☐ |
-| P6 | **Release v1.9.0** (or fold the v1.8.0 tag here — see owner gate) | docs · issues | ☐ |
+| P1 | **Row-read correction** — widen starts at 0.5 km; correct the false ≥10× claim; re-measure LIVE | constant + LIVE measure; docs | ☑ #230 (LIVE 3,248 ≤4k, 11.3×) |
+| P2 | **Input forgiveness — outward postcodes** (SE1, E8): the broken-example bug | **MODULE** `shared/sanitize` → RED-first · gazetteer data | ☑ #233 (0006 applied + durable) |
+| scam | **Scam natural-language match** — "is X a scam" resolves (found by the P1 live sweep) | **MODULE** `matchFirms` → RED-first | ☑ #232 |
+| P3 | **Record-date honesty** — heritage shows a listing date, not "data as of 1974" | render label + per-corpus `CorpusLabels` → RED-first | ☑ #234 |
+| P4 | **Config/code separation** — one shared usecase catalog (kills the UI `routable`/`example` drift) | **MODULE**/data → RED-first | ☑ #235 |
+| P5 | **Visual/UX pass** — distances, glyphs, chips, rotating placeholder, progressive hero, sources expander, de-dupe | CSS/copy/glue → **e2e + axe** | ☑ #237 |
+| P5b | **No-match card — "type this" vs "open this"** — founders/route get a blurb + `?usecase=` link | render + copy → e2e | ☑ #236 |
+| P6 | **Release v1.9.0** (single release for all of 018; v1.8.0 folded here) | docs · issues | ☐ in progress |
 
 ## LIVE measurements (2026-07-24, prod food_hygiene = 66,871 rows) — the P1 evidence
 

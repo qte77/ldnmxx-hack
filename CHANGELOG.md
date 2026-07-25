@@ -4,6 +4,13 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-07-25
+
+Arc 018 — post-launch polish: input forgiveness (outward postcodes + scam natural-language matching),
+honesty (row-read numbers, record dates), config-separation (one shared usecase catalog), and a
+visual/UX pass. All phases strict-TDD (RED-first for load-bearing modules), CI-gated, and per-phase
+deploy + live tier3-sweep verified (axe 0/0 across 3 theme variants × light/dark).
+
 ### Plan 018 — post-launch polish · P5: visual/UX pass (#223)
 
 - **Human distances** — `worker/src/geo.ts` `humanDistance` (RED-first): "· 0 km" → "<50 m", "N m ·
