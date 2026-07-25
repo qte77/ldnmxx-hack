@@ -21,14 +21,17 @@
  * Consumed by index.css:  @import "tailwindcss"; @import "./tokens.css";
  */
 @theme {
-  /* Neutrals — fo linear.css, light scheme. Dark swaps at runtime in the two blocks below. */
-  --color-bg: #fcfcfd;
-  --color-surface: #f4f5f7;
-  /* Cards sit on --surface-lift: in light it is the page's near-white lifted a step (separation
-   * comes from the hairline); in dark the lift itself is the separation. This IS fo's surface
-   * model and it is why cards no longer lean on a drop shadow. */
+  /* Neutrals — fo linear.css, light scheme, WARMED for a reassuring civic feel (020 P4b): bg/surface/
+   * hairline carry a faint warm cast while the CONTRAST-CRITICAL pairs are untouched — the card lift
+   * stays pure #ffffff (the measured 4.96:1 accent + AA link ratios hold), text/border-strong unchanged.
+   * Dark swaps at runtime in the two blocks below. */
+  --color-bg: #fdfcf9;
+  --color-surface: #f4f2ed;
+  /* Cards sit on --surface-lift: in light it is pure white (a warm-neutral page lifting to a clean
+   * card), with the soft --shadow-card giving a gentle, reassuring elevation; in dark the lift itself
+   * is the separation. */
   --color-surface-lift: #ffffff;
-  --color-border: #cfd3da;
+  --color-border: #d7d3cb;
   /* Interactive-control borders only (inputs, toggles) — 3.84:1 light / 3.31:1 dark. MEASURED. */
   --color-border-strong: #767c88;
   --color-text: #0d0e0f;
@@ -50,9 +53,10 @@
   --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  --radius-card: 12px;
-  /* fo's depth is a whisper, not a drop shadow — the hairline + lift do the separating. */
-  --shadow-card: 0 1px 2px rgb(13 14 15 / 0.04), 0 1px 3px rgb(13 14 15 / 0.06);
+  --radius-card: 14px;
+  /* 020 P4b: a soft, WARM-tinted elevation (was a near-invisible whisper) so cards feel gently raised
+   * and reassuring — subtle, not a heavy drop shadow. Dark keeps its own stronger shadow below. */
+  --shadow-card: 0 1px 2px rgb(60 50 35 / 0.05), 0 8px 20px rgb(60 50 35 / 0.08);
 }
 
 /*

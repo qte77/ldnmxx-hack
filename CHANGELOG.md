@@ -4,6 +4,17 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 020 — UX overhaul · P4b/c: warm civic visual system + gentle motion (#4)
+
+- **Warmer, softer, more alive — the owner-chosen "warm & reassuring civic" direction.** Light neutrals
+  gain a faint warm cast (`ui/src/tokens.css`: bg/surface/hairline) while every contrast-measured pair is
+  untouched (white card lift, near-black text, the Thames Teal accent, the control-affordance
+  border-strong — AA holds; the live axe sweep stays the gate). Cards get a slightly larger radius
+  (12→14px) and a soft, warm-tinted **elevation** in place of the near-invisible whisper shadow, so
+  results feel gently raised; a reduced-motion-safe **card fade+rise** on enter (`ui/src/index.css`) makes
+  answers arrive rather than snap. CSS-only → verified by the axe + screenshot sweep on deploy (CSS budget
+  5.0/8KB). The 3 variants + ADR-0005 project-owned tokens are kept.
+
 ### Plan 020 — UX overhaul · P4a: readability + touch targets for elderly / less-technical users (#4)
 
 - **Bigger, roomier, easier to tap.** The objective a11y foundation of the UX overhaul (no colour/identity
