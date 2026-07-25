@@ -133,6 +133,37 @@ per-item source maps below still apply for when external fetching is back on the
 - **When ready:** revisit the "live to others" stance (reports are semi-dynamic → a daily cron snapshot is
   honest per ADR-0002; NOT a real-time feed). The write half (`file_report` + ReportCard) stays its own arc.
 
+## Reference blueprints (file:line — MIRROR these, do not re-explore)
+
+Lines are approximate (they drift); the function/anchor names are exact. Verified this session.
+
+**#199 watchdog — build by cloning two existing workflows:**
+- `.github/workflows/tier3-monitor.yml` — copy the shape: `schedule` + `workflow_dispatch`,
+  `permissions: {contents: read, issues: write}`, and the **alert-on-fail** step (`gh issue list --search
+  "\"<title>\" in:title" --json number --jq '.[0].number // empty'` → if found `gh issue comment` else
+  `gh issue create`). Actions SHA-pinned (repo policy: `allowed_actions=selected + sha_pinning_required`).
+- `.github/workflows/d1-verify.yml` — copy the D1 read: `env: {CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID}`
+  (repo secrets, present), `defaults.run.working-directory: worker`, `npm ci` then `./node_modules/.bin/
+  wrangler d1 execute DB --remote --config wrangler.toml --command "$SQL" --json | tee /tmp/d1-result.json`.
+  Freshness SQL: `SELECT corpus, ingested_at FROM corpus_meta`. In the step, compare each `ingested_at` to
+  now−48h (bash `date`); fail + alert if any is stale.
+
+**#185 gazetteer — mirror the existing ingest parser/fetcher patterns:**
+- `ingest/parsers.py`: `parse_postcodes` (~L126, returns `[{postcode,lat,lng}]`, drops NI/BT + not-found)
+  is the shape to copy for `parse_onspd`; `bng_to_wgs84` (~L29) if ONSPD carries BNG easting/northing not
+  lat/long; `_in_london(lat,lng)` (~L151) + `GREATER_LONDON_BBOX` (~L21) for the London filter;
+  `with_outcodes` (~L148, reuse as-is to append outcode centroids).
+- `ingest/seed.py`: `fetch_greenspace` (~L104, the zip-download pattern `fetch_bytes(url)` →
+  `zipfile.ZipFile(io.BytesIO(...))` → read inner) is the template for `fetch_onspd`; `main()` gazetteer
+  assembly (~L188–197, where `artifacts["postcodes"]` is set) — swap the source to ONSPD-London; `FLOORS`
+  (~L58) — raise `"postcodes"` from 1000. Publishing rides `.github/workflows/ingest.yml` (weekly +
+  dispatch) → the 04:47 Worker cron swaps D1. (If option A: a one-time script + a `worker/migrations/000N`
+  INSERT, no `ingest.yml` change.)
+
+**#168 deps:** `ui/package.json` + `worker/package.json` (`overrides`/`resolutions` → find `sharp`);
+`.github/dependabot.yml` (the TS + zod `ignore` blocks). After any change run `npm ci` + `npm audit
+--omit=dev --audit-level=high` in EACH package.
+
 ## Standing execution contract (unchanged from 018)
 
 Branch per topic → strict module-TDD (RED first; glue/CSS/copy/CI → e2e/dispatch) → gates (`npm --prefix
