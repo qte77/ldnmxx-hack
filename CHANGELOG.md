@@ -4,6 +4,16 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 020 — UX overhaul · P4a: readability + touch targets for elderly / less-technical users (#4)
+
+- **Bigger, roomier, easier to tap.** The objective a11y foundation of the UX overhaul (no colour/identity
+  change yet — that's the next, owner-directed sub-phase): a ~17px base font + roomier line-height
+  (`ui/src/index.css`), the result-line "caption" ramp lifted off the small end (0.8rem→0.9rem) so the
+  content, not just titles, stays readable, sub-16px civic microcopy (chip label, privacy note, footer)
+  bumped to `text-sm`, and **≥44px touch targets** (WCAG 2.5.5) on every control — header toggles, chips,
+  the input, and the submit button. CSS/glue → verified by the axe + screenshot sweep on deploy. CSS
+  budget 5.0/8KB.
+
 ### Plan 020 — UX overhaul · P3: re-show examples after a search (#3)
 
 - **The example chips no longer vanish for good.** They collapsed after the first search (018 P5) and

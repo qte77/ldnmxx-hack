@@ -3,10 +3,17 @@
  * registry-independent — see ui/src/tokens.css (#82). App rules below consume the tokens it registers. */
 @import "./tokens.css";
 
+/* 020 P4a: a gentle global readability bump for elderly / less-technical users — ~17px base so no
+ * civic copy sits at the small end, with roomy line-height so prose and result lines breathe. */
+:root {
+  font-size: 106.25%;
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
+  line-height: 1.6;
   margin: 0;
 }
 
@@ -176,11 +183,14 @@ body {
   font-weight: 600;
 }
 .a2ui-surface .qte-text-body {
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 1rem;
+  line-height: 1.55;
 }
+/* 020 P4a: result lines (distance / why) use "caption" — lift it off the small end so the actual
+ * content, not just the titles, stays comfortably readable for less-technical / older users. */
 .a2ui-surface .qte-text-caption {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--color-text-muted);
 }
 
