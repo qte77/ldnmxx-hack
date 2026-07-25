@@ -4,7 +4,7 @@
   "example": "is Thames Capital Partners a scam",
   "blurb": "Check whether a firm is on the FCA's register of authorised financial businesses.",
   "render": { "mode": "scam" },
-  "keywords": ["scam", "fraud", "fca", "frn", "authorised firm", "fca register", "is this firm", "legit", "legitimate", "rip off", "ripoff"],
+  "keywords": ["scam", "fraud", "fca", "frn", "authorised firm", "fca register", "is this firm", "legit", "legitimate", "rip off", "ripoff", "fraudster", "fraudulent", "phishing", "con artist", "swindle", "rip-off"],
   "stages": [
     {
       "name": "plan",

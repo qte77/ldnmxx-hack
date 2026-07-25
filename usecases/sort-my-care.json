@@ -4,7 +4,7 @@
   "example": "GP near E8 3GT",
   "blurb": "Find NHS and public health services near a postcode — GPs, pharmacies, hospitals, dentists.",
   "render": { "mode": "corpus" },
-  "keywords": ["gp", "nhs", "clinic", "pharmacy", "chemist", "hospital", "dentist", "doctor", "health service", "care home", "a&e"],
+  "keywords": ["gp", "nhs", "clinic", "pharmacy", "chemist", "hospital", "dentist", "doctor", "health service", "care home", "a&e", "surgery", "gp surgery", "urgent care", "health centre", "medical", "prescription", "vaccination"],
   "stages": [
     {
       "name": "plan",

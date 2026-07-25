@@ -40,7 +40,7 @@ for *modules* only; CSS/wiring/glue → the e2e sweep is the test); lint + typin
 
 | # | Phase | Kind | Status |
 |---|---|---|---|
-| P1 | **Route to the right workflow** (#2) | module · RED-first | ☐ |
+| P1 | **Route to the right workflow** (#2) | module · RED-first | ☑ whole-word `matchesKeyword` + synonym expansion (RED-first) |
 | P2 | **Place-name input** (#1) — bundled resolver + `data/places.json` + D1 table/migration | module · RED-first + data | ☐ |
 | P3 | **Re-show examples after a query** (#3) | glue + pure gate | ☐ |
 | P4a | **Visual + readability** (type scale, spacing, ≥44px targets, elevation) | CSS/tokens · e2e | ☐ |
