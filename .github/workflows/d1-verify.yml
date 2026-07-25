@@ -55,7 +55,7 @@ jobs:
         run: |
           if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
             echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it as a repository secret."
-            echo "This check also needs Account > D1 > Edit (Cloudflare has no read-only D1 scope)."
+            echo "These are read-only SELECTs, so a token scoped to Account > D1 > Read is enough."
             exit 1
           fi
 

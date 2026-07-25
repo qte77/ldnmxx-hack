@@ -26,16 +26,27 @@ the D1 gazetteer, so most London postcodes resolve to "no data").
 | P5 | **#150 jsx-a11y** — adopt once eslint-plugin-jsx-a11y supports ESLint 10 | BLOCKED (upstream) | ☐ watch |
 | P6 | **#8 Open311 read-only slice** — DEFERRED: needs a live fetch to council/FixMyStreet endpoints ("no live to others for now") | deferred | ☐ |
 
-### Session note (2026-07-25) — #199 shipped, new owner gate surfaced
+### Session note (2026-07-25) — #199 shipped credential-free; #168 assessed
 
-**#199 code is merged (#245) and its evaluate logic is verified offline** (fresh → ok, 100h → stale,
-null → stale). But its LIVE done-when is blocked: the repo has **no `CLOUDFLARE_API_TOKEN` secret**
-(only `NPM_READ_TOKEN`), so the D1 read fails at preflight — the *same* latent gate `d1-verify.yml`
-has silently carried since its 2026-07-23 failed run. **New owner gate (batch with the others):** add
-`CLOUDFLARE_API_TOKEN` (scope Account > D1 > Edit) + `CLOUDFLARE_ACCOUNT_ID` as **repo** secrets →
-unblocks both `freshness-watchdog` and `d1-verify`. Until then the daily watchdog run fails loudly at
-preflight (intended — a credential-less monitor must not report green). **#168** assessed: `sharp`
-override, TS 7, and zod 4 are all still held for valid, re-verified upstream reasons — no change.
+**#199 watchdog merged (#245).** Its D1-read design first hit a gate: `CLOUDFLARE_API_TOKEN` is **not
+provisioned to GitHub Actions at all** (`gh secret list` shows only `NPM_READ_TOKEN`; the 017-P1 plan to
+add it as an Actions secret was never executed) — so `deploy.yml`, `d1-verify.yml` (broken since
+2026-07-23) and the watchdog all fail at their credentials preflight. Owner chose (after an explicit
+KISS/DRY/YAGNI challenge — do not re-litigate) to make the watchdog **credential-free**:
+
+- **#247 (merged):** public read-only `GET /api/freshness` (`worker/src/freshness.ts`; RED-first pure
+  builder + route; `no-store`) — exposes only corpus + ingest stamps + row counts.
+- **PR B:** the watchdog now `curl`s that endpoint (no CF token, no `uses:` actions) + wording fix
+  (Cloudflare **does** have a `D1 Read` scope; `d1-verify` needs only that, migrations need `D1 Edit`).
+
+**Remaining gate = a Worker deploy of the endpoint** (owner action — the agent can't deploy: no CF creds
+in the devcontainer, and dispatching `deploy.yml` is classifier-blocked). Either **provision
+`CLOUDFLARE_API_TOKEN` as an Actions secret then dispatch `deploy.yml`** (production Environment approval),
+or **`make deploy` from a machine that has the token**. Once the endpoint is live, mark PR B ready →
+merge → dispatch the watchdog (default → green credential-free; `max_age_hours=0` → alert issue). The old
+"the watchdog needs a CF secret" framing is **gone** — the watchdog now needs none. `d1-verify` still
+wants its own token but only `D1 Read`, dispatch-only (not blocking). **#168** assessed: `sharp` override,
+TS 7, and zod 4 all still held for valid, re-verified upstream reasons — no change.
 
 ## ⚠ CONSTRAINT + OPEN DECISION (owner, 2026-07-25) — READ FIRST
 
