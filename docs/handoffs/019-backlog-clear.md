@@ -1,5 +1,5 @@
 ---
-title: "Handoff 019 — backlog clear. OWNER CONSTRAINT (2026-07-25): no live external fetch → #185/#161/#8 blocked. Runnable now = #199 + #168. #185 needs an A/B/C decision first (see plan's CONSTRAINT section)."
+title: "Handoff 019 — backlog clear. #199 SHIPPED (#245, live-gated on a CF CI secret) + #168 assessed (no change). OWNER CONSTRAINT (2026-07-25): no live external fetch → #185/#161/#8 blocked. #185 = owner picked A (needs the ONSPD file). NEW owner gate: add CLOUDFLARE_API_TOKEN repo secret (also unblocks d1-verify)."
 type: handoff
 updated: 2026-07-25
 pairs_with: docs/plans/019-backlog-clear.md
@@ -15,19 +15,29 @@ per-item source map (files/functions), the approach, and the done-when for each.
 Arc 018 shipped v1.9.0 (released + deployed + live-verified). Arc 019 clears the remaining backlog.
 **READ the plan's "⚠ CONSTRAINT + OPEN DECISION" section FIRST.** Owner (2026-07-25): "no fetching data
 live from other sources as of now" → the three DATA items are blocked: **#185** (ONSPD), **#161** (TRUD),
-**#8** (Open311) all need an external fetch. **Runnable NOW with no external fetch:** **#199** freshness
-watchdog + **#168** deps — start there. **#185 is high-value but needs an owner A/B/C decision first**
-(A = a one-time committed ONSPD import = no recurring fetch, recommended; B = defer; C = rescope). The
-repo is the SSOT; work e2e-unattended with the loop below.
+**#8** (Open311) all need an external fetch. The repo is the SSOT; work e2e-unattended with the loop below.
+
+**Progress (2026-07-25 session):** **#199 SHIPPED** — `.github/workflows/freshness-watchdog.yml` merged
+in #245 (`cf4d22e`), evaluate logic verified offline; its LIVE run is **gated** on a repo
+`CLOUDFLARE_API_TOKEN` secret that does not exist yet (see owner gates — it also unblocks `d1-verify`).
+**#168 assessed** — `sharp` override + TS 7 + zod 4 all still correctly held for re-verified upstream
+reasons; no change (details on the issue). **#185:** owner picked **option A** (one-time committed ONSPD
+import) — still needs the owner to provide the ONSPD file (no live fetch). **#161/#8/#150** unchanged
+(owner-gated / blocked). **So Phase A agent-runnable work is complete; the rest is owner-gated.**
 
 ## Queue (details + source map in the plan)
 
-- **P1 #185 gazetteer widen** (A, agent, DO FIRST) — ingest full-London ONSPD (OGL, has coords) via the
-  ONS Open Geography Portal; `ingest/parsers.py` `parse_onspd` (RED-first) + `ingest/seed.py` `fetch_onspd`;
-  raise `FLOORS["postcodes"]`; add to `data/sources.json`. Verify a previously-failing postcode resolves live.
-- **P2 #199 freshness watchdog** (A, agent) — new `.github/workflows/freshness-watchdog.yml` mirroring
-  `tier3-monitor.yml` + `d1-verify.yml`; alert if `corpus_meta.ingested_at` > ~48h stale.
-- **P3 #168 deps** (A, agent chore) — drop the `sharp` override if `npm ci`/audit stay green; assess TS 7 + zod 4.
+- **P1 #185 gazetteer widen** (A, agent — **owner picked option A**) — ingest full-London ONSPD (OGL, has
+  coords). Under the no-live-fetch constraint, option A = the owner provides the ONSPD file once; then
+  `ingest/parsers.py` `parse_onspd` (RED-first) + `ingest/seed.py` `fetch_onspd`/one-time loader; raise
+  `FLOORS["postcodes"]`; add to `data/sources.json`. Verify a previously-failing postcode resolves live.
+  **BLOCKED until the owner hands over the ONSPD file.**
+- **P2 #199 freshness watchdog** — ☑ **DONE (#245, `cf4d22e`).** `.github/workflows/freshness-watchdog.yml`
+  mirrors `tier3-monitor.yml` + `d1-verify.yml`; alerts if `corpus_meta.ingested_at` > 48h stale; logic
+  verified offline. **LIVE run gated on the CF CI secret (owner gate #3 below) — same gate as `d1-verify`.**
+- **P3 #168 deps** — ☑ **ASSESSED (no change).** `sharp` override, TS 7, zod 4 all still held for
+  re-verified upstream reasons (miniflare still pins sharp 0.34.5; typescript-eslint peer `<6.1.0`;
+  @a2ui/react peer `zod ^3`). #168 kept open as the upstream watch.
 - **P4 #161 real Care (ODS/TRUD)** (B, OWNER GATE = a TRUD account) — build the ODS ingest DORMANT behind
   the credential; `care`'s `d1View` already exists. Activates when the secret lands.
 - **P5 #150 jsx-a11y** (BLOCKED upstream) — watch; adopt when eslint-plugin-jsx-a11y supports ESLint 10.
@@ -37,7 +47,10 @@ repo is the SSOT; work e2e-unattended with the loop below.
 ## Owner gates (batch into one sitting)
 
 1. **TRUD account + secret** for #161 (P4). 2. **#8 scope decision** (read-only slice vs own arc).
-Everything else in Phase A is agent-runnable now with no gate.
+3. **CF CI secret (NEW, 2026-07-25):** add `CLOUDFLARE_API_TOKEN` (scope Account > D1 > Edit) +
+   `CLOUDFLARE_ACCOUNT_ID` as **repo** secrets → activates the shipped **#199** watchdog AND fixes
+   `d1-verify.yml` (both fail at preflight without it). ~2-minute action. 4. **#185 ONSPD file** — owner
+   picked option A; hand over the ONSPD download once so the one-time committed import can be built.
 
 ## The loop (per phase / PR)
 

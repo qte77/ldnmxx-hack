@@ -19,12 +19,23 @@ the D1 gazetteer, so most London postcodes resolve to "no data").
 
 | # | Item | Phase | Status |
 |---|---|---|---|
-| P1 | **#185 gazetteer widen** — full-London ONSPD postcode units | A (agent) | ☐ |
-| P2 | **#199 freshness watchdog** — alert when the 04:47 ingest cron goes stale | A (agent) | ☐ |
-| P3 | **#168 deps** — drop `sharp` override; assess TS 7 + zod 4 | A (agent chore) | ☐ |
-| P4 | **#161 real Care corpus (NHS ODS/TRUD)** — build DORMANT behind the TRUD credential | B (owner-gated) | ☐ |
+| P1 | **#185 gazetteer widen** — full-London ONSPD postcode units | A (agent) | ☐ owner picked **A**; needs the ONSPD file from owner (no live fetch) |
+| P2 | **#199 freshness watchdog** — alert when the 04:47 ingest cron goes stale | A (agent) | ☑ shipped #245 (`cf4d22e`) · logic verified offline · **live-gated on the CF CI secret** |
+| P3 | **#168 deps** — drop `sharp` override; assess TS 7 + zod 4 | A (agent chore) | ☑ assessed 2026-07-25 — all 3 still held (no change; reasons on the issue) |
+| P4 | **#161 real Care corpus (NHS ODS/TRUD)** — build DORMANT behind the TRUD credential | B (owner-gated) | ☐ owner gate: TRUD account |
 | P5 | **#150 jsx-a11y** — adopt once eslint-plugin-jsx-a11y supports ESLint 10 | BLOCKED (upstream) | ☐ watch |
 | P6 | **#8 Open311 read-only slice** — DEFERRED: needs a live fetch to council/FixMyStreet endpoints ("no live to others for now") | deferred | ☐ |
+
+### Session note (2026-07-25) — #199 shipped, new owner gate surfaced
+
+**#199 code is merged (#245) and its evaluate logic is verified offline** (fresh → ok, 100h → stale,
+null → stale). But its LIVE done-when is blocked: the repo has **no `CLOUDFLARE_API_TOKEN` secret**
+(only `NPM_READ_TOKEN`), so the D1 read fails at preflight — the *same* latent gate `d1-verify.yml`
+has silently carried since its 2026-07-23 failed run. **New owner gate (batch with the others):** add
+`CLOUDFLARE_API_TOKEN` (scope Account > D1 > Edit) + `CLOUDFLARE_ACCOUNT_ID` as **repo** secrets →
+unblocks both `freshness-watchdog` and `d1-verify`. Until then the daily watchdog run fails loudly at
+preflight (intended — a credential-less monitor must not report green). **#168** assessed: `sharp`
+override, TS 7, and zod 4 are all still held for valid, re-verified upstream reasons — no change.
 
 ## ⚠ CONSTRAINT + OPEN DECISION (owner, 2026-07-25) — READ FIRST
 
