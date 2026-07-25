@@ -39,7 +39,7 @@ const corpora: Record<string, CorpusDef> = {
       summaryLine: "Nearest public-service signposts",
       // Curated + verified, NEVER generated.
       officialLink: { text: "Search official NHS services", url: "https://www.nhs.uk/service-search" },
-      emptyInvalidHint: "Try a London postcode like E8 3GT.",
+      emptyInvalidHint: "Try a London postcode like E8 3GT, or a place like Camden or Hackney.",
       // Coverage honesty (P3): the CQC directory has no community pharmacies — point at the
       // official NHS search rather than implying nothing exists nearby.
       emptyUnknownHint:
@@ -73,7 +73,7 @@ const corpora: Record<string, CorpusDef> = {
         text: "Historic England — The List",
         url: "https://historicengland.org.uk/listing/the-list/",
       },
-      emptyInvalidHint: "Try a London postcode like E8 3GT.",
+      emptyInvalidHint: "Try a London postcode like E8 3GT, or a place like Camden or Hackney.",
       emptyUnknownHint:
         "We don't have sample data for that postcode yet — try E8 3GT, SW9 9SL or N1 9GU.",
       // P2 (#182): the licence obligations for the REAL data this corpus serves (data/sources.json
@@ -102,7 +102,7 @@ const corpora: Record<string, CorpusDef> = {
       // Curated + verified, NEVER generated. Our OWN card style — never the FSA badge graphic
       // (trademark/Brand Standard, see data/sources.json fhrs redistribute_note).
       officialLink: { text: "Search official food hygiene ratings", url: "https://ratings.food.gov.uk/" },
-      emptyInvalidHint: "Try a London postcode like SW9 9SL.",
+      emptyInvalidHint: "Try a London postcode like SW9 9SL, or a place like Brixton or Peckham.",
       emptyUnknownHint:
         "Nothing found for that postcode — search the official FSA ratings site below.",
       // The licence obligations for the REAL data this corpus serves (FHRS OGL; inspection dates
