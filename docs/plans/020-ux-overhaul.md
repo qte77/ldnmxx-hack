@@ -46,9 +46,9 @@ for *modules* only; CSS/wiring/glue → the e2e sweep is the test); lint + typin
 | P3 | **Re-show examples after a query** (#3) | glue + pure gate | ☑ `suggestionMode` gate (RED-first) + "Try another" row; e2e-verify on deploy |
 | P4a | **Visual + readability** (type scale, spacing, ≥44px targets, elevation) | CSS/tokens · e2e | ☑ ~17px base + line-height, caption ramp lift, ≥44px targets; sweep-verify on deploy |
 | P4b | **Colour "familiar to Londoners"** (owner chose "warm & reassuring civic") | CSS/tokens · e2e | ☑ warm light neutrals + soft card elevation (measured pairs kept); sweep-verify on deploy |
-| P4c | **Motion & states** (card enter, loading skeleton, hover/press; reduced-motion-gated) | CSS · e2e | ◐ card fade+rise shipped; loading skeleton + hover/press with P4d/e |
-| P4d | **Layout + header rearrange** (hero→results scan, labelled control cluster, help affordance) | TSX/CSS · e2e | ☐ |
-| P4e | **Richer result cards** (glyph, distance/rating badges, official-link button) | worker+ui · e2e | ☐ |
+| P4c | **Motion & states** (card enter, loading skeleton, hover/press) | CSS · e2e | ◐ card fade+rise shipped; **skeleton dropped (YAGNI** — deterministic corpus responses are near-instant) |
+| P4d | **Layout + header rearrange** (help affordance, control cluster) | TSX/CSS · e2e | ☑ plain-language "?" HelpPanel; toggle-cluster rearrange = optional follow-up |
+| P4e | **Richer result cards** (glyph, distance/rating badges, official-link button) | worker+ui · e2e | ⏸ **DEFERRED** — pill badges need a custom A2UI `usageHint`; the UI schema allows it (`z.unknown()` props) but whether @a2ui/react renders a custom hint's class is unverifiable without a browser (unit tests are node-only). Build→deploy→verify iteration, not blind. |
 
 ## Phase source map (files/functions — MIRROR these, do not re-explore)
 
