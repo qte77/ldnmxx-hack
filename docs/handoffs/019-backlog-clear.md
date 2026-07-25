@@ -1,5 +1,5 @@
 ---
-title: "Handoff 019 — backlog clear. Start at P1 (#185 gazetteer widen). Two owner-gates: TRUD account (#161), ESLint-10 upstream (#150). #8 needs a scope call."
+title: "Handoff 019 — backlog clear. OWNER CONSTRAINT (2026-07-25): no live external fetch → #185/#161/#8 blocked. Runnable now = #199 + #168. #185 needs an A/B/C decision first (see plan's CONSTRAINT section)."
 type: handoff
 updated: 2026-07-25
 pairs_with: docs/plans/019-backlog-clear.md
@@ -12,10 +12,13 @@ per-item source map (files/functions), the approach, and the done-when for each.
 
 ## Onboarding — the 30-second picture
 
-Arc 018 shipped v1.9.0 (released + deployed + live-verified). Arc 019 clears the entire remaining backlog
-in one Phase-A/B/C-shaped arc. **Start at P1 (#185 gazetteer widen)** — it's the highest user-value item
-(today only 6,656 postcodes are in D1, so most London postcodes resolve to "no data"). The repo is the
-SSOT; work e2e-unattended with the loop below.
+Arc 018 shipped v1.9.0 (released + deployed + live-verified). Arc 019 clears the remaining backlog.
+**READ the plan's "⚠ CONSTRAINT + OPEN DECISION" section FIRST.** Owner (2026-07-25): "no fetching data
+live from other sources as of now" → the three DATA items are blocked: **#185** (ONSPD), **#161** (TRUD),
+**#8** (Open311) all need an external fetch. **Runnable NOW with no external fetch:** **#199** freshness
+watchdog + **#168** deps — start there. **#185 is high-value but needs an owner A/B/C decision first**
+(A = a one-time committed ONSPD import = no recurring fetch, recommended; B = defer; C = rescope). The
+repo is the SSOT; work e2e-unattended with the loop below.
 
 ## Queue (details + source map in the plan)
 

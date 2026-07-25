@@ -26,6 +26,27 @@ the D1 gazetteer, so most London postcodes resolve to "no data").
 | P5 | **#150 jsx-a11y** — adopt once eslint-plugin-jsx-a11y supports ESLint 10 | BLOCKED (upstream) | ☐ watch |
 | P6 | **#8 Open311 read-only slice** — DEFERRED: needs a live fetch to council/FixMyStreet endpoints ("no live to others for now") | deferred | ☐ |
 
+## ⚠ CONSTRAINT + OPEN DECISION (owner, 2026-07-25) — READ FIRST
+
+**Owner constraint: "we don't want to fetch data live from other sources as of now."** This BLOCKS all
+three DATA items — each needs a live/one-off external fetch: **#185** (ONSPD from ONS), **#161** (NHS
+TRUD), **#8** (Open311 councils). It does NOT tear down the existing daily cron (the current corpora stay
+live) — it holds off ADDING new external fetching.
+
+**Runnable NOW with no external fetch (do these):** **#199** freshness watchdog (reads only our own D1
+`corpus_meta`) and **#168** deps (npm only). These override the queue's Phase-A row for #185.
+
+**OPEN owner decision for #185 (pick BEFORE building it):**
+- **A —** ONE-TIME committed ONSPD-London import: owner downloads ONSPD once (or hands over the file); we
+  process + COMMIT the full-London gazetteer as static data and load it into D1 via a migration. NO
+  recurring external fetch — same "committed reference data" pattern as the sample corpora, just complete.
+  Coverage 6,656 → full London. **(recommended — delivers #185's value within the constraint.)**
+- **B —** defer all three data items (#185/#161/#8) → arc 019 = **#199 + #168** only.
+- **C —** rescope further (e.g. pause the existing cron too — owner to specify).
+
+**#161 and #8 stay deferred** under this constraint regardless (both need external fetching). The
+per-item source maps below still apply for when external fetching is back on the table.
+
 ## Phase A — agent-runnable now (do these first, in order)
 
 ### P1 · #185 gazetteer widen (highest value)
