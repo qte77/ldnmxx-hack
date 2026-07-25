@@ -6,6 +6,7 @@ import { readUsecase } from "./usecase";
 import { useAgentSSE, type Byok, type RunStatus } from "./agent/useAgentSSE";
 import type { EventLogEntry } from "./agent/applyA2UIEvent";
 import { usecaseCatalog } from "../../shared/usecaseCatalog";
+import { useRotatingPlaceholder } from "./useRotatingPlaceholder";
 
 // 018 P4: the workflow catalog is now ONE shared source of truth (shared/usecaseCatalog.ts, read by the
 // Worker too) — no second, drifting UI copy. The UI needs only id→title (to name the resolved workflow +
@@ -15,11 +16,25 @@ const USECASES = usecaseCatalog();
 
 const USECASE_IDS = USECASES.map((u) => u.id);
 
+// 018 P5: the routable subset (keyword-carrying) — the ONLY workflows a typed ask can reach, so the only
+// ones offered as suggestion chips / rotated as placeholders (founders + route are never-auto-routed,
+// ADR 0004). Stable module-scope arrays so the rotating-placeholder effect doesn't re-run every render.
+const ROUTABLE = USECASES.filter((u) => u.keywords.length > 0);
+const ROUTABLE_EXAMPLES = ROUTABLE.map((u) => u.example);
+
 // Shared chrome-control styling: border-border-strong (not the decorative hairline) because a
 // control's border IS its affordance — WCAG 1.4.11 wants 3:1, which only the strong token meets.
 const CONTROL_CLASS =
   "px-2 py-1 rounded border border-border-strong text-text-muted hover:border-primary " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+// 018 P5: suggestion chips + example placeholders. Same token set as CONTROL_CLASS (border-border-strong
+// = the 3:1-contrast control affordance, WCAG 1.4.11) — a separate string (not `${CONTROL_CLASS} rounded-full`)
+// because Tailwind utility precedence is generation-order-based, so chaining `rounded` then `rounded-full`
+// would not reliably win.
+const CHIP_CLASS =
+  "px-3 py-1.5 rounded-full border border-border-strong text-text-muted text-sm hover:border-primary " +
+  "hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 // Minimal light/dark toggle: flips the `data-theme` attribute the theme + anti-FOUC script read.
 type Theme = "light" | "dark";
@@ -205,6 +220,90 @@ function DevConsole(props: { show: boolean; status: RunStatus | null; events: Ev
   );
 }
 
+// 018 P5: the hero — eyebrow + H1 + the single input, plus (empty state only) the collapsible dek,
+// suggestion chips, and rotating example placeholder. Extracted from Dashboard so each component's
+// cyclomatic complexity stays in budget; owns the input-focus + rotating-placeholder state.
+function Hero({
+  prompt,
+  setPrompt,
+  onSubmit,
+  submitPrompt,
+  isRunning,
+  stop,
+  hasSearched,
+}: {
+  prompt: string;
+  setPrompt: (v: string) => void;
+  onSubmit: (e: SyntheticEvent) => void;
+  submitPrompt: (text: string) => void;
+  isRunning: boolean;
+  stop: () => void;
+  hasSearched: boolean;
+}) {
+  const [inputFocused, setInputFocused] = useState(false);
+  const placeholder = useRotatingPlaceholder(ROUTABLE_EXAMPLES, inputFocused || prompt.length > 0);
+  return (
+    <section className="pt-6 sm:pt-10">
+      <p className="text-sm text-text-muted">London public services · free, no sign-up</p>
+      <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-text">
+        Ask in your own words. Get the official source.
+      </h1>
+      {!hasSearched && (
+        <p className="mt-2 text-text-muted max-w-prose">
+          Not a live search: we keep a snapshot of official registers — CQC, the Food Standards Agency,
+          Historic England, Ordnance Survey — refreshed weekly. Every result shows the date on the record
+          itself and links to the live page.
+        </p>
+      )}
+
+      <form onSubmit={onSubmit} className="mt-5 flex flex-col sm:flex-row gap-2">
+        <label htmlFor="civic-query" className="sr-only">
+          Ask in your own words
+        </label>
+        <input
+          id="civic-query"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
+          placeholder={`e.g. ${placeholder}`}
+          autoComplete="off"
+          className="flex-1 px-3 py-2 rounded border border-border-strong bg-bg text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        />
+        {isRunning ? (
+          <button type="button" onClick={stop} className={`${CONTROL_CLASS} px-4 py-2`}>
+            Stop
+          </button>
+        ) : (
+          <button
+            type="submit"
+            className="px-4 py-2 rounded bg-primary text-primary-on font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Find it
+          </button>
+        )}
+      </form>
+
+      {!hasSearched && (
+        <>
+          <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Try an example">
+            <span className="text-xs text-text-muted">Try:</span>
+            {ROUTABLE.map((u) => (
+              <button key={u.id} type="button" onClick={() => submitPrompt(u.example)} className={CHIP_CLASS}>
+                {u.example}
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-text-muted max-w-prose">
+            No account, no cookies — anonymous page-view counts only. We point you to the official record;
+            confirm there before you act.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
 function Dashboard() {
   const { eventLog, isRunning, error, run, stop, status, resolved } = useAgentSSE();
   // ?usecase=<id> is an explicit BYPASS (deep link / founders demo) — null ⇒ the Worker auto-routes
@@ -220,20 +319,32 @@ function Dashboard() {
   // Dev mode reveals the AG-UI console + ⚙ Key panel (hidden in the civic default). Ctrl+K / Ctrl+I or
   // ?dev=1 toggles it; the choice persists in localStorage (qte77-dev).
   const [devMode, setDevMode] = useState(() => readDevMode(location.search));
+  // 018 P5: collapse the hero dek + suggestion chips once a search has happened, so results lead.
+  const hasSearched = isRunning || eventLog.length > 0;
 
   // The workflow name to announce: the router's pick on a prompt-only run, or the bypass label on a
   // deep link. Drives the aria-live announcement + the visible "Showing …" heading above the results.
   const activeTitle = resolved?.title ?? bypassDef?.title;
   const announce = activeTitle ? `Showing: ${activeTitle}` : "";
 
+  // 018 P5: shared submit — a chip click and the form both funnel through here. Pass the text DIRECTLY
+  // (not the `prompt` state, which setPrompt hasn't committed yet on a chip click) to dodge a stale closure.
+  const submitPrompt = useCallback(
+    (text: string) => {
+      setPrompt(text);
+      const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
+      // Prompt-only unless a ?usecase= bypass is active; the Worker's ?demo=1 stays available.
+      void run(text, byok, false, bypass ?? undefined);
+    },
+    [run, apiKey, model, bypass],
+  );
+
   const onSubmit = useCallback(
     (e: SyntheticEvent) => {
       e.preventDefault();
-      const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
-      // Prompt-only unless a ?usecase= bypass is active; the Worker's ?demo=1 stays available.
-      void run(prompt, byok, false, bypass ?? undefined);
+      submitPrompt(prompt);
     },
-    [run, prompt, apiKey, model, bypass],
+    [submitPrompt, prompt],
   );
 
   // Dev-mode toggle: Ctrl+K / Ctrl+I flips it (persisted), so the dev console is reachable without any
@@ -274,48 +385,15 @@ function Dashboard() {
 
       <main className="flex-1">
         {/* One input, one action. The workflow is chosen by the Worker's router from what's typed. */}
-        <section className="pt-6 sm:pt-10">
-          <p className="text-sm text-text-muted">London public services · free, no sign-up</p>
-          <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-text">
-            Ask in your own words. Get the official source.
-          </h1>
-          <p className="mt-2 text-text-muted max-w-prose">
-            Not a live search: we keep a snapshot of official registers — CQC, the Food Standards
-            Agency, Historic England, Ordnance Survey — refreshed weekly. Every result shows the date
-            on the record itself and links to the live page.
-          </p>
-
-          <form onSubmit={onSubmit} className="mt-5 flex flex-col sm:flex-row gap-2">
-            <label htmlFor="civic-query" className="sr-only">
-              Ask in your own words
-            </label>
-            <input
-              id="civic-query"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g. food hygiene near SE1"
-              autoComplete="off"
-              className="flex-1 px-3 py-2 rounded border border-border-strong bg-bg text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            />
-            {isRunning ? (
-              <button type="button" onClick={stop} className={`${CONTROL_CLASS} px-4 py-2`}>
-                Stop
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="px-4 py-2 rounded bg-primary text-primary-on font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                Find it
-              </button>
-            )}
-          </form>
-
-          <p className="mt-3 text-xs text-text-muted max-w-prose">
-            No account, no cookies — anonymous page-view counts only. We point you to the official
-            record; confirm there before you act.
-          </p>
-        </section>
+        <Hero
+          prompt={prompt}
+          setPrompt={setPrompt}
+          onSubmit={onSubmit}
+          submitPrompt={submitPrompt}
+          isRunning={isRunning}
+          stop={stop}
+          hasSearched={hasSearched}
+        />
 
         {error && (
           <div role="alert" className="mt-4 px-3 py-2 text-sm text-data-negative border border-border rounded">

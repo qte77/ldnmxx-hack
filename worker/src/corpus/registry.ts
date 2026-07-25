@@ -53,6 +53,7 @@ const corpora: Record<string, CorpusDef> = {
       // date for the whole pull; the per-location "last checked" lives in `why`) — so "data as of" is
       // honest. (P3 #225)
       dateLabel: "asOf",
+      glyph: "🩺",
     },
   },
   wander: {
@@ -86,6 +87,7 @@ const corpora: Record<string, CorpusDef> = {
       // rows" is usually a heritage listing year — a record's own age, not our freshness — so make NO
       // date claim rather than a misleading one. (P3 #225)
       dateLabel: "omit",
+      glyph: "🚶",
     },
   },
   "food-hygiene": {
@@ -111,6 +113,7 @@ const corpora: Record<string, CorpusDef> = {
       // FHRS lastUpdated is the establishment's own inspection (RatingDate), not our ingest freshness —
       // word it "inspected {date}", never "data as of". (P3 #225)
       dateLabel: "inspected",
+      glyph: "🍽️",
     },
   },
 };

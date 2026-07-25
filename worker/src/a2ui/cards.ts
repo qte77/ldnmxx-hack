@@ -119,7 +119,11 @@ const disclaimerCard = (link: { text: string; url: string }, attribution: string
   lines: [
     "A signpost to public services — not advice, a referral, or a booking. Details can change.",
     `[${link.text}](${link.url})`,
-    ...attribution,
+    // 018 P5: collapse the N licence-obligation lines into ONE "Sources & licence:" caption — every
+    // required attribution string is kept VERBATIM (only the line count changes, N → 1), so the
+    // cron's swap-gate precondition (non-empty attribution) is untouched. No A2UI disclosure primitive
+    // exists (see the P5 spec), so this is honest presentational compaction, not a fake accordion.
+    ...(attribution.length > 0 ? [`Sources & licence: ${attribution.join(" ")}`] : []),
   ],
 });
 
@@ -169,6 +173,19 @@ export function buildRouteCards(r: Route = route): unknown[] {
   return cardsBatch([summary, ...legs]);
 }
 
+// 018 P5: a per-workflow glyph for the discovery list. Decorative + purely LOCAL — kept OUT of
+// shared/usecaseCatalog.ts (which owns only the router/deep-link contract). A neutral fallback covers
+// any future usecase id added without an entry here, so a glyph is never missing/undefined.
+const GLYPH_BY_USECASE: Record<string, string> = {
+  "sort-my-care": "🩺",
+  "sort-my-wander": "🚶",
+  "sort-my-food-hygiene": "🍽️",
+  "sort-my-scam-check": "🔍",
+  "founders-copilot": "🚀",
+  "sort-my-route": "🧭",
+};
+const glyphFor = (id: string): string => GLYPH_BY_USECASE[id] ?? "•";
+
 // The no-match card (017 P2, ADR 0004): when the router can't confidently place a free-text ask, we
 // NEVER fall back to a flagship — we render a deterministic "here's what I can help with" card + the
 // discovery list, so a first-time visitor learns the app's scope instead of getting a wrong answer.
@@ -187,7 +204,7 @@ export function buildNoMatchCards(catalog: CatalogEntry[]): unknown[] {
   };
   const options: CardSpec[] = catalog.map((u) => ({
     key: `opt-${u.id}`,
-    title: u.title,
+    title: `${glyphFor(u.id)} ${u.title}`,
     lines:
       u.keywords.length > 0
         ? [u.blurb, `Try typing: "${u.example}"`]

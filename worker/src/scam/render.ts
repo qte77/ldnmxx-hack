@@ -21,13 +21,15 @@ export function buildScamCards(q: ScamQuery): unknown[] {
   const count = q.rows.length;
   const summary: CardSpec = {
     key: "summary",
-    title: `${String(count)} ${labels.noun}${count > 1 ? "s" : ""} matching '${q.query ?? ""}'`,
+    // 018 P5: a per-workflow glyph on the summary title (scam = 🔍, never a shield/check badge).
+    title: `${labels.glyph} ${String(count)} ${labels.noun}${count > 1 ? "s" : ""} matching '${q.query ?? ""}'`,
     lines: [`${labels.summaryLine} · data as of ${q.asOf ?? ""}`],
   };
+  // 018 P5: the firm-name title is now the FCA-register link (drops the separate official-link row).
   const rowCards: CardSpec[] = q.rows.map((r) => ({
     key: r.id,
-    title: r.title,
-    lines: [r.line, r.why, `[${labels.officialLink.text}](${r.officialUrl})`],
+    title: `[${r.title}](${r.officialUrl})`,
+    lines: [r.line, r.why],
   }));
   const cards: CardSpec[] = [summary, ...rowCards];
   // The deterministic clone flag (query.ts) — a neutral note, only when the results themselves contain

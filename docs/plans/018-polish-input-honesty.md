@@ -1,7 +1,7 @@
 ---
 title: "Plan 018 — post-launch polish: input forgiveness, honesty, config-separation, UX"
 type: plan
-status: "open — minted after 017 shipped + deployed; captures live-testing findings"
+status: "open (2026-07-25) — P1/P2/scam/P3/P4/P5b SHIPPED+deployed+live-verified; P5 code done on branch fix/018-p5-visual-ux (@e91f215, gates green) needs PR→merge→deploy→owner screenshot review; then P6 release v1.9.0. Resume via docs/handoffs/018."
 refs: ["#223 (018 tracker)", "#224 (P2 outward postcodes)", "#225 (P3 date honesty)", "#201 (017 tracker, closed-out)", "ADR 0002 (bounded reads / record dates)", "#185 (gazetteer widening)", "#199 (freshness watchdog)", "plan 017 (deployed)"]
 ---
 

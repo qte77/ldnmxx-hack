@@ -45,6 +45,7 @@ const labels: CorpusLabels = {
   emptyUnknownHint: "We don't have sample data for that postcode yet — try SW9 9SL, E1 6AN or N1 9GU.",
   attribution: [],
   dateLabel: "asOf",
+  glyph: "🩺",
 };
 
 const sample: CorpusQuery = {
@@ -121,10 +122,10 @@ describe("buildCorpusCards", () => {
     const json = JSON.stringify(batch);
     expect(json).toContain("© Historic England 2026");
     expect(json).toContain("Contains OS data © Crown copyright and database right 2026");
-    // On the DISCLAIMER card: title + caveat + link + 2 attribution lines.
+    // On the DISCLAIMER card: title + caveat + link + ONE joined "Sources & licence:" line (018 P5).
     const update = batch.find((m) => m.surfaceUpdate)?.surfaceUpdate;
     const body = update?.components.find((c) => c.id === "body-disclaimer");
-    expect(body?.component["Column"]?.children?.explicitList).toHaveLength(5);
+    expect(body?.component["Column"]?.children?.explicitList).toHaveLength(4);
   });
 
   it("renders no attribution lines for a sample corpus (empty attribution)", () => {

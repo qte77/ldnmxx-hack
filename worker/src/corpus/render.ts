@@ -26,13 +26,20 @@ export function buildCorpusCards(q: CorpusQuery): unknown[] {
   const dateClaim = formatDateLabel(labels.dateLabel, q.asOf);
   const summary: CardSpec = {
     key: "summary",
-    title: `${String(count)} ${labels.noun}${count > 1 ? "s" : ""} near ${q.query ?? ""}`,
-    lines: [dateClaim ? `${labels.summaryLine} · ${dateClaim}` : labels.summaryLine],
+    // 018 P5: a per-workflow glyph on the title; the shared authority (de-duped off every row by
+    // query.ts) tagged here as its own line — only when the whole result set truly shares one.
+    title: `${labels.glyph} ${String(count)} ${labels.noun}${count > 1 ? "s" : ""} near ${q.query ?? ""}`,
+    lines: [
+      dateClaim ? `${labels.summaryLine} · ${dateClaim}` : labels.summaryLine,
+      ...(q.sharedAuthority ? [q.sharedAuthority] : []),
+    ],
   };
+  // 018 P5: the card TITLE is now the official-source link — drops the separate "[Official page]" row
+  // (one destination per card, less clutter). The markdown link renders as an anchor; its text = title.
   const cards: CardSpec[] = q.rows.map((r) => ({
     key: r.id,
-    title: r.title,
-    lines: [r.line, r.why, `[Official page](${r.officialUrl})`],
+    title: `[${r.title}](${r.officialUrl})`,
+    lines: [r.line, r.why],
   }));
   return appendDisclaimer(cardsBatch([summary, ...cards]), labels.officialLink, labels.attribution);
 }
