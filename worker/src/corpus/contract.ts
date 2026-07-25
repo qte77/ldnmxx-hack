@@ -35,6 +35,10 @@ export interface CorpusLabels {
   // every corpus present and future declares its date semantics consciously instead of inheriting a
   // wrong default. See dates.ts `formatDateLabel`.
   dateLabel: DateLabelMode;
+  // P5 (018): a small per-corpus mark shown ONCE on the summary card title — cheap visual variety
+  // across workflows without touching every row. Required (like dateLabel), so every corpus declares it
+  // consciously; decorative reviewed-TS, never inferred from data.
+  glyph: string;
 }
 
 // A row handed to the render. `line` is the retrieval-specific secondary line, PRE-FORMATTED by the
@@ -55,4 +59,9 @@ export interface CorpusQuery {
   rows: CorpusRow[];
   asOf: string | null;
   labels: CorpusLabels;
+  // P5 (018): the authority EVERY shown row shares, or null when the corpus is multi-source for this
+  // query — render.ts tags the summary card with it only when non-null (never a false single claim).
+  // Optional + derived by query.ts, so existing CorpusQuery fixtures need no edit (undefined ⇒ the
+  // per-row `authority · distance` line, today's honest behaviour).
+  sharedAuthority?: string | null;
 }

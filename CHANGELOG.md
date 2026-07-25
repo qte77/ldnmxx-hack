@@ -4,6 +4,24 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 018 — post-launch polish · P5: visual/UX pass (#223)
+
+- **Human distances** — `worker/src/geo.ts` `humanDistance` (RED-first): "· 0 km" → "<50 m", "N m ·
+  ~X-min walk", or "N.N km · ~X-min walk".
+- **De-duped cards** — the authority every shown row shares lifts to the summary as a tag; a genuinely
+  multi-source result keeps it per-row (never a false single-source claim). `corpus/query.ts`
+  `sharedAuthorityOf` + `CorpusQuery.sharedAuthority`.
+- **Per-workflow glyph** — a required `CorpusLabels.glyph` on each summary title (🩺/🚶/🍽️; scam 🔍,
+  never a shield/✅) + a local `GLYPH_BY_USECASE` for the no-match card; and the result **card title is
+  now the official-source link** (drops the redundant "[Official page]" row).
+- **Sources & licence** — the N licence-attribution lines collapse into ONE "Sources & licence:" caption,
+  every string kept verbatim (no A2UI disclosure primitive exists, so honest compaction, not a fake
+  accordion).
+- **Progressive hero** (`ui/src/App.tsx` new `Hero`) — the dek + chips collapse after a search so results
+  lead; **suggestion chips** of the routable examples on the empty state; **rotating placeholder**
+  (`ui/src/useRotatingPlaceholder.ts`, `shouldRotate` RED-first, `prefers-reduced-motion`-aware).
+- Verified: worker + ui full local gates green; the live axe 0/0 + flow sweep is the post-deploy gate.
+
 ### Plan 018 — post-launch polish · P5b: no-match card — "type this" vs "open this" (#223)
 
 - **The no-match discovery card now offers an honest affordance per workflow.** It listed every

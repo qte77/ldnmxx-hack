@@ -65,3 +65,14 @@ export function nearestN<T extends Coords>(
     .sort((x, y) => x.distanceKm - y.distanceKm)
     .slice(0, n);
 }
+
+// Human-readable distance + walk estimate for a corpus result row (018 P5). Walking pace ≈ 12 min/km
+// (~5 km/h). Branches on the ROUNDED metres (not raw km) so a value that rounds up to 1000 m always
+// reads "1.0 km" (never "1000 m"), and a doorstep result reads "<50 m" instead of a bare "0 km".
+export function humanDistance(km: number): string {
+  const walkMin = Math.max(1, Math.round(km * 12));
+  const metres = Math.round(km * 1000);
+  if (metres < 50) return "<50 m";
+  if (metres < 1000) return `${String(metres)} m · ~${String(walkMin)}-min walk`;
+  return `${km.toFixed(1)} km · ~${String(walkMin)}-min walk`;
+}

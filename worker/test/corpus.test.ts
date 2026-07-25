@@ -21,6 +21,7 @@ const def: CorpusDef = {
     emptyUnknownHint: "We don't have sample data for that postcode yet.",
     attribution: [],
     dateLabel: "asOf",
+    glyph: "🩺",
   },
 };
 
@@ -33,9 +34,20 @@ describe("queryCorpusDef", () => {
     expect(Object.keys(q.rows[0]!).sort()).toEqual(["id", "line", "officialUrl", "title", "why"].sort());
   });
 
-  it("pre-formats the retrieval-specific secondary line (authority + rounded distance)", () => {
+  it("humanises the distance; keeps the per-row authority when the result set is multi-source (018 P5)", () => {
+    // n=2 returns NHS A + NHS B (different authorities) ⇒ no shared authority ⇒ it stays per-row (an
+    // honest fallback — never a false single-source claim). The distance is humanised, never a bare "· N km".
+    const q = queryCorpusDef(def, "SW1A 1AA", 2);
+    expect(q.sharedAuthority).toBeNull();
+    expect(q.rows[0]!.line).toMatch(/^NHS A · (<50 m|\d+ m · ~\d+-min walk|\d+\.\d km · ~\d+-min walk)$/);
+  });
+
+  it("de-dupes the authority to the summary when every shown row shares one (018 P5)", () => {
+    // n=1 ⇒ a single row trivially shares its authority ⇒ lifted to q.sharedAuthority, so the row line
+    // is JUST the humanised distance (the live single-source corpora, e.g. all-FSA food-hygiene, do this).
     const q = queryCorpusDef(def, "SW1A 1AA", 1);
-    expect(q.rows[0]!.line).toMatch(/^NHS A · \d+(\.\d)? km$/);
+    expect(q.sharedAuthority).toBe("NHS A");
+    expect(q.rows[0]!.line).toMatch(/^(<50 m|\d+ m · ~\d+-min walk|\d+\.\d km · ~\d+-min walk)$/);
   });
 
   it("advertises the OLDEST lastUpdated as asOf (conservative freshness)", () => {

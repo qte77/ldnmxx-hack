@@ -43,4 +43,7 @@ export const scamLabels: CorpusLabels = {
   // Type-compliance only: scam's own render (scam/render.ts) hardcodes its date line and never reads
   // this field. Its lastUpdated is a register-check freshness date, so "asOf" is the honest value. (P3)
   dateLabel: "asOf",
+  // P5 (018): 🔍 "check/flag" — deliberately NOT a shield/checkmark; this workflow must never look like
+  // a "verified/safe" badge (see scam.render.test.ts VERDICT_WORDS).
+  glyph: "🔍",
 };

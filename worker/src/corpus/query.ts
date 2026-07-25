@@ -1,31 +1,41 @@
 import { normalisePostcode } from "../../../shared/sanitize";
-import { bboxAround, nearestN, type Coords } from "../geo";
+import { bboxAround, humanDistance, nearestN, type Coords } from "../geo";
 import { oldestIsoDate } from "../dates";
 import type { CorpusLabels, CorpusQuery, CorpusRecord, CorpusRow } from "./contract";
 import { bundledSource, d1Source, type CorpusSource, type QueryCtx } from "./source";
 import { getCorpus, type CorpusDef } from "./registry";
 
-const round1 = (n: number): number => Math.round(n * 10) / 10;
+// Pure: the authority EVERY shown row shares, or null when the corpus is genuinely multi-source for
+// this query (wander UNIONs NHLE + Greenspace; care's bundled sample mixes ICBs). Never a false
+// single-source claim — render.ts only tags the summary with it when it is non-null.
+function sharedAuthorityOf(records: readonly { authority: string }[]): string | null {
+  const first = records[0]?.authority;
+  if (first === undefined) return null;
+  return records.every((r) => r.authority === first) ? first : null;
+}
 
 // The pure, load-bearing core: nearest-N + the pre-formatted display line + conservative freshness.
 // Model-free, IO-free — driven directly in tests. The row's `line` is formatted HERE (query shapes
-// data, render lays it out) so the render never sees a distance or coords.
+// data, render lays it out) so the render never sees a distance or coords. 018 P5: humanised distance
+// (never a bare "0 km") + a walk estimate; the shared authority is lifted to the summary card, de-duped
+// off every row (fallback: keep it per-row when the corpus is multi-source, so no false single claim).
 function corpusRows(
   origin: Coords,
   records: readonly CorpusRecord[],
   n: number
-): { rows: CorpusRow[]; asOf: string | null } {
+): { rows: CorpusRow[]; asOf: string | null; sharedAuthority: string | null } {
   const nearest = nearestN(origin, records, n);
+  const shared = sharedAuthorityOf(nearest);
   const rows: CorpusRow[] = nearest.map((r) => ({
     id: r.id,
     title: r.name,
-    line: `${r.authority} · ${String(round1(r.distanceKm))} km`,
+    line: shared ? humanDistance(r.distanceKm) : `${r.authority} · ${humanDistance(r.distanceKm)}`,
     why: r.why,
     officialUrl: r.officialUrl,
   }));
   // Oldest lastUpdated = the conservative freshness to advertise across the shown rows. Validated
   // ISO (dates.ts) so a malformed date can never become a falsely-early "data as of" (#128).
-  return { rows, asOf: oldestIsoDate(nearest.map((r) => r.lastUpdated)) };
+  return { rows, asOf: oldestIsoDate(nearest.map((r) => r.lastUpdated)), sharedAuthority: shared };
 }
 
 // Deterministic, model-free nearest-N over an in-memory corpus def. Pure + injectable, so it is
