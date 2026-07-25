@@ -29,9 +29,10 @@ for *modules* only; CSS/wiring/glue → the e2e sweep is the test); lint + typin
 ## Owner decisions (LOCKED — chosen 2026-07-25 AFTER an explicit KISS/DRY/YAGNI challenge; do NOT re-litigate)
 
 - **Scope = FULL comprehensive arc** — all four phases; P4 in its 5 sub-phases; axe + screenshot sweep per phase.
-- **P2 place-names = FULLER + D1** — ~60-120 curated `name→{lat,lng}` entries **and** a D1 `places` table +
-  migration (mirror `0006`) for the live path. Bundled resolver ships first (works pre-deploy); the migration +
-  rows activate on deploy.
+- **P2 place-names = FULLER + D1** → **D1 DEFERRED (owner-confirmed 2026-07-25).** Shipped the fuller ~80-place
+  curated gazetteer bundled; the D1 `places` table was assessed unnecessary during build (small + static, ships
+  in the Worker bundle, resolves LIVE with no D1 read — unlike the ingest-managed `postcodes` table) and the
+  owner confirmed keeping it deferred. Reopen only if the gazetteer grows large or becomes ingest-managed.
 - **P4 colour** — keep the 3 variants (ADR 0005), refresh application + neutrals/type; default stays Thames Teal.
 - **P4e cards** — type/badge/glyph/button richness; NO map thumbnails (no fetch).
 - **P3 test** — keep the pure `shouldShowSuggestions` gate + RED-first test (mirrors the tested `shouldRotate`).
@@ -43,7 +44,7 @@ for *modules* only; CSS/wiring/glue → the e2e sweep is the test); lint + typin
 | P1 | **Route to the right workflow** (#2) | module · RED-first | ☑ whole-word `matchesKeyword` + synonym expansion (RED-first) |
 | P2 | **Place-name input** (#1) — bundled resolver + `data/places.json` (~80 places) | module · RED-first + data | ☑ resolver + gazetteer + query-seam hook (RED-first); **D1 table assessed unnecessary** (bundled, works live) |
 | P3 | **Re-show examples after a query** (#3) | glue + pure gate | ☑ `suggestionMode` gate (RED-first) + "Try another" row; e2e-verify on deploy |
-| P4a | **Visual + readability** (type scale, spacing, ≥44px targets, elevation) | CSS/tokens · e2e | ☐ |
+| P4a | **Visual + readability** (type scale, spacing, ≥44px targets, elevation) | CSS/tokens · e2e | ☑ ~17px base + line-height, caption ramp lift, ≥44px targets; sweep-verify on deploy |
 | P4b | **Colour "familiar to Londoners"** (refresh the 3 variants + neutrals) | CSS/tokens · e2e | ☐ |
 | P4c | **Motion & states** (card enter, loading skeleton, hover/press; reduced-motion-gated) | CSS · e2e | ☐ |
 | P4d | **Layout + header rearrange** (hero→results scan, labelled control cluster, help affordance) | TSX/CSS · e2e | ☐ |

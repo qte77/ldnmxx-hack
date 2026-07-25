@@ -25,8 +25,11 @@ const ROUTABLE_EXAMPLES = ROUTABLE.map((u) => u.example);
 
 // Shared chrome-control styling: border-border-strong (not the decorative hairline) because a
 // control's border IS its affordance — WCAG 1.4.11 wants 3:1, which only the strong token meets.
+// 020 P4a: min 44x44 hit area (WCAG 2.5.5) so header/chip controls are usable by less-technical /
+// older users and on touch — the flex centering keeps the glyph/label centred in the taller box.
 const CONTROL_CLASS =
-  "px-2 py-1 rounded border border-border-strong text-text-muted hover:border-primary " +
+  "min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-1 rounded border border-border-strong " +
+  "text-text-muted hover:border-primary " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 // 018 P5: suggestion chips + example placeholders. Same token set as CONTROL_CLASS (border-border-strong
@@ -34,8 +37,9 @@ const CONTROL_CLASS =
 // because Tailwind utility precedence is generation-order-based, so chaining `rounded` then `rounded-full`
 // would not reliably win.
 const CHIP_CLASS =
-  "px-3 py-1.5 rounded-full border border-border-strong text-text-muted text-sm hover:border-primary " +
-  "hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "min-h-[44px] inline-flex items-center px-4 py-2 rounded-full border border-border-strong text-text-muted " +
+  "hover:border-primary hover:text-text " +
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 // Minimal light/dark toggle: flips the `data-theme` attribute the theme + anti-FOUC script read.
 type Theme = "light" | "dark";
@@ -237,7 +241,7 @@ function SuggestionChips({
 }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label={ariaLabel}>
-      <span className="text-xs text-text-muted">{label}</span>
+      <span className="text-sm text-text-muted">{label}</span>
       {ROUTABLE.map((u) => (
         <button key={u.id} type="button" onClick={() => onPick(u.example)} className={CHIP_CLASS}>
           {u.example}
@@ -298,7 +302,7 @@ function Hero({
           onBlur={() => setInputFocused(false)}
           placeholder={`e.g. ${placeholder}`}
           autoComplete="off"
-          className="flex-1 px-3 py-2 rounded border border-border-strong bg-bg text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="min-h-[44px] flex-1 px-3 py-2 rounded border border-border-strong bg-bg text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         />
         {isRunning ? (
           <button type="button" onClick={stop} className={`${CONTROL_CLASS} px-4 py-2`}>
@@ -307,7 +311,7 @@ function Hero({
         ) : (
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-primary text-primary-on font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="min-h-[44px] inline-flex items-center justify-center px-5 py-2 rounded bg-primary text-primary-on font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Find it
           </button>
@@ -317,7 +321,7 @@ function Hero({
       {showExamples && (
         <>
           <SuggestionChips label="Try:" ariaLabel="Try an example" onPick={submitPrompt} />
-          <p className="mt-3 text-xs text-text-muted max-w-prose">
+          <p className="mt-3 text-sm text-text-muted max-w-prose">
             No account, no cookies — anonymous page-view counts only. We point you to the official record;
             confirm there before you act.
           </p>
@@ -440,7 +444,7 @@ function Dashboard() {
         <DevConsole show={devMode} status={status} events={eventLog} />
       </main>
 
-      <footer className="mt-8 py-3 text-xs text-text-muted border-t border-border">
+      <footer className="mt-8 py-3 text-sm text-text-muted border-t border-border">
         We find it. You sort it. A signpost to official public services, not advice.{" "}
         <a
           href="https://github.com/qte77/ldnmxx-hack/issues"
