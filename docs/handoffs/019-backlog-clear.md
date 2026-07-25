@@ -49,11 +49,14 @@ import) — still needs the owner to provide the ONSPD file (no live fetch). **#
 ## Owner gates (batch into one sitting)
 
 1. **TRUD account + secret** for #161 (P4). 2. **#8 scope decision** (read-only slice vs own arc).
-3. **Deploy the `/api/freshness` endpoint (2026-07-25):** dispatch `deploy.yml` (production Environment
-   — no new secret; the deploy token already lives there). Activates the shipped endpoint (#247) so the
-   credential-free watchdog (PR B) goes live. This **replaces** the earlier "add a CF repo secret" gate —
-   the watchdog no longer needs any Cloudflare token. (`d1-verify` still wants its own token, but only
-   `D1 Read`, and it's dispatch-only — not blocking.) 4. **#185 ONSPD file** — owner picked option A;
+3. **Deploy the `/api/freshness` endpoint (2026-07-25):** the CF deploy credential is NOT provisioned to
+   GitHub Actions (`deploy.yml` is dormant per 017-P1) and the devcontainer has no CF creds, so this is an
+   owner action: EITHER provision `CLOUDFLARE_API_TOKEN` as an Actions secret + dispatch `deploy.yml`
+   (production Environment approval), OR `make deploy` from a machine that has the token. Activates the
+   shipped endpoint (#247) so the credential-free watchdog (PR B, held as a draft) goes live — then mark PR
+   B ready, merge, and dispatch the watchdog to verify. The watchdog itself needs **no** Cloudflare token.
+   (`d1-verify` still wants its own token, but only `D1 Read`, dispatch-only — not blocking.)
+   4. **#185 ONSPD file** — owner picked option A;
    hand over the ONSPD download once so the one-time committed import can be built.
 
 ## The loop (per phase / PR)
