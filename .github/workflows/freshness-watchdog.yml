@@ -1,0 +1,133 @@
+# Freshness watchdog (#199): alert if the 04:47 UTC ingest cron silently dies and D1 serves stale
+# data invisibly. Reads ONLY our own D1 corpus_meta.ingested_at (no external fetch — respects the
+# arc-019 owner constraint), so it needs the same CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID repo
+# secrets as d1-verify.yml. Mirrors tier3-monitor.yml's open-or-comment alert pattern: a stale corpus
+# fails the run and opens (or comments on) one alert issue. Recovery-close is deliberately NOT built
+# (KISS — matches tier3-monitor; a human closes the issue once the cron is healthy again).
+#
+# SAFETY: the D1 statement is a STATIC read-only SELECT (mirrors d1-verify.yml / ADR 0002). No
+# free-text SQL input exists. Actions are SHA-pinned (repo policy: selected + sha_pinning_required);
+# the trailing comment tracks the tag.
+name: Freshness Watchdog
+on:
+  schedule:
+    - cron: "37 6 * * *" # daily, ~2h after the 04:47 UTC ingest cron so a missed swap is caught same-day
+  workflow_dispatch:
+    inputs:
+      max_age_hours:
+        description: "Staleness threshold in hours (dispatch with 0 to exercise the stale/alert path)"
+        type: string
+        required: false
+        default: "48"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Scheduled runs use the 48h default; a dispatch may override (e.g. 0 to prove the alert path).
+      MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '48' }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+
+      - name: Preflight — credentials present
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it as a repository secret."
+            echo "This check also needs Account > D1 > Edit (Cloudflare has no read-only D1 scope)."
+            exit 1
+          fi
+
+      - name: Read corpus_meta from D1
+        run: |
+          set -euo pipefail
+          ./node_modules/.bin/wrangler d1 execute DB --remote --config wrangler.toml \
+            --command "SELECT corpus, ingested_at FROM corpus_meta ORDER BY corpus" \
+            --json | tee /tmp/d1-freshness.json
+
+      - name: Evaluate freshness
+        id: evaluate
+        run: |
+          set -euo pipefail
+          # Validate the (write-access-only) dispatch input before it reaches arithmetic — a bad
+          # value can only be a non-negative integer, never a shell/arithmetic footgun.
+          case "$MAX_AGE_HOURS" in
+            '' | *[!0-9]*)
+              echo "::error::max_age_hours must be a non-negative integer (got '$MAX_AGE_HOURS')"
+              exit 1 ;;
+          esac
+          now="$(date -u +%s)"
+          threshold=$(( MAX_AGE_HOURS * 3600 ))
+          count="$(jq '(.[0].results // []) | length' /tmp/d1-freshness.json)"
+
+          stale=""
+          {
+            echo "## Freshness watchdog"
+            echo ""
+            echo "Threshold: **${MAX_AGE_HOURS}h** · corpora tracked: **${count}**"
+            echo ""
+            echo "| corpus | ingested_at (UTC) | age (h) | status |"
+            echo "| --- | --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$count" -eq 0 ]; then
+            echo "| _(none)_ | — | — | ❌ empty corpus_meta |" >> "$GITHUB_STEP_SUMMARY"
+            stale="corpus_meta-empty"
+          else
+            while IFS=$'\t' read -r corpus ingested; do
+              if [ -z "$ingested" ] || [ "$ingested" = "null" ]; then
+                echo "| \`$corpus\` | (missing) | — | ❌ no ingested_at |" >> "$GITHUB_STEP_SUMMARY"
+                stale="${stale:+$stale, }$corpus"
+                continue
+              fi
+              ts="$(date -u -d "$ingested" +%s)"
+              age=$(( now - ts ))
+              age_h=$(( age / 3600 ))
+              if [ "$age" -gt "$threshold" ]; then
+                echo "| \`$corpus\` | $ingested | ${age_h} | ❌ stale |" >> "$GITHUB_STEP_SUMMARY"
+                stale="${stale:+$stale, }$corpus"
+              else
+                echo "| \`$corpus\` | $ingested | ${age_h} | ✅ fresh |" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            done < <(jq -r '.[0].results[] | [.corpus, (.ingested_at // "null")] | @tsv' /tmp/d1-freshness.json)
+          fi
+
+          if [ -n "$stale" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "stale_list=$stale" >> "$GITHUB_OUTPUT"
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Alert on stale (open or update the alert issue), then fail
+        if: steps.evaluate.outputs.stale == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STALE_LIST: ${{ steps.evaluate.outputs.stale_list }}
+        run: |
+          title="Freshness watchdog: corpus data is STALE"
+          body="The ingest cron may have stalled — stale/missing corpora: ${STALE_LIST} (threshold ${MAX_AGE_HOURS}h). See ${RUN_URL} for the per-corpus table. Check the 04:47 UTC ingest cron + the corpus-data release."
+          n="$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "Still stale: ${STALE_LIST} — ${RUN_URL}"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
+          echo "::error::Stale corpora: ${STALE_LIST}"
+          exit 1
