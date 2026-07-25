@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { classifyHeuristic, classifyUsecase, type Routable } from "../src/agent/router";
+import { routableUsecases } from "../src/usecases";
 import type { Provider } from "../src/agent/providers";
 import type { ToolSpec, ModelToolResult } from "../src/agent/model";
 
@@ -63,6 +64,33 @@ describe("classifyHeuristic (keyless, pure)", () => {
   });
   it("returns null on empty input", () => {
     expect(classifyHeuristic("", ROUTABLES)).toBeNull();
+  });
+
+  // 020 P1: whole-word matching, not raw substring — "parking" must NOT false-route to wander via "park".
+  it("matches whole words, not substrings: 'parking' does not route to wander", () => {
+    expect(classifyHeuristic("where is the nearest parking", ROUTABLES)).toBeNull();
+  });
+  it("still matches a simple plural: 'parks' routes to wander", () => {
+    expect(classifyHeuristic("parks near me", ROUTABLES)).toBe("sort-my-wander");
+  });
+});
+
+// 020 P1: the router "feels narrow" because the keyword vocabulary was thin — natural phrasings that
+// carry no listed keyword fall to the no-match card. These drive the synonym expansion in usecases/*.json,
+// tested against the REAL routable catalogue (not the small local fixture).
+describe("classifyHeuristic — real catalogue synonym coverage (020 P1)", () => {
+  const REAL = routableUsecases();
+  it("routes a natural 'walk outdoors' ask to wander", () => {
+    expect(classifyHeuristic("somewhere to walk outdoors", REAL)).toBe("sort-my-wander");
+  });
+  it("routes 'a safe place to eat' to food-hygiene", () => {
+    expect(classifyHeuristic("a safe place to eat nearby", REAL)).toBe("sort-my-food-hygiene");
+  });
+  it("routes 'book a surgery appointment' to care", () => {
+    expect(classifyHeuristic("book a surgery appointment", REAL)).toBe("sort-my-care");
+  });
+  it("routes 'report a fraudster' to scam-check", () => {
+    expect(classifyHeuristic("how do I report a fraudster", REAL)).toBe("sort-my-scam-check");
   });
 });
 

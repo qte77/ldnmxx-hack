@@ -4,7 +4,7 @@
   "example": "parks to wander near SW9 9SL",
   "blurb": "Find parks, green spaces and listed heritage sites to explore near a postcode.",
   "render": { "mode": "corpus" },
-  "keywords": ["wander", "park", "green space", "heritage", "garden", "stroll", "nature reserve", "listed building", "historic site", "places to walk", "things to do"],
+  "keywords": ["wander", "park", "green space", "heritage", "garden", "stroll", "nature reserve", "listed building", "historic site", "places to walk", "things to do", "walk", "outdoors", "greenery", "nature", "picnic", "riverside", "woods", "sightseeing", "landmark"],
   "stages": [
     {
       "name": "plan",

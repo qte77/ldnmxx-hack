@@ -4,6 +4,18 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 020 — UX overhaul · P1: route to the right workflow (#2)
+
+- **Routing vocabulary + precision.** The keyword router (`worker/src/agent/router.ts` `classifyHeuristic`)
+  matched keywords as raw substrings — so "parking" false-routed to wander via "park" — and thin keyword sets
+  left many natural phrasings ("a place to eat", "somewhere to walk outdoors", "book a surgery appointment")
+  with no match, falling to the same no-match card. Now `matchesKeyword` does a whole-word match with a simple
+  plural/possessive tail (so "parks" still routes, "parking" no longer does; a manual boundary scan, **no
+  dynamic RegExp → no ReDoS surface**), and the `usecases/*.json` keyword sets gained curated domain synonyms
+  (wander +walk/outdoors/nature…; care +surgery/medical…; food-hygiene +eat/dining/food…; scam
+  +fraudster/phishing…). RED-first in `worker/test/router.test.ts` (matcher precision + real-catalogue synonym
+  coverage). The two keyword-less workflows stay never-auto-routed (ADR 0004).
+
 ### Plan 019 — backlog clear · P2b: public freshness endpoint (#199)
 
 - **`GET /api/freshness`** (`worker/src/freshness.ts` + a route in `worker/src/worker.ts`) — a public,
