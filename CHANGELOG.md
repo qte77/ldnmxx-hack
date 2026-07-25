@@ -4,6 +4,14 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 020 — UX overhaul · P4d: plain-language "What is this?" help (#4)
+
+- **An always-on explainer for less-technical / older users.** After a search the hero dek collapses, so
+  the "what is this?" context disappeared. A header **`?`** control now toggles a plain-language `HelpPanel`
+  any time — what the tool is, how to phrase a query (a need + a place: a postcode like E8 3GT, or an area
+  like Camden), and the honest "signposts to official sources, not advice" framing (`ui/src/App.tsx`,
+  mirrors the KeyPanel show-gate; Dashboard stays under the complexity gate). Glue → sweep-verified.
+
 ### Plan 020 — UX overhaul · P4b/c: warm civic visual system + gentle motion (#4)
 
 - **Warmer, softer, more alive — the owner-chosen "warm & reassuring civic" direction.** Light neutrals

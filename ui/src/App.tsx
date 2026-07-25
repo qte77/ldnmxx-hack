@@ -149,11 +149,27 @@ function StatusChip({ status }: { status: RunStatus | null }) {
   );
 }
 
-// Header dev controls (⚙ Key + dev-exit, dev mode only) beside the always-on variant + theme toggles.
-// Extracted from Dashboard to keep it under the complexity gate.
-function HeaderControls(props: { devMode: boolean; onToggleKey: () => void; onExitDev: () => void }) {
+// Header dev controls (⚙ Key + dev-exit, dev mode only) beside the always-on Help, variant + theme
+// toggles. Extracted from Dashboard to keep it under the complexity gate.
+function HeaderControls(props: {
+  devMode: boolean;
+  onToggleHelp: () => void;
+  onToggleKey: () => void;
+  onExitDev: () => void;
+}) {
   return (
     <div className="flex items-center gap-2">
+      {/* 020 P4d: an always-on plain-language explainer — after a search the hero dek collapses, so
+          less-technical / older users can re-open "what is this?" any time. */}
+      <button
+        type="button"
+        onClick={props.onToggleHelp}
+        title="What is this? How sortmy.london works"
+        aria-label="What is this? How sortmy.london works"
+        className={CONTROL_CLASS}
+      >
+        ?
+      </button>
       {props.devMode && (
         <button
           type="button"
@@ -176,6 +192,23 @@ function HeaderControls(props: { devMode: boolean; onToggleKey: () => void; onEx
       )}
       <VariantToggle />
       <ThemeToggle />
+    </div>
+  );
+}
+
+// 020 P4d: a plain-language "what is this?" panel for less-technical / older users. Mirrors KeyPanel's
+// show-gate so Dashboard stays under the complexity gate.
+function HelpPanel({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <div className="mt-2 p-4 rounded border border-border bg-surface text-text max-w-prose" role="note">
+      <p className="font-semibold">What is this?</p>
+      <p className="mt-1 text-text-muted">
+        sortmy.london is a free tool that helps you find official London public services — GPs and
+        pharmacies, parks and heritage, food-hygiene ratings, and firm/scam checks. Type what you need and
+        a place (a postcode like E8 3GT, or an area like Camden). We show the nearest official records and
+        link you to the real page. No account, no cookies, no advice — just signposts to the official source.
+      </p>
     </div>
   );
 }
@@ -339,6 +372,7 @@ function Dashboard() {
   const bypassDef = USECASES.find((u) => u.id === bypass);
   const [prompt, setPrompt] = useState<string>(bypassDef?.example ?? "");
   const [showKey, setShowKey] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   // No env prefill — VITE_* is inlined into the build, so a key here would ship in the bundle. The ⚙ Key
   // panel starts empty; a user-entered key is forwarded to the Worker per request and resolved server-side.
   const [apiKey, setApiKey] = useState("");
@@ -405,11 +439,13 @@ function Dashboard() {
         <span className="text-lg font-bold text-primary lowercase">sortmy.london</span>
         <HeaderControls
           devMode={devMode}
+          onToggleHelp={() => setShowHelp((v) => !v)}
           onToggleKey={() => setShowKey((v) => !v)}
           onExitDev={() => setDevMode(false)}
         />
       </header>
 
+      <HelpPanel show={showHelp} />
       <KeyPanel show={devMode && showKey} apiKey={apiKey} model={model} setApiKey={setApiKey} setModel={setModel} />
 
       <main className="flex-1">
