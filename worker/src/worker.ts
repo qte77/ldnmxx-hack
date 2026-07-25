@@ -1,6 +1,7 @@
 import { makeEmitter, exportSpans, MAX_TRACE_SPANS, type Emitter, type Span } from "./trace/arize";
 import { withIncorporate, buildNoMatchCards } from "./a2ui/cards";
 import { runIngest } from "./corpus/ingest";
+import { buildFreshnessPayload, FRESHNESS_SQL, type FreshnessRow } from "./freshness";
 import { registry } from "./workflows";
 import { callRenderModel, extractToolArgs, type ToolSpec } from "./agent/model";
 import { buildProviders, renderFree, runChain, type Provider } from "./agent/providers";
@@ -118,10 +119,27 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   const allow = allowed.includes(origin) ? origin : (allowed[0] ?? "null");
   return {
     "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, content-type",
     Vary: "Origin",
   };
+}
+
+// Public read-only freshness surface (#199): one static SELECT over corpus_meta so a credential-free
+// CI watchdog can poll for a silently-dead ingest cron. Returns null for any non-freshness request so
+// the caller falls through to the normal ladder. no-store so an edge cache can never mask staleness
+// (the #178 cache incident). DB absent (local dev/tests) -> empty corpora.
+async function freshnessResponse(
+  request: Request,
+  url: URL,
+  env: Env,
+  cors: Record<string, string>
+): Promise<Response | null> {
+  if (request.method !== "GET" || url.pathname !== "/api/freshness") return null;
+  const rows = env.DB ? (await env.DB.prepare(FRESHNESS_SQL).all<FreshnessRow>()).results : [];
+  return new Response(JSON.stringify(buildFreshnessPayload(rows, new Date().toISOString())), {
+    headers: { ...cors, "content-type": "application/json", "cache-control": "no-store" },
+  });
 }
 
 // The keyless free chain, built from whatever bindings/secrets are present (cheapest-first). The
@@ -463,6 +481,10 @@ export default {
     const cors = corsHeaders(request, env);
 
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+
+    const fresh = await freshnessResponse(request, url, env, cors);
+    if (fresh) return fresh;
+
     const isRun = url.pathname === "/api/run";
     const isTrace = url.pathname === "/api/trace";
     if (!isRun && !isTrace) return new Response("Not found", { status: 404, headers: cors });
