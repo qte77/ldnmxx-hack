@@ -1,4 +1,5 @@
 import { normalisePostcode } from "../../../shared/sanitize";
+import { resolvePlace } from "../../../shared/places";
 import { bboxAround, humanDistance, nearestN, type Coords } from "../geo";
 import { oldestIsoDate } from "../dates";
 import type { CorpusLabels, CorpusQuery, CorpusRecord, CorpusRow } from "./contract";
@@ -38,17 +39,31 @@ function corpusRows(
   return { rows, asOf: oldestIsoDate(nearest.map((r) => r.lastUpdated)), sharedAuthority: shared };
 }
 
+// A user's ask resolves to EITHER a postcode string (looked up in the gazetteer) OR a named London
+// place with fixed anchor coords (committed data/places.json, 020 P2/#1). null when the ask names
+// neither — a genuinely unparseable location. Fetch-free: both paths are static in-memory lookups.
+type Located = { label: string; postcode: string } | { label: string; coords: Coords };
+
+function resolveLocation(prompt: string): Located | null {
+  const postcode = normalisePostcode(prompt);
+  if (postcode) return { label: postcode, postcode };
+  const place = resolvePlace(prompt);
+  if (place) return { label: place.label, coords: { lat: place.lat, lng: place.lng } };
+  return null;
+}
+
 // Deterministic, model-free nearest-N over an in-memory corpus def. Pure + injectable, so it is
-// driven directly in tests. Graceful, never-throwing on USER input: an invalid postcode ⇒
-// { query: null, rows: [] }; a valid but unknown one ⇒ { query, rows: [] }.
+// driven directly in tests. Graceful, never-throwing on USER input: an unresolvable location ⇒
+// { query: null, rows: [] }; a place/valid postcode with nothing nearby ⇒ { query, rows: [] }.
 export function queryCorpusDef(def: CorpusDef, prompt: string, n = 3): CorpusQuery {
   const { labels } = def;
-  const postcode = normalisePostcode(prompt);
-  if (!postcode) return { query: null, rows: [], asOf: null, labels };
+  const loc = resolveLocation(prompt);
+  if (!loc) return { query: null, rows: [], asOf: null, labels };
+  if ("coords" in loc) return { query: loc.label, ...corpusRows(loc.coords, def.records, n), labels };
   // noUncheckedIndexedAccess: an unknown postcode is undefined at runtime, so the guard is real.
-  const origin = def.postcodes[postcode];
-  if (!origin) return { query: postcode, rows: [], asOf: null, labels };
-  return { query: postcode, ...corpusRows(origin, def.records, n), labels };
+  const origin = def.postcodes[loc.postcode];
+  if (!origin) return { query: loc.postcode, rows: [], asOf: null, labels };
+  return { query: loc.postcode, ...corpusRows(origin, def.records, n), labels };
 }
 
 // P2b (017): read the corpus bounded to a bbox around the origin, WIDENING the radius until at least
@@ -72,8 +87,20 @@ async function readWithinWidening(
   return source.records(); // unbounded — never fewer results than today; also the empty-view guard point
 }
 
-// One source-driven query: resolve the origin, then rank. Shared by the bundled + D1 paths. A
-// gazetteer MISS is a real "unknown postcode" answer, not a failure — it does not trigger fallback.
+// Rank a corpus around an ALREADY-resolved origin (a postcode's coords or a place anchor). Shared by
+// the postcode + place paths and by the bundled + D1 sources.
+async function rankFrom(
+  source: CorpusSource,
+  labels: CorpusLabels,
+  queryLabel: string,
+  origin: Coords,
+  n: number
+): Promise<CorpusQuery> {
+  return { query: queryLabel, ...corpusRows(origin, await readWithinWidening(source, origin, n), n), labels };
+}
+
+// One postcode-driven query: resolve the origin from the gazetteer, then rank. A gazetteer MISS is a
+// real "unknown postcode" answer, not a failure — it does not trigger fallback.
 async function querySource(
   source: CorpusSource,
   labels: CorpusLabels,
@@ -82,7 +109,7 @@ async function querySource(
 ): Promise<CorpusQuery> {
   const origin = await source.origin(postcode);
   if (!origin) return { query: postcode, rows: [], asOf: null, labels };
-  return { query: postcode, ...corpusRows(origin, await readWithinWidening(source, origin, n), n), labels };
+  return rankFrom(source, labels, postcode, origin, n);
 }
 
 export interface QueryCorpusInput {
@@ -102,14 +129,20 @@ export async function queryCorpus(
 ): Promise<CorpusQuery> {
   const def = input.corpus === undefined ? undefined : getCorpus(input.corpus);
   if (!def) throw new Error(`queryCorpus: unknown corpus "${input.corpus ?? "(none)"}"`);
-  const postcode = normalisePostcode(input.prompt);
-  if (!postcode) return { query: null, rows: [], asOf: null, labels: def.labels };
+  const loc = resolveLocation(input.prompt);
+  if (!loc) return { query: null, rows: [], asOf: null, labels: def.labels };
+  // One closure over BOTH location kinds (postcode lookup vs place anchor) so the D1→bundled fallback
+  // below is written once, not per kind.
+  const runOn = (source: CorpusSource): Promise<CorpusQuery> =>
+    "coords" in loc
+      ? rankFrom(source, def.labels, loc.label, loc.coords, n)
+      : querySource(source, def.labels, loc.postcode, n);
   if (def.d1View !== undefined && ctx?.db !== undefined) {
     try {
-      return await querySource(d1Source(ctx.db, def.d1View), def.labels, postcode, n);
+      return await runOn(d1Source(ctx.db, def.d1View));
     } catch (err) {
       console.warn(`corpus "${String(input.corpus)}": D1 source failed, using bundled:`, err);
     }
   }
-  return querySource(bundledSource(def), def.labels, postcode, n);
+  return runOn(bundledSource(def));
 }

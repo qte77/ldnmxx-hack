@@ -74,6 +74,12 @@ describe("queryCorpusDef", () => {
     expect(q.rows).toEqual([]);
   });
 
+  it("resolves a PLACE NAME (not a postcode) to nearest-N rows and labels the query with it (020 P2)", () => {
+    const q = queryCorpusDef(def, "services near Camden", 2);
+    expect(q.query).toBe("Camden");
+    expect(q.rows.length).toBeGreaterThan(0);
+  });
+
   it("always carries the corpus labels through to the render", () => {
     expect(queryCorpusDef(def, "nonsense").labels).toEqual(def.labels);
   });

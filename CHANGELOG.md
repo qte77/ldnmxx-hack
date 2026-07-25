@@ -4,6 +4,19 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 020 — UX overhaul · P2: accept London place names (#1)
+
+- **Place-name input.** A query that names a London place instead of a postcode ("wander nearby tower",
+  "GP near Camden") dead-ended on "Enter a valid UK postcode". Now a fetch-free resolver
+  (`shared/places.ts` `resolvePlace`, longest-alias-wins) maps ~80 committed boroughs / areas / landmarks
+  (`data/places.json`) to an anchor point, hooked at a new location seam (`worker/src/corpus/query.ts`
+  `resolveLocation`), so nearest-N answers from a place too. The empty-state now reads "Enter a London
+  postcode or place" with a place example. RED-first `worker/test/places.test.ts` + a place query in
+  `worker/test/corpus.test.ts`. DRY: the whole-word matcher moved to `shared/text-match.ts`, shared by the
+  router (P1) and the resolver. Fetch-free per ADR 0002 (static in-memory lookup, no geocoder). **The D1
+  `places` table was assessed unnecessary** — the gazetteer is small + static, ships in the Worker bundle,
+  and resolves LIVE with no D1 read (unlike the large, ingest-managed `postcodes` table).
+
 ### Plan 020 — UX overhaul · P1: route to the right workflow (#2)
 
 - **Routing vocabulary + precision.** The keyword router (`worker/src/agent/router.ts` `classifyHeuristic`)

@@ -8,6 +8,7 @@
 // founders-copilot) is absent from the catalog and therefore can never be auto-routed.
 
 import { normalisePostcode } from "../../../shared/sanitize";
+import { matchesWholeWord } from "../../../shared/text-match";
 import { detectInjection } from "../../../shared/guard";
 import { ROUTE_TOOL, ROUTE_NONE, isValidRouteResult, type RouteResult } from "../../../shared/routerTool";
 import { CLASSIFY_SYSTEM, classifyUser } from "../../../shared/prompt";
@@ -25,38 +26,17 @@ export interface Routable {
 export type RouteSource = "heuristic" | "model" | "none";
 
 // Keyless, pure, deterministic. Score each workflow by how many of its keywords appear (case-insensitive
-// whole-word, see matchesKeyword) in the ask; the unique top scorer wins. Zero hits, or a tie, returns null
+// whole-word, see matchesWholeWord) in the ask; the unique top scorer wins. Zero hits, or a tie, returns null
 // — an honestly ambiguous ask escalates to the model rather than guessing. normalisePostcode is NOT used
 // to decide the id here (a bare postcode fits care/wander/food-hygiene equally); it informs the model
 // escalation instead (classifyUser).
-// Whole-word (with a simple plural/possessive tail) match, NOT raw substring: "park" matches "park",
-// "parks", "park's" but NOT "parking" (substring matching false-routed inflected words). Multi-word
-// keywords ("green space", "food hygiene") match as a phrase. Manual boundary scan — no dynamic RegExp
-// (no ReDoS surface; keeps security/detect-non-literal-regexp clean).
-function isWordChar(ch: string): boolean {
-  return /[a-z0-9]/.test(ch);
-}
-function matchesKeyword(lowerText: string, keyword: string): boolean {
-  const k = keyword.toLowerCase();
-  let i = lowerText.indexOf(k);
-  while (i !== -1) {
-    const beforeOk = i === 0 || !isWordChar(lowerText[i - 1] ?? "");
-    let end = i + k.length;
-    if (lowerText[end] === "'" && lowerText[end + 1] === "s") end += 2; // possessive
-    else if (lowerText[end] === "s" && !isWordChar(lowerText[end + 1] ?? "")) end += 1; // simple plural
-    if (beforeOk && !isWordChar(lowerText[end] ?? "")) return true;
-    i = lowerText.indexOf(k, i + 1);
-  }
-  return false;
-}
-
 export function classifyHeuristic(prompt: string, routables: Routable[]): string | null {
   const text = prompt.toLowerCase();
   let bestId: string | null = null;
   let bestScore = 0;
   let tie = false;
   for (const u of routables) {
-    const score = u.keywords.reduce((n, k) => (matchesKeyword(text, k) ? n + 1 : n), 0);
+    const score = u.keywords.reduce((n, k) => (matchesWholeWord(text, k) ? n + 1 : n), 0);
     if (score > bestScore) {
       bestScore = score;
       bestId = u.id;

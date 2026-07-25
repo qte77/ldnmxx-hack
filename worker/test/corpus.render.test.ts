@@ -99,7 +99,7 @@ describe("buildCorpusCards", () => {
     const batch = buildCorpusCards({ query: null, rows: [], asOf: null, labels }) as Batch[];
     assertSelfContained(batch);
     const json = JSON.stringify(batch);
-    expect(json).toContain("Enter a valid UK postcode");
+    expect(json).toContain("Enter a London postcode or place");
     expect(json).toContain("Try a London postcode like SW9 9SL.");
     expect(rootList(batch)).toContain("card-disclaimer");
   });

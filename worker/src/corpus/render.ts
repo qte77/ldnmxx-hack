@@ -14,7 +14,7 @@ export function buildCorpusCards(q: CorpusQuery): unknown[] {
   if (q.rows.length === 0) {
     const empty: CardSpec = {
       key: "empty",
-      title: q.query ? `No sample ${labels.noun}s near ${q.query}` : "Enter a valid UK postcode",
+      title: q.query ? `No sample ${labels.noun}s near ${q.query}` : "Enter a London postcode or place",
       lines: [q.query ? labels.emptyUnknownHint : labels.emptyInvalidHint],
     };
     return appendDisclaimer(cardsBatch([empty]), labels.officialLink, labels.attribution);
