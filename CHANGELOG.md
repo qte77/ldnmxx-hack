@@ -4,6 +4,17 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 019 — backlog clear · P2b: public freshness endpoint (#199)
+
+- **`GET /api/freshness`** (`worker/src/freshness.ts` + a route in `worker/src/worker.ts`) — a public,
+  read-only surface that runs one static `SELECT corpus, as_of, ingested_at, row_count FROM corpus_meta`
+  (ADR-0002 closed-whitelist SQL) and returns `{ generatedAt, corpora: [{corpus, ingestedAt, asOf,
+  rowCount}] }` as `application/json` with `Cache-Control: no-store` (so an edge cache can never mask
+  staleness — the #178 lesson). Exposes only non-sensitive aggregate metadata (no PII, no record rows).
+  This lets the freshness watchdog poll for a dead ingest cron **credential-free** — no Cloudflare token
+  in CI. The pure `buildFreshnessPayload` mapper is unit-tested (RED-first); the route + D1 read are
+  glue, verified by `curl` against the deploy. `Access-Control-Allow-Methods` now includes `GET`.
+
 ### Plan 019 — backlog clear · P2: freshness watchdog (#199)
 
 - **Freshness watchdog** (`.github/workflows/freshness-watchdog.yml`) — a scheduled (daily 06:37 UTC,

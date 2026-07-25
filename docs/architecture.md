@@ -147,7 +147,8 @@ sets the next run's `?demo=1` intent; the chip reports what the last run actuall
 Cloudflare **Workers (NOT Workflows)** + Pages. AI Gateway is supported in code but not configured in
 prod (#29); no KV binding exists today. Arize tracing via an injectable emitter (keyless console
 default; real OTLP export is planned, #21). **AG Grid deferred** → built-in A2UI cards (removed the top
-build risk).
+build risk). **Ops:** a public read-only `GET /api/freshness` (`corpus_meta` stamps, `no-store`) lets the
+CI freshness watchdog (#199) detect a dead ingest cron credential-free — no CF token in CI.
 
 ## Source map (reuse — don't rebuild)
 

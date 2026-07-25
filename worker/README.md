@@ -2,7 +2,8 @@
 
 The middleware. `POST /api/run?usecase=founders-copilot|on-it|sort-my-care|sort-my-wander|sort-my-scam-check`
 → `runUsecase` (plan→tool→render) → SSE (AG-UI events → A2UI batch), plus `POST /api/trace` (browser span
-forwarder).
+forwarder) and `GET /api/freshness` (public read-only `corpus_meta` freshness JSON — `no-store`; lets the
+CI watchdog detect a dead ingest cron with zero credentials; `src/freshness.ts`).
 Self-contained (`wrangler.toml`, `package.json`, `tsconfig`); tests in `worker/test/`. Secrets are Worker
 secrets only.
 
