@@ -4,6 +4,34 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 021 — the fold now shows the value proposition (P1-P5)
+
+- **The page finally says what it knows.** A first-principles pass found the live deploy holds ~112k real
+  official records while the fold claimed none of them: the slot right under the H1 held a *caveat*
+  ("Not a live search…"), and the covered categories existed only inside chip labels that read as input
+  examples. The fold is now **coverage → proof → input → examples → a sample answer → one honesty line**:
+  a `CoverageLine` names what is covered (GPs · dentists · pharmacies · food hygiene · parks & heritage ·
+  firm checks) and states the **live** record count read from the existing `GET /api/freshness`
+  (`ui/src/coverage.ts` + `ui/src/useCoverage.ts`, RED-first).
+- **Honest by construction.** The count sums only user-findable corpora — the `gazetteer` (postcode
+  centroids, an anchor and never a result) is excluded — and rounds **down** to the nearest thousand, so
+  the claim is never overstated. A failed, blocked or malformed fetch yields **no number at all** rather
+  than a stale one (browser-verified with the endpoint aborted). The freshness caveat is not deleted: it
+  moves to one compact line below the value and, in full, into the `?` HelpPanel.
+- **You can see an answer before you type.** A `SampleCard` renders one real committed record
+  (`data/food-hygiene/establishments.sample.json`) labelled "Example" under "Here's what you get:", so the
+  output shape — name, distance, inspection date, official link — is visible without a query. Both it and
+  the coverage line yield to results once a search lands.
+- **A place-less ask no longer reads as a form error.** "where can I take my kids this weekend" routes
+  correctly but has no location, landing on the empty card — many visitors' first impression. Its title
+  becomes **"Almost — which part of London?"** (`worker/src/corpus/render.ts`, RED-first), acknowledging
+  the understood ask instead of rejecting it; the per-corpus hint already supplies examples to type.
+- **One message per surface.** The builder/engine story ("each workflow is a JSON file, not a rebuild")
+  moves to the footer; the fold speaks only to a Londoner with an errand.
+- Verified in-browser (patchright chromium) at desktop + mobile portrait/landscape: coverage line, live
+  `112,000+`, sample card, results takeover, and the blocked-endpoint fallback — 0 app console errors.
+  Bundle 141.2/150KB JS, 5.1/8KB CSS.
+
 ### Plan 020 — UX overhaul · P4d: plain-language "What is this?" help (#4)
 
 - **An always-on explainer for less-technical / older users.** After a search the hero dek collapses, so

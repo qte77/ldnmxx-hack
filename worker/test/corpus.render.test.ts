@@ -95,11 +95,14 @@ describe("buildCorpusCards", () => {
     expect(JSON.stringify(buildCorpusCards(one))).toContain("1 service near SW9 9SL");
   });
 
+  // 021 P4: a place-less ask ("where can I take my kids this weekend") routes CORRECTLY but lands here,
+  // so this card is many visitors' first impression. It must read as one step short of an answer — the
+  // workflow was understood, only the location is missing — not as a form error.
   it("shows a graceful, still-self-contained prompt (with disclaimer) for an invalid postcode", () => {
     const batch = buildCorpusCards({ query: null, rows: [], asOf: null, labels }) as Batch[];
     assertSelfContained(batch);
     const json = JSON.stringify(batch);
-    expect(json).toContain("Enter a London postcode or place");
+    expect(json).toContain("Almost — which part of London?");
     expect(json).toContain("Try a London postcode like SW9 9SL.");
     expect(rootList(batch)).toContain("card-disclaimer");
   });
