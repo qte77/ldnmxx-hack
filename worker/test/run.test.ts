@@ -184,7 +184,7 @@ describe("worker /run", () => {
     const batch = parseFrames(await res.text()).find((f) => f.a2uiMessages)?.a2uiMessages;
     expect(batch).toBeTruthy();
     if (batch) assertSelfContained(batch);
-    expect(JSON.stringify(batch)).toContain("Enter a London postcode or place");
+    expect(JSON.stringify(batch)).toContain("Almost — which part of London?");
   });
 
   it("emits one Arize span per stage (run/plan/tool×2/render)", async () => {

@@ -7,6 +7,7 @@ import { useAgentSSE, type Byok, type RunStatus } from "./agent/useAgentSSE";
 import type { EventLogEntry } from "./agent/applyA2UIEvent";
 import { usecaseCatalog } from "../../shared/usecaseCatalog";
 import { useRotatingPlaceholder } from "./useRotatingPlaceholder";
+import { useCoverage } from "./useCoverage";
 import { suggestionMode, type SuggestionMode } from "./suggestions";
 
 // 018 P4: the workflow catalog is now ONE shared source of truth (shared/usecaseCatalog.ts, read by the
@@ -209,6 +210,13 @@ function HelpPanel({ show }: { show: boolean }) {
         a place (a postcode like E8 3GT, or an area like Camden). We show the nearest official records and
         link you to the real page. No account, no cookies, no advice — just signposts to the official source.
       </p>
+      {/* 021 P2: the freshness explanation the hero used to lead with. It belongs here and on every
+          result card (each carries its own date) — not in the fold's value slot. */}
+      <p className="mt-2 text-text-muted">
+        It is not a live search: we keep a snapshot of official registers — CQC, the Food Standards Agency,
+        Historic England, Ordnance Survey — refreshed weekly. Every result shows the date on the record
+        itself and links to the live page, so you can always confirm at the source.
+      </p>
     </div>
   );
 }
@@ -290,6 +298,61 @@ function TryAnotherRow({ mode, onPick }: { mode: SuggestionMode; onPick: (text: 
   return <SuggestionChips label="Try another:" ariaLabel="Try another search" onPick={onPick} />;
 }
 
+// 021 P2: the value proposition, in the slot the freshness caveat used to hold. A visitor's first
+// question is "what does this know?", and until now the page only answered it after a successful query.
+// Two lines: WHAT is covered, then the PROOF of scale. The count is live (useCoverage) and simply absent
+// if the endpoint cannot be read — the categories still carry the message.
+function CoverageLine({ count }: { count: string | null }) {
+  return (
+    <div className="mt-3 max-w-prose">
+      <p className="text-text font-semibold">
+        GPs · dentists · pharmacies · food hygiene ratings · parks &amp; heritage · firm checks
+      </p>
+      <p className="mt-1 text-text-muted">
+        {count ? (
+          <>
+            <span className="text-text font-semibold">{count}</span> official London records — free, no
+            sign-up, no account.
+          </>
+        ) : (
+          <>Official London records — free, no sign-up, no account.</>
+        )}
+      </p>
+    </div>
+  );
+}
+
+// 021 P3: show the ANSWER before the first query. The strongest first-glance asset the app had was a
+// result card — name, distance, date, official link — and it was invisible until a search succeeded.
+// This is a real committed record (data/food-hygiene/establishments.sample.json, fhrs-1558876), rendered
+// as copy and labelled as an example, so nothing here can be mistaken for a live result.
+//
+// Built from the card TOKENS rather than the `.qte-card` class: that rule is scoped under
+// `.a2ui-surface` in index.css (the library's reset root), and borrowing the class outside that scope
+// would couple this static card to the A2UI surface's styling contract. A few duplicated utilities beat
+// the wrong abstraction here (AHA).
+function SampleCard() {
+  return (
+    <div className="mt-6">
+      <p className="text-sm text-text-muted">Here&apos;s what you get:</p>
+      <div
+        className="mt-2 max-w-prose p-4 rounded-[var(--radius-card)] bg-surface-lift border border-border"
+        role="note"
+        aria-label="Example of a result card"
+      >
+        <p className="flex items-baseline justify-between gap-3">
+          <span className="font-semibold text-text">Brixton Kebab</span>
+          <span className="text-sm text-text-muted whitespace-nowrap">Example</span>
+        </p>
+        <p className="mt-1 text-sm text-text-muted">120 m · near SW9 9SL</p>
+        <p className="mt-1 text-sm text-text-muted">
+          Food hygiene rating 4, inspected 2026-05-20 — confirm on the official FSA page.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Hero({
   prompt,
   setPrompt,
@@ -298,6 +361,7 @@ function Hero({
   isRunning,
   stop,
   showExamples,
+  coverage,
 }: {
   prompt: string;
   setPrompt: (v: string) => void;
@@ -306,6 +370,7 @@ function Hero({
   isRunning: boolean;
   stop: () => void;
   showExamples: boolean;
+  coverage: string | null;
 }) {
   const [inputFocused, setInputFocused] = useState(false);
   const placeholder = useRotatingPlaceholder(ROUTABLE_EXAMPLES, inputFocused || prompt.length > 0);
@@ -315,13 +380,7 @@ function Hero({
       <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-text">
         Ask in your own words. Get the official source.
       </h1>
-      {showExamples && (
-        <p className="mt-2 text-text-muted max-w-prose">
-          Not a live search: we keep a snapshot of official registers — CQC, the Food Standards Agency,
-          Historic England, Ordnance Survey — refreshed weekly. Every result shows the date on the record
-          itself and links to the live page.
-        </p>
-      )}
+      {showExamples && <CoverageLine count={coverage} />}
 
       <form onSubmit={onSubmit} className="mt-5 flex flex-col sm:flex-row gap-2">
         <label htmlFor="civic-query" className="sr-only">
@@ -354,9 +413,12 @@ function Hero({
       {showExamples && (
         <>
           <SuggestionChips label="Try:" ariaLabel="Try an example" onPick={submitPrompt} />
-          <p className="mt-3 text-sm text-text-muted max-w-prose">
-            No account, no cookies — anonymous page-view counts only. We point you to the official record;
-            confirm there before you act.
+          <SampleCard />
+          {/* 021 P2: the honesty line stays visible — one compact sentence, below the value, with the
+              full explanation one tap away in "?" (HelpPanel). It is repeated on every result card. */}
+          <p className="mt-4 text-sm text-text-muted max-w-prose">
+            A weekly snapshot of official registers, not a live search — every result carries its own date
+            and links to the official page. No cookies; anonymous page-view counts only.
           </p>
         </>
       )}
@@ -384,6 +446,9 @@ function Dashboard() {
   // 020 P3: the chips return as a compact "try another" row after results land, so a user can pivot.
   const hasSearched = isRunning || eventLog.length > 0;
   const suggestions = suggestionMode({ hasSearched, isRunning });
+  // 021 P2: the live record count for the hero's coverage line (null until read; null forever if the
+  // freshness endpoint cannot be reached — the line then states the categories alone).
+  const coverage = useCoverage();
 
   // The workflow name to announce: the router's pick on a prompt-only run, or the bypass label on a
   // deep link. Drives the aria-live announcement + the visible "Showing …" heading above the results.
@@ -458,6 +523,7 @@ function Dashboard() {
           isRunning={isRunning}
           stop={stop}
           showExamples={suggestions === "hero"}
+          coverage={coverage}
         />
 
         {error && (
@@ -489,6 +555,18 @@ function Dashboard() {
           rel="noopener noreferrer"
         >
           Built to WCAG 2.1 AA — report an accessibility issue
+        </a>
+        .{" "}
+        {/* 021 P5: the builder/engine story lives HERE, not above the fold — the fold speaks only to a
+            Londoner with an errand. Each workflow is a JSON stage-def read at runtime; add one, add a
+            workflow. */}
+        <a
+          href="https://github.com/qte77/ldnmxx-hack"
+          className="underline underline-offset-2 hover:text-primary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open source — each workflow is a JSON file, not a rebuild
         </a>
         .{" "}
         <span title="deployed release" className="whitespace-nowrap font-mono">

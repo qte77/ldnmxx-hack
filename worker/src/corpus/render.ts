@@ -12,9 +12,13 @@ import { formatDateLabel } from "../dates";
 export function buildCorpusCards(q: CorpusQuery): unknown[] {
   const { labels } = q;
   if (q.rows.length === 0) {
+    // 021 P4: when the ask routed correctly but carried no location ("where can I take my kids this
+    // weekend"), this card is the visitor's FIRST impression. Word it as one step short of an answer —
+    // we understood the ask, we just need the where — rather than as a form error. The per-corpus
+    // emptyInvalidHint below already supplies concrete examples to type.
     const empty: CardSpec = {
       key: "empty",
-      title: q.query ? `No sample ${labels.noun}s near ${q.query}` : "Enter a London postcode or place",
+      title: q.query ? `No sample ${labels.noun}s near ${q.query}` : "Almost — which part of London?",
       lines: [q.query ? labels.emptyUnknownHint : labels.emptyInvalidHint],
     };
     return appendDisclaimer(cardsBatch([empty]), labels.officialLink, labels.attribution);
