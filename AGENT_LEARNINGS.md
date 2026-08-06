@@ -53,6 +53,19 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
   real failure mode, not just a stubbed one.
 - **Refs:** PR #98 perf verification (headless probe against `sortmy.london`).
 
+## A handoff watch-out is a claim, not a fact — re-verify capability limits before repeating them
+
+- **Pattern:** Handoff 020 recorded "the agent CANNOT deploy (no CF creds in the devcontainer)". It was
+  copied into handoff 021 and told to the owner twice, unverified. It is **wrong**: the gitignored
+  repo-root `.env` holds a valid `CLOUDFLARE_API_TOKEN`, and `make deploy` → `scripts/provision_cf.sh`
+  sources it explicitly (`wrangler whoami` confirms auth). The claim came from `make dev` failing with
+  "No credentials found" — but `wrangler dev` does **not** source the repo-root `.env`, so a dev-server
+  failure never implied the deploy path was blocked.
+- **Fix:** Before repeating an inherited "the agent cannot X", run the cheapest read-only probe that
+  settles it (`wrangler whoami`, a `--dry-run`, a key-presence check). Scope the watch-out to the exact
+  command that failed, never to a whole capability. A stale limit silently narrows every later arc.
+- **Refs:** arc 021 (this correction); handoffs 020 + 021.
+
 ## `_headers` / CSP only take effect after a Pages deploy
 
 - **Pattern:** Tweaked `_headers` (cache/CSP) and checked via `vite preview` — no effect.
