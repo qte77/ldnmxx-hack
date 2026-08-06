@@ -65,9 +65,14 @@ Two levers, both shipped:
 
 ## Remaining work
 
-| # | Item | Gate | Done-when |
+**None — arc closed 2026-08-06.** P1-P5 shipped in #267; P6 deployed and verified live:
+`food hygiene near Camden` returns **"🍽️ 5 venues near Camden"** + **"Nearest 5 · from 67,082 official
+records"**. The same probe exposed a pre-existing data-honesty defect (placeholder `1901-01-01`
+inspection dates) — that is **arc 023**, not a remainder of this one.
+
+| # | Item | Gate | Status |
 |---|---|---|---|
-| P6 | Deploy + confirm live: a real query returns 5 cards and the summary names the pool | **owner** | Owner deploys; agent re-probes `/api/run` and sweeps |
+| — | (no open items) | — | Migrate any new work to arc 023 |
 
 ## Source map
 

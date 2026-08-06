@@ -4,6 +4,25 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 023 — a placeholder is not a date ("inspected 1901-01-01")
+
+- **Fixed: 6,361 live food-hygiene rows claimed an inspection that never happened.** Verifying arc 022
+  live surfaced `Food hygiene ratings near you · inspected 1901-01-01`. Root cause: `parse_fhrs` already
+  guarded FHRS placeholder dates — but by **exact match on `1900-01-01`**, and the FSA also stamps
+  un-inspected establishments (`RatingValue: AwaitingInspection`) with **`1901-01-01`**. 9.5% of the
+  corpus slipped through, rendering "rating AwaitingInspection, inspected 1901-01-01" on cards whose
+  whole promise is "the official source". Pre-existing, not caused by arc 022 — raising N 3→5 lifted the
+  per-query odds ~26%→~40% and made it visible on the summary line too.
+- **Fixed as a class, not a value.** The guard is now a **plausibility floor**
+  (`FHRS_MIN_PLAUSIBLE_DATE = 2000-01-01`; the FHRS scheme began in 2010), so the next sentinel the FSA
+  invents is caught by construction. A sentinel list is brittle by nature — that brittleness is exactly
+  why this recurred.
+- **Defence in depth for rows already stored.** `formatDateLabel` now makes **no claim at all** for a
+  pre-2000 `inspected` date rather than printing a false one. Scoped to `inspected`: `listedYear` dates
+  are legitimately old (NHLE listings from 1949) and are explicitly unaffected.
+- The **summary** line is clean immediately (computed at render); the **per-row** text is stored at
+  ingest, so those cards self-heal when the daily ingest cron re-parses with the fixed guard.
+
 ### Plan 022 — the depth behind an answer now shows
 
 - **5 results instead of 3, and the answer names the pool it ranked from.** Arc 021 made the coverage
