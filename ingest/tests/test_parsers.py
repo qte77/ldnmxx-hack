@@ -8,6 +8,7 @@ rendered worker-side from registry attribution, never from these artifacts.
 import json
 from pathlib import Path
 
+import pytest
 from parsers import (
     GREATER_LONDON_BBOX,
     attach_coords,
@@ -281,11 +282,26 @@ class TestParseFhrs:
         ids = {r["id"] for r in self.records(mutate)}
         assert "fhrs-1824267" not in ids
 
-    def test_drops_placeholder_1900_rating_dates(self):
-        # FHRS gives un-inspected establishments RatingDate 1900-01-01 — a real value that would
-        # otherwise become a false "data as of 1900-01-01". Drop it (data-honesty, #182 P5).
+    # 023: the guard below used to test `rating_date == "1900-01-01"` — an exact match against ONE
+    # magic value. FHRS actually stamps 1901-01-01 too, so 6,361 of 67,082 live rows slipped through
+    # and rendered "Food hygiene rating AwaitingInspection, inspected 1901-01-01" to Londoners.
+    # The rule is now a PLAUSIBILITY FLOOR, not a sentinel list: the FHRS scheme began in 2010, so any
+    # pre-2000 inspection date is a placeholder whatever its exact value. Parametrised so the next
+    # sentinel the FSA invents is caught by construction rather than by another incident.
+    @pytest.mark.parametrize("placeholder", ["1900-01-01", "1901-01-01", "1899-12-31", "1970-01-01"])
+    def test_drops_any_implausible_rating_date(self, placeholder):
         def mutate(d):
-            d["establishments"][0]["RatingDate"] = "1900-01-01T00:00:00"
+            d["establishments"][0]["RatingDate"] = f"{placeholder}T00:00:00"
 
         ids = {r["id"] for r in self.records(mutate)}
         assert "fhrs-1824267" not in ids
+
+    @pytest.mark.parametrize("real", ["2010-01-01", "2024-07-09", "2026-03-18"])
+    def test_keeps_real_inspection_dates(self, real):
+        # The floor must not eat legitimate early-scheme dates — only the pre-scheme placeholders.
+        def mutate(d):
+            d["establishments"][0]["RatingDate"] = f"{real}T00:00:00"
+
+        r = next(x for x in self.records(mutate) if x["id"] == "fhrs-1824267")
+        assert r["lastUpdated"] == real
+        assert real in r["why"]

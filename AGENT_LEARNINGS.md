@@ -53,6 +53,19 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
   real failure mode, not just a stubbed one.
 - **Refs:** PR #98 perf verification (headless probe against `sortmy.london`).
 
+## Guard against a CLASS of bad values, never an exact sentinel
+
+- **Pattern:** `parse_fhrs` dropped FHRS placeholder dates with `rating_date == "1900-01-01"`. The FSA
+  also emits **1901-01-01**, so the guard never fired for it and 6,361 of 67,082 live rows told
+  Londoners a venue was "inspected 1901-01-01" (and "rating AwaitingInspection"). The guard's own
+  comment showed the intent was right; only its shape was wrong.
+- **Fix:** express the intent as a **plausibility floor** over the domain (FHRS began 2010 ⇒ any
+  pre-2000 date is a placeholder), not a list of known-bad literals. Add a backstop at the render
+  boundary for values already stored. Scope the floor to the semantic that needs it — `listedYear`
+  dates are legitimately old (NHLE 1949), so a global floor would be wrong.
+- **Smell:** any `== "<magic value>"` filtering untrusted upstream data. The next variant ships silently.
+- **Refs:** arc 023; the original guard was #182 P5.
+
 ## A handoff watch-out is a claim, not a fact — re-verify capability limits before repeating them
 
 - **Pattern:** Handoff 020 recorded "the agent CANNOT deploy (no CF creds in the devcontainer)". It was

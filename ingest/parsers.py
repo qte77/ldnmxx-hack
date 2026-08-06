@@ -314,6 +314,11 @@ def attach_coords(records: list[dict], gazetteer: dict[str, dict]) -> list[dict]
 # --- FHRS establishments -> food-hygiene records --------------------------------------------------
 
 
+# 023: the floor below which an FHRS "inspection date" cannot be real. The scheme began in 2010; 2000
+# leaves generous headroom while still catching every pre-scheme placeholder the FSA emits.
+FHRS_MIN_PLAUSIBLE_DATE = "2000-01-01"
+
+
 def parse_fhrs(pages: list[dict]) -> list[dict]:
     """Establishment pages -> records. Shows the inspection date (licence); FHRS scheme only."""
     out = []
@@ -328,9 +333,13 @@ def parse_fhrs(pages: list[dict]) -> list[dict]:
             except (TypeError, ValueError):
                 continue
             rating_date = (est.get("RatingDate") or "").split("T")[0]
-            # FHRS stamps un-inspected establishments with the placeholder 1900-01-01 — drop it so
-            # it can never become a false "data as of 1900" (data honesty, #182 P5).
-            if not fhrs_id or not name or not rating_date or rating_date == "1900-01-01":
+            # FHRS stamps un-inspected establishments ("RatingValue": "AwaitingInspection") with a
+            # placeholder date. This was an exact match on 1900-01-01 — but the FSA also uses
+            # 1901-01-01, so 6,361 of 67,082 live rows slipped through and told Londoners a venue was
+            # "inspected 1901-01-01" (023). A sentinel LIST is brittle by nature; the honest rule is a
+            # plausibility floor: the FHRS scheme began in 2010, so any pre-2000 date is a placeholder
+            # whatever its exact value, and the row has no inspection to report (data honesty, #182 P5).
+            if not fhrs_id or not name or not rating_date or rating_date < FHRS_MIN_PLAUSIBLE_DATE:
                 continue
             value = est.get("RatingValue") or "unavailable"
             out.append(

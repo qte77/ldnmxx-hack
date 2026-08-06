@@ -46,3 +46,27 @@ describe("formatDateLabel", () => {
     }
   });
 });
+
+// 023: defence in depth. The ingest guard that should have dropped FHRS placeholder dates matched ONE
+// magic value (1900-01-01) and missed the 1901-01-01 the FSA also uses, so 6,361 live rows rendered
+// "inspected 1901-01-01" to Londoners. Fixing the parser stops NEW rows; this stops any placeholder that
+// is already stored — or that a future source invents — from ever becoming a claim on a card.
+//
+// Mode-aware by necessity: `listedYear` dates are LEGITIMATELY old (NHLE listings from 1949), so the
+// floor applies only to `inspected`, where a pre-2000 date cannot be a real inspection (FHRS began 2010).
+describe("formatDateLabel — implausible 'inspected' dates make no claim", () => {
+  it("refuses to claim a pre-2000 inspection date", () => {
+    for (const placeholder of ["1901-01-01", "1900-01-01", "1970-01-01", "1999-12-31"]) {
+      expect(formatDateLabel("inspected", placeholder)).toBe("");
+    }
+  });
+
+  it("still reports real inspection dates", () => {
+    expect(formatDateLabel("inspected", "2024-07-09")).toBe("inspected 2024-07-09");
+    expect(formatDateLabel("inspected", "2010-01-01")).toBe("inspected 2010-01-01");
+  });
+
+  it("leaves legitimately-old listing years alone (a 1949 listing is real, not a placeholder)", () => {
+    expect(formatDateLabel("listedYear", "1949-02-24")).toBe("listed 1949");
+  });
+});

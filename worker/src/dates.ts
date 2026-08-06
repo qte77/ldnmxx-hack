@@ -31,9 +31,19 @@ export type DateLabelMode = "asOf" | "listedYear" | "inspected" | "omit";
 // The per-corpus date CLAIM for the summary line. "" = no claim at all; the caller (render.ts) must
 // drop the " · " separator too, never print a dangling "summaryLine · ". Static/editorial per corpus —
 // never inferred from ingested row data (the repo-wide data-honesty rule).
+// 023: the floor below which an "inspected" date cannot be real. FHRS stamps un-inspected venues with a
+// placeholder (1900-01-01 AND 1901-01-01 — the ingest guard matched only the first, so 6,361 live rows
+// told Londoners a venue was "inspected 1901-01-01"). The parser now drops them at ingest; this is the
+// last line of defence for rows ALREADY stored, or a placeholder a future source invents. Scoped to
+// `inspected` on purpose: `listedYear` dates are legitimately old (NHLE listings from 1949).
+const MIN_PLAUSIBLE_INSPECTION_DATE = "2000-01-01";
+
 export function formatDateLabel(mode: DateLabelMode, isoDate: string | null): string {
   if (mode === "omit" || isoDate === null) return "";
   if (mode === "listedYear") return `listed ${isoDate.slice(0, 4)}`;
-  if (mode === "inspected") return `inspected ${isoDate}`;
+  // No claim beats a false one: an implausible inspection date is a placeholder, not an inspection.
+  if (mode === "inspected") {
+    return isoDate < MIN_PLAUSIBLE_INSPECTION_DATE ? "" : `inspected ${isoDate}`;
+  }
   return `data as of ${isoDate}`; // mode === "asOf"
 }
