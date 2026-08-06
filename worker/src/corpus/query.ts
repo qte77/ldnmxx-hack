@@ -55,7 +55,8 @@ function resolveLocation(prompt: string): Located | null {
 // Deterministic, model-free nearest-N over an in-memory corpus def. Pure + injectable, so it is
 // driven directly in tests. Graceful, never-throwing on USER input: an unresolvable location ⇒
 // { query: null, rows: [] }; a place/valid postcode with nothing nearby ⇒ { query, rows: [] }.
-export function queryCorpusDef(def: CorpusDef, prompt: string, n = 3): CorpusQuery {
+// 022: n defaults to 5 (was 3) — see queryCorpus. The bundled def carries no pool count, so no claim.
+export function queryCorpusDef(def: CorpusDef, prompt: string, n = DEFAULT_N): CorpusQuery {
   const { labels } = def;
   const loc = resolveLocation(prompt);
   if (!loc) return { query: null, rows: [], asOf: null, labels };
@@ -75,6 +76,11 @@ export function queryCorpusDef(def: CorpusDef, prompt: string, n = 3): CorpusQue
 // row-read win depends on a tight first box (LIVE food-hygiene: 5 km read 55,201 rows = 1.2×; 0.5 km
 // reads 3,810 = 17.5×, clearing ADR 0002's ≥10× target). Widen only when a sparse corpus needs it.
 const WIDEN_KM = [0.5, 2, 8];
+
+// 022: how many results an answer shows by default. Raised 3 → 5 so the depth behind the corpus is
+// visible in the answer itself; still far below source.ts's BBOX_CAP (50), so it buys no extra D1 read,
+// and the widen-retry above keeps a sparse area answering rather than shrinking.
+const DEFAULT_N = 5;
 async function readWithinWidening(
   source: CorpusSource,
   origin: Coords,
@@ -89,6 +95,20 @@ async function readWithinWidening(
 
 // Rank a corpus around an ALREADY-resolved origin (a postcode's coords or a place anchor). Shared by
 // the postcode + place paths and by the bundled + D1 sources.
+// 022: the pool count is COSMETIC — it must never cost a user their answer. Any failure (or a source
+// that cannot count) degrades to null, i.e. no claim on the card, while the records read proceeds
+// untouched. Deliberately NOT inside queryCorpus's D1 try/catch: a corpus_meta hiccup must not demote a
+// working D1 answer to the bundled sample.
+async function poolSize(source: CorpusSource): Promise<number | null> {
+  if (source.size === undefined) return null;
+  try {
+    return await source.size();
+  } catch (err) {
+    console.warn("corpus size unavailable — rendering without a pool claim:", err);
+    return null;
+  }
+}
+
 async function rankFrom(
   source: CorpusSource,
   labels: CorpusLabels,
@@ -96,7 +116,9 @@ async function rankFrom(
   origin: Coords,
   n: number
 ): Promise<CorpusQuery> {
-  return { query: queryLabel, ...corpusRows(origin, await readWithinWidening(source, origin, n), n), labels };
+  // Concurrent: the pool count never adds latency to the read that actually answers the question.
+  const [records, corpusSize] = await Promise.all([readWithinWidening(source, origin, n), poolSize(source)]);
+  return { query: queryLabel, ...corpusRows(origin, records, n), labels, corpusSize };
 }
 
 // One postcode-driven query: resolve the origin from the gazetteer, then rank. A gazetteer MISS is a
@@ -125,7 +147,7 @@ export interface QueryCorpusInput {
 export async function queryCorpus(
   input: QueryCorpusInput,
   ctx?: QueryCtx,
-  n = 3
+  n = DEFAULT_N
 ): Promise<CorpusQuery> {
   const def = input.corpus === undefined ? undefined : getCorpus(input.corpus);
   if (!def) throw new Error(`queryCorpus: unknown corpus "${input.corpus ?? "(none)"}"`);

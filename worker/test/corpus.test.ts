@@ -222,7 +222,7 @@ describe("queryCorpus (async seam over the registry)", () => {
     const q = await queryCorpus({ prompt: "SW9 9SL", corpus: "care" });
     expect(q.query).toBe("SW9 9SL");
     expect(q.rows.length).toBeGreaterThan(0);
-    expect(q.rows.length).toBeLessThanOrEqual(3);
+    expect(q.rows.length).toBeLessThanOrEqual(5); // 022: the default answer size (was 3)
     expect(typeof q.rows[0]!.line).toBe("string");
   });
 

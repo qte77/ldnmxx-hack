@@ -64,4 +64,9 @@ export interface CorpusQuery {
   // Optional + derived by query.ts, so existing CorpusQuery fixtures need no edit (undefined ⇒ the
   // per-row `authority · distance` line, today's honest behaviour).
   sharedAuthority?: string | null;
+  // 022: how many records the shown rows were ranked FROM — the depth behind the answer, which was
+  // otherwise invisible (5 rows off 67k official records looked like 5 rows off a 12-row sample).
+  // Read from corpus_meta (the row already behind /api/freshness), so it is a real ingested count and
+  // never a guess. null/undefined ⇒ unknown (the bundled sample) ⇒ render makes NO claim.
+  corpusSize?: number | null | undefined;
 }

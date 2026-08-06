@@ -4,6 +4,26 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 022 — the depth behind an answer now shows
+
+- **5 results instead of 3, and the answer names the pool it ranked from.** Arc 021 made the coverage
+  visible on the landing page; the answer still hid it — 3 cards drawn from 67,082 FSA records looked
+  identical to 3 drawn from a 12-row sample. The default answer size rises to **5**
+  (`DEFAULT_N`, `worker/src/corpus/query.ts`) at **no extra D1 cost**: `BBOX_CAP` already returns up to
+  50 nearest-by-proxy rows per bounded read, and the widen-retry keeps a sparse area answering rather
+  than shrinking. The summary card gains a provenance line — **"Nearest 5 · from 67,082 official
+  records"** — read from `corpus_meta`, the same row already powering `GET /api/freshness`.
+- **Honest by construction.** The count is a real ingested figure, never a constant: an unknown size
+  renders **no line at all**, so the bundled sample can never imply a full corpus; `wander_places`
+  UNIONs two ingests so its pool is the **sum** (35,938), never one arm; and the count reflects the rows
+  actually shown, so a sparse area reads "Nearest 2" rather than a padded 5.
+- **The pool read can never cost a user their answer.** `poolSize()` wraps `CorpusSource.size()` in its
+  own try/catch, deliberately outside `queryCorpus`'s D1 fallback — a `corpus_meta` hiccup degrades to
+  "no claim" instead of demoting a working D1 answer to the bundled sample — and runs concurrently with
+  the records read, so it adds no latency. No new SQL: `size()` reuses the existing static
+  `FRESHNESS_SQL` and sums in JS, keeping the statement set closed (ADR 0002).
+- Also refreshed `docs/handoffs/README.md`, whose resume point still pointed at arc 018 — six arcs stale.
+
 ### Plan 021 — the fold now shows the value proposition (P1-P5)
 
 - **The page finally says what it knows.** A first-principles pass found the live deploy holds ~112k real

@@ -3,6 +3,7 @@
 // slip can't alter copy or links. Two implementations: the bundled sample JSON (default, and the
 // outage fallback) and a CF D1 store read through one SQL view per corpus (worker/migrations/*).
 import type { BBox, Coords } from "../geo";
+import { FRESHNESS_SQL } from "../freshness";
 import type { CorpusRecord } from "./contract";
 
 // Threaded from the request (worker.ts ModelCtx) into deterministic query stages. Optional end to
@@ -18,6 +19,10 @@ export interface CorpusSource {
   // by proximity so the LIMIT keeps the nearest. Absent ⇒ the full unbounded read (the widen-retry's
   // final fallback + the empty-view guard). The bundled source is in-memory and ignores both.
   records(bbox?: BBox, origin?: Coords): Promise<CorpusRecord[]>;
+  // 022: how many records this source holds in total — the pool the nearest-N were ranked from.
+  // OPTIONAL: a source that cannot say (the bundled sample) simply omits it, and the render then makes
+  // no claim. Cosmetic by contract — query.ts must never let this read fail a user's answer.
+  size?(): Promise<number | null>;
 }
 
 // The bundled static-JSON corpus (compile-checked against CorpusRecord in registry.ts). Resolves
@@ -73,9 +78,19 @@ const VIEW_SQL: Record<string, string> = {
 const BBOX_SUFFIX =
   " WHERE lat BETWEEN ?1 AND ?2 AND lng BETWEEN ?3 AND ?4" +
   " ORDER BY (lat - ?5) * (lat - ?5) + (lng - ?6) * (lng - ?6) * ?7 LIMIT ?8";
-// Nearest-by-proxy rows to return from a bounded read — well above the workflow's n (3), so the true
-// nearest-N are always within the capped set even allowing for the proxy's small skew.
+// Nearest-by-proxy rows to return from a bounded read — well above the workflow's n (5 since 022), so
+// the true nearest-N are always within the capped set even allowing for the proxy's small skew. Raising
+// n costs no extra D1 read while it stays far below this cap.
 const BBOX_CAP = 50;
+
+// 022: which ingested corpora feed each D1 view, for the pool count on the summary card. `wander_places`
+// UNIONs two ingests, so its pool is the SUM — never one arm of it. A static closed map, mirroring
+// VIEW_SQL above: a new view declares its meta keys here, consciously, or reports no size at all.
+const VIEW_META_KEYS: Record<string, readonly string[]> = {
+  care_signposts: ["care"],
+  wander_places: ["wander-greenspace", "wander-nhle"],
+  food_hygiene: ["food-hygiene"],
+};
 const toRad = (deg: number): number => (deg * Math.PI) / 180;
 
 // A corpus read through its D1 view (the CorpusRecord contract in SQL — see worker/migrations).
@@ -128,6 +143,25 @@ export function d1Source(db: D1Database, view: string): CorpusSource {
         throw new Error(`d1Source: view "${view}" has no valid rows — corpus not swapped yet`);
       }
       return valid;
+    },
+    // 022: the pool the nearest-N were ranked from. Reuses FRESHNESS_SQL — the same reviewed static
+    // statement already serving /api/freshness (DRY: one corpus_meta read shape, not two) — over a
+    // table of a handful of rows, so it is negligible beside the bbox read. Summing in JS keeps the SQL
+    // closed and static (no IN-list built per view). An unmapped view or a missing/blank meta row
+    // yields null, i.e. no claim.
+    size: async () => {
+      const keys = VIEW_META_KEYS[view];
+      if (keys === undefined) return null;
+      const rs = await db.prepare(FRESHNESS_SQL).all();
+      const rows = rs.results as unknown[];
+      let total = 0;
+      for (const raw of rows) {
+        const row = raw as { corpus?: unknown; row_count?: unknown };
+        if (typeof row.corpus === "string" && keys.includes(row.corpus) && typeof row.row_count === "number") {
+          total += row.row_count;
+        }
+      }
+      return total > 0 ? total : null;
     },
   };
 }
