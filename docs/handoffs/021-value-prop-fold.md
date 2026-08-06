@@ -40,11 +40,18 @@ copy is preserved (compact line + full text in `?`), and a place-less ask no lon
 
 ## Owner gates
 
-- **Deploy** — dispatch `deploy.yml` (production Environment). The agent CANNOT deploy: no CF creds in the
-  devcontainer, and dispatch is classifier-blocked. **Note for local work:** `make dev` cannot boot the
-  Worker either (wrangler needs CF credentials for the remote AI binding). Verify the SPA locally with
-  `VITE_WORKER_BASE=https://sortmy.london npm --prefix ui run dev` — `ALLOWED_ORIGINS` already whitelists
-  `localhost:5173`, so the real API answers. **This trick is the arc's most reusable finding.**
+- **Deploy** — an owner DECISION, not an agent incapability. **Correction (2026-08-05, verified):** the
+  arc-020 watch-out "no CF creds in the devcontainer" is **wrong**. The gitignored repo-root `.env`
+  carries a valid `CLOUDFLARE_API_TOKEN` (confirmed via `wrangler whoami`), and `make deploy` →
+  `scripts/provision_cf.sh` explicitly sources it, so **`make deploy` works from the devcontainer**.
+  The confusion: `wrangler dev` does NOT source the repo-root `.env`, so `make dev` fails with "No
+  credentials found" — a dev-server limitation that never implied the deploy path was blocked.
+  `gh workflow run deploy.yml` remains the preferred path (deploys a known merged commit through the
+  production Environment, with its approval + audit trail, rather than a local working tree), and
+  dispatching it is classifier-blocked for the agent. Treat production pushes as owner-gated by policy.
+- **Local UI verification without the Worker:** `make dev` cannot boot the Worker (see above), so verify
+  the SPA with `VITE_WORKER_BASE=https://sortmy.london npm --prefix ui run dev` — `ALLOWED_ORIGINS`
+  already whitelists `localhost:5173`, so the real API answers. **The arc's most reusable finding.**
 
 ## The loop (per phase / PR)
 
