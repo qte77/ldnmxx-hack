@@ -2,21 +2,25 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [018 — post-launch polish](018-polish-input-honesty.md) — start at P1 (row-read correction)
+## ▶ Resume point: [022 — nearest-N depth](022-nearest-n-depth.md) — start at P6 (owner deploy + live re-probe)
 
-Arc 017 **shipped + DEPLOYED** to `sortmy.london` (single-input UX + auto-router + fo Linear theme;
-PRs #208/#212/#213/#215/#217, deploy + migration `0005` live). Live testing found a coherent
-polish/honesty backlog → **arc 018**: **P1** correct P2b's over-claimed row-read
-(prod is ~1.2×; fix = 0.5 km widen, measured 17.5×), **P2** outward-postcode input forgiveness (the
-`food hygiene near SE1` self-example bug), **P3** the `data as of 1974` heritage-date honesty, **P4** one
-shared usecase catalog (kills the UI/worker drift), **P5** the visual/UX pass. **Owner gate: the v1.8.0
-tag** (default = hold until P1–P3). Predecessor 016 CLOSED.
+Arc 021 **shipped + DEPLOYED**: the landing fold now shows the value proposition — covered categories,
+the **live** record count read from `/api/freshness` (112,000+), a sample answer card, and a place-less
+ask that reads as one step short of an answer rather than a form error (#265/#266; live sweep PASS,
+axe 0/0). Arc 022 carries the same idea into the **answer**: **5 results by default** (free — `BBOX_CAP`
+already reads up to 50 nearest rows) and a provenance line naming the pool, "Nearest 5 · from 67,082
+official records", read from `corpus_meta`. Everything is merged; only the **owner deploy + live
+re-probe** remain. Predecessors 018–021 CLOSED.
 
 ## Index
 
 | # | Handoff | State |
 |---|---|---|
-| 018 | [Post-launch polish](018-polish-input-honesty.md) | **OPEN** — start at P1 |
+| 022 | [Nearest-N depth](022-nearest-n-depth.md) | **OPEN** — start at P6 (owner deploy) |
+| 021 | [Value-proposition fold](021-value-prop-fold.md) | closed — shipped + deployed; live sweep PASS |
+| 020 | [UX overhaul](020-ux-overhaul.md) | closed — routing · place-names · examples · visual/a11y |
+| 019 | [Backlog clear](019-backlog-clear.md) | closed — freshness watchdog |
+| 018 | [Post-launch polish](018-polish-input-honesty.md) | closed |
 | 017 | [One input, London-themed](017-single-input-london-theme.md) | closed — shipped + deployed; polish → 018 |
 | 016 | [Keyless real data — pipeline + 3 real corpora](016-keyless-real-data.md) | closed — P0–P5 shipped |
 | 015 | [Civic usecase expansion + real data](015-civic-usecase-expansion.md) | closed (≈90%; remainder → 016) |

@@ -74,6 +74,30 @@ describe("buildCorpusCards", () => {
     expect(JSON.stringify(buildCorpusCards(sample))).toContain("NHS A · 0.4 km");
   });
 
+  // 022: the depth behind an answer was invisible — a 5-row answer drawn from 67k official records
+  // looked identical to one drawn from a 12-row sample. The summary card now names the pool it ranked
+  // from. "Nearest N" is the load-bearing word: it says these are the CLOSEST, not an arbitrary N.
+  describe("corpus-size provenance on the summary card", () => {
+    it("names the pool the rows were ranked from, with a thousands-separated count", () => {
+      const json = JSON.stringify(buildCorpusCards({ ...sample, corpusSize: 67082 }));
+      expect(json).toContain("Nearest 2 · from 67,082 official records");
+    });
+
+    it("counts the rows actually SHOWN, not the requested N (a sparse area shows fewer)", () => {
+      const one: CorpusQuery = { ...sample, rows: [sample.rows[0]!], corpusSize: 9360 };
+      expect(JSON.stringify(buildCorpusCards(one))).toContain("Nearest 1 · from 9,360 official records");
+    });
+
+    // The bundled 12-row sample must never imply a 67k corpus. No size ⇒ no claim.
+    it("omits the line entirely when the size is unknown (bundled fallback) — never a false claim", () => {
+      for (const size of [undefined, null, 0]) {
+        const json = JSON.stringify(buildCorpusCards({ ...sample, corpusSize: size }));
+        expect(json).not.toContain("official records");
+        expect(json).not.toContain("Nearest 2");
+      }
+    });
+  });
+
   it("takes the disclaimer link from the corpus labels, not a hardcoded NHS url", () => {
     const wander: CorpusQuery = {
       ...sample,

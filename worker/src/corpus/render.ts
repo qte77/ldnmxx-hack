@@ -28,6 +28,14 @@ export function buildCorpusCards(q: CorpusQuery): unknown[] {
   // record's own listing/inspection age), and drop the " · " separator entirely when there is no
   // honest claim — never a dangling "summaryLine · data as of ".
   const dateClaim = formatDateLabel(labels.dateLabel, q.asOf);
+  // 022: name the pool these rows were ranked from, so the depth behind a short answer is visible.
+  // "Nearest N" is load-bearing — it says these are the CLOSEST of that pool, not an arbitrary slice.
+  // Only ever rendered from a real ingested count (corpus_meta); an unknown size makes NO claim, so the
+  // bundled sample can never imply a full corpus.
+  const pool =
+    typeof q.corpusSize === "number" && q.corpusSize > 0
+      ? `Nearest ${String(count)} · from ${q.corpusSize.toLocaleString("en-GB")} official records`
+      : null;
   const summary: CardSpec = {
     key: "summary",
     // 018 P5: a per-workflow glyph on the title; the shared authority (de-duped off every row by
@@ -35,6 +43,7 @@ export function buildCorpusCards(q: CorpusQuery): unknown[] {
     title: `${labels.glyph} ${String(count)} ${labels.noun}${count > 1 ? "s" : ""} near ${q.query ?? ""}`,
     lines: [
       dateClaim ? `${labels.summaryLine} · ${dateClaim}` : labels.summaryLine,
+      ...(pool ? [pool] : []),
       ...(q.sharedAuthority ? [q.sharedAuthority] : []),
     ],
   };
