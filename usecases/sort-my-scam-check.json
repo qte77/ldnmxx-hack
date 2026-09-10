@@ -3,6 +3,9 @@
   "title": "Sort My Scam Check",
   "example": "is Thames Capital Partners a scam",
   "blurb": "Check whether a firm is on the FCA's register of authorised financial businesses.",
+  "source": "Financial Conduct Authority",
+  "officialLink": { "text": "Check the FCA Financial Services Register", "url": "https://register.fca.org.uk/" },
+  "sampleData": true,
   "render": { "mode": "scam" },
   "keywords": ["scam", "fraud", "fca", "frn", "authorised firm", "fca register", "is this firm", "legit", "legitimate", "rip off", "ripoff", "fraudster", "fraudulent", "phishing", "con artist", "swindle", "rip-off"],
   "stages": [

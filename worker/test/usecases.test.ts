@@ -102,6 +102,20 @@ describe("usecases guard", () => {
     expect(() => assertUsecaseDef({ ...validDef, keywords: "scam" })).toThrow(/keywords/);
     expect(() => assertUsecaseDef({ ...validDef, keywords: [1, 2] })).toThrow(/keywords/);
   });
+
+  // 024 P0.3: the shared catalog's source/officialLink/freshnessKey/sampleData fields ride on the
+  // same usecases/*.json file the engine loads, so assertUsecaseDef must not reject them as unknown.
+  it("accepts the shared catalog's optional source/officialLink/freshnessKey/sampleData keys", () => {
+    expect(() =>
+      assertUsecaseDef({
+        ...validDef,
+        source: "Care Quality Commission",
+        officialLink: { text: "Search official NHS services", url: "https://www.nhs.uk/service-search" },
+        freshnessKey: "care",
+        sampleData: true,
+      })
+    ).not.toThrow();
+  });
 });
 
 describe("routableUsecases — the register-only router catalog", () => {
