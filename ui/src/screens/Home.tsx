@@ -274,8 +274,13 @@ function ResultBody({
         </div>
       )}
 
-      {/* aria-live announces the router's choice so the routing decision is not sighted-only. */}
-      <p aria-live="polite" className={activeTitle ? "mt-3 text-sm font-semibold text-text" : "sr-only"}>
+      {/* 024 P2 fix: the sheet's own header now shows this SAME text visibly (ResultSheet's `label`
+          prop) and carries it as the dialog's accessible name — this paragraph would otherwise
+          duplicate it on screen. It stays for screen readers only: aria-live still announces the
+          router's choice as a live-region change (belt-and-braces alongside the dialog's accessible
+          name, which the label prop covers on mount/focus but a live region also covers mid-session,
+          e.g. a "Try another:" chip changing the workflow without remounting the sheet). */}
+      <p aria-live="polite" className="sr-only">
         {announce}
       </p>
 
