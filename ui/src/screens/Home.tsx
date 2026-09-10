@@ -5,10 +5,15 @@ import { matchesToggle, readDevMode, writeDevMode } from "../devmode";
 import { readUsecase } from "../usecase";
 import { useAgentSSE, type Byok, type RunStatus } from "../agent/useAgentSSE";
 import type { EventLogEntry } from "../agent/applyA2UIEvent";
-import { usecaseCatalog } from "../../../shared/usecaseCatalog";
+import { usecaseCatalog, type CatalogEntry } from "../../../shared/usecaseCatalog";
 import { useRotatingPlaceholder } from "../useRotatingPlaceholder";
 import { useCoverage } from "../useCoverage";
 import { suggestionMode, type SuggestionMode } from "../suggestions";
+import { readBorough } from "../prefs";
+import { withLocationAnchor } from "./locationAnchor";
+import { categoryCards } from "./categoryCards";
+import { resultSheetOpen } from "./resultSheetOpen";
+import { ResultSheet } from "../sheet/ResultSheet";
 
 // 018 P4: the workflow catalog is now ONE shared source of truth (shared/usecaseCatalog.ts, read by the
 // Worker too) — no second, drifting UI copy. The UI needs only id→title (to name the resolved workflow +
@@ -23,6 +28,10 @@ const USECASE_IDS = USECASES.map((u) => u.id);
 // ADR 0004). Stable module-scope arrays so the rotating-placeholder effect doesn't re-run every render.
 const ROUTABLE = USECASES.filter((u) => u.keywords.length > 0);
 const ROUTABLE_EXAMPLES = ROUTABLE.map((u) => u.example);
+
+// 024 P1: the "Common questions" card order — real, routable usecases first, the 2 never-auto-routed
+// demo flows last (categoryCards.ts, unit-tested there).
+const CATEGORY_CARDS = categoryCards(USECASES);
 
 // Shared chrome-control styling: border-border-strong (not the decorative hairline) because a
 // control's border IS its affordance — WCAG 1.4.11 wants 3:1, which only the strong token meets.
@@ -222,6 +231,70 @@ function TryAnotherRow({ mode, onPick }: { mode: SuggestionMode; onPick: (text: 
   return <SuggestionChips label="Try another:" ariaLabel="Try another search" onPick={onPick} />;
 }
 
+// 024 P2: the block that used to sit directly in <main> after a search — MOVED (not duplicated) into
+// the ResultSheet overlay. Extracted to its own component so Home() itself stays under the complexity
+// gate (the file's established reason for splitting components, see Hero's comment above).
+function ResultBody({
+  error,
+  errorMsg,
+  activeTitle,
+  showSampleNote,
+  isRunning,
+  suggestions,
+  onPick,
+  devMode,
+  status,
+  events,
+}: {
+  error: string | null;
+  errorMsg: string | null;
+  activeTitle: string | undefined;
+  showSampleNote: boolean;
+  isRunning: boolean;
+  suggestions: SuggestionMode;
+  onPick: (text: string) => void;
+  devMode: boolean;
+  status: RunStatus | null;
+  events: EventLogEntry[];
+}) {
+  const announce = activeTitle ? `Showing: ${activeTitle}` : "";
+  return (
+    <>
+      {/* 024 P2: Scam Check has no live corpus (synthetic sample only) — say so beside the result
+          itself, not just on the Home card, so nobody mistakes it for a real regulatory check. */}
+      {showSampleNote && (
+        <p className="px-3 py-2 text-sm text-text border border-border rounded bg-data-caution/10" role="note">
+          Sample data — not a live FCA lookup. Always confirm on the official FCA register.
+        </p>
+      )}
+
+      {error && (
+        <div role="alert" className="mt-3 px-3 py-2 text-sm text-data-negative border border-border rounded">
+          {errorMsg}
+        </div>
+      )}
+
+      {/* 024 P2 fix: the sheet's own header now shows this SAME text visibly (ResultSheet's `label`
+          prop) and carries it as the dialog's accessible name — this paragraph would otherwise
+          duplicate it on screen. It stays for screen readers only: aria-live still announces the
+          router's choice as a live-region change (belt-and-braces alongside the dialog's accessible
+          name, which the label prop covers on mount/focus but a live region also covers mid-session,
+          e.g. a "Try another:" chip changing the workflow without remounting the sheet). */}
+      <p aria-live="polite" className="sr-only">
+        {announce}
+      </p>
+
+      <div aria-live="polite" aria-busy={isRunning} className="mt-3">
+        <A2UISurface />
+      </div>
+
+      <TryAnotherRow mode={suggestions} onPick={onPick} />
+
+      <DevConsole show={devMode} status={status} events={events} />
+    </>
+  );
+}
+
 // 021 P2: the value proposition, in the slot the freshness caveat used to hold. A visitor's first
 // question is "what does this know?", and until now the page only answered it after a successful query.
 // Two lines: WHAT is covered, then the PROOF of scale. The count is live (useCoverage) and simply absent
@@ -274,6 +347,68 @@ function SampleCard() {
         </p>
       </div>
     </div>
+  );
+}
+
+// 024 P1: one card per catalog entry. The 4 real, routable usecases render like an ordinary corpus
+// lookup; the 2 never-auto-routed demo flows (ADR 0004 — no keywords, a card tap is the ONLY way to
+// reach them) carry a visibly distinct "Demo" badge so they never read as a real signpost. Scam Check
+// additionally carries a "sample data" note — it has no live corpus, a synthetic sample only.
+function CategoryCard({
+  entry,
+  onPick,
+  disabled,
+}: {
+  entry: CatalogEntry;
+  onPick: (text: string, usecaseId: string) => void;
+  disabled: boolean;
+}) {
+  const isDemo = entry.keywords.length === 0;
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onPick(entry.example, entry.id)}
+      // 024 P2 fix: submitPrompt no-ops while a run is in flight (never relabels the sheet mid-stream) —
+      // disable the visible affordance too, so that no-op has a reason instead of reading as broken.
+      className="text-left p-4 rounded-[var(--radius-card)] bg-surface-lift border border-border hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className="font-semibold text-text">{entry.title}</span>
+        {isDemo && (
+          <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-text-muted/15 text-text-muted">
+            Demo
+          </span>
+        )}
+      </span>
+      <span className="block mt-1 text-sm text-text-muted">{entry.blurb}</span>
+      {entry.sampleData && (
+        <span className="block mt-1 text-xs text-data-caution">Sample data — not a live check</span>
+      )}
+    </button>
+  );
+}
+
+// 024 P1: always visible on Home, independent of search state — a standing way to ask a next question
+// (results live in the ResultSheet overlay, not inline, so there is no "collapse after first search"
+// reason to hide this the way the Hero's own extras collapse). No service-notice band, no "Recently
+// looked up" — both dropped per the plan (no honest backing data yet).
+function CategoryCardList({
+  onPick,
+  disabled,
+}: {
+  onPick: (text: string, usecaseId: string) => void;
+  disabled: boolean;
+}) {
+  return (
+    <section className="mt-8">
+      <h2 className="text-lg font-bold text-text">Common questions</h2>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {CATEGORY_CARDS.map((entry) => (
+          <CategoryCard key={entry.id} entry={entry} onPick={onPick} disabled={disabled} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -374,23 +509,52 @@ export function Home() {
   // freshness endpoint cannot be reached — the line then states the categories alone).
   const coverage = useCoverage();
 
-  // The workflow name to announce: the router's pick on a prompt-only run, or the bypass label on a
-  // deep link. Drives the aria-live announcement + the visible "Showing …" heading above the results.
-  const activeTitle = resolved?.title ?? bypassDef?.title;
-  const announce = activeTitle ? `Showing: ${activeTitle}` : "";
+  // 024 P2: which usecase actually drove the CURRENT/last submission. `resolved` (USECASE_RESOLVED)
+  // only fires when the Worker auto-routes a prompt-only ask — worker.ts's resolveTarget marks any
+  // explicit ?usecase= run (a category-card tap, or a deep link) `routed: false` and never emits it. So
+  // a card tap needs its own tracking, seeded from the mount-time bypass so a deep link is honoured
+  // immediately, before any submission.
+  const [activeUsecaseId, setActiveUsecaseId] = useState<string | undefined>(bypass ?? undefined);
+  // 024 P2: has the sheet been explicitly dismissed since the last submission? Reset on every
+  // submitPrompt call so a new search always reopens it, even after a manual close.
+  const [dismissed, setDismissed] = useState(false);
+  // resultSheetOpen.ts (unit-tested) — deliberately not just `hasSearched`, see its comment: a failed
+  // run must keep the sheet open to show the error, even though `hasSearched` itself reverts to false.
+  const sheetOpen = resultSheetOpen({ hasSearched, error, dismissed });
+
+  // The workflow actually driving the CURRENT/last run, looked up in the SAME catalog the cards render
+  // from — so the "Showing …" announcement and the Scam Check sample-data note both key off one source
+  // of data, never a second hardcoded usecase id.
+  const activeDef = USECASES.find((u) => u.id === (resolved?.usecase ?? activeUsecaseId));
+  const activeTitle = activeDef?.title;
+  const showSampleNote = activeDef?.sampleData === true;
 
   // 018 P5: shared submit — a chip click and the form both funnel through here. Pass the text DIRECTLY
   // (not the `prompt` state, which setPrompt hasn't committed yet on a chip click) to dodge a stale closure.
   // 024 P0.2: `usecaseId` is a NEW optional per-submission override — row 4's category-card tap passes
   // its own id here, without touching the URL/mount-time `bypass`. Falls back to the mount-time bypass,
   // then to the Worker's auto-router, exactly as before.
+  // 024 P1: applied here (not at each call site) so EVERY Home submission — hero search, "Try:"/"Try
+  // another:" chips, and category-card taps alike — gets the same default-location ANCHOR, one place,
+  // DRY. `readBorough()` is read fresh per submit (no state needed: it is write-once in Settings,
+  // read-only here, and Home remounts on every tab switch anyway).
+  // 024 P2 fix: mirror useAgentSSE's own `if (isRunning) return` — `run()` already silently no-ops a
+  // tap while a request is in flight, but this callback used to update activeUsecaseId/dismissed FIRST,
+  // so a card tap during a still-streaming run would relabel the sheet ("Showing: Sort My Care", no
+  // sample-data note) and reopen it over results that are still the PREVIOUS run's (e.g. synthetic Scam
+  // Check cards streaming in under a "Sort My Care" title) — the exact honesty failure row 5 exists to
+  // prevent. Bailing out before any state changes keeps a tap during a run a true no-op, everywhere.
   const submitPrompt = useCallback(
     (text: string, usecaseId?: string) => {
+      if (isRunning) return;
       setPrompt(text);
+      setActiveUsecaseId(usecaseId ?? bypass ?? undefined);
+      setDismissed(false);
+      const anchored = withLocationAnchor(text, readBorough());
       const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
-      void run(text, byok, false, usecaseId ?? bypass ?? undefined);
+      void run(anchored, byok, false, usecaseId ?? bypass ?? undefined);
     },
-    [run, apiKey, model, bypass],
+    [run, apiKey, model, bypass, isRunning],
   );
 
   const onSubmit = useCallback(
@@ -452,25 +616,35 @@ export function Home() {
           coverage={coverage}
         />
 
-        {error && (
-          <div role="alert" className="mt-4 px-3 py-2 text-sm text-data-negative border border-border rounded">
-            {errorMsg}
-          </div>
-        )}
-
-        {/* aria-live announces the router's choice so the routing decision is not sighted-only. */}
-        <p aria-live="polite" className={activeTitle ? "mt-6 text-sm font-semibold text-text" : "sr-only"}>
-          {announce}
-        </p>
-
-        <div aria-live="polite" aria-busy={isRunning} className="mt-3">
-          <A2UISurface />
-        </div>
-
-        <TryAnotherRow mode={suggestions} onPick={submitPrompt} />
-
-        <DevConsole show={devMode} status={status} events={eventLog} />
+        {/* 024 P1: always visible, independent of search state — results now live in the ResultSheet
+            overlay below, not inline, so there is no "hide after first search" reason to hide this too. */}
+        <CategoryCardList onPick={submitPrompt} disabled={isRunning} />
       </main>
+
+      {/* 024 P2: results moved out of <main> into a bottom-sheet overlay, driven by the same
+          submitPrompt funnel that opens it. Closing only hides the sheet — the run underneath (and its
+          eventLog/status/error state, held in this component) is untouched, so reopening by searching
+          again shows it continuing or its finished result. */}
+      <ResultSheet
+        open={sheetOpen}
+        onClose={() => setDismissed(true)}
+        isRunning={isRunning}
+        onStop={stop}
+        label={activeTitle ? `Showing: ${activeTitle}` : "Search results"}
+      >
+        <ResultBody
+          error={error}
+          errorMsg={errorMsg}
+          activeTitle={activeTitle}
+          showSampleNote={showSampleNote}
+          isRunning={isRunning}
+          suggestions={suggestions}
+          onPick={submitPrompt}
+          devMode={devMode}
+          status={status}
+          events={eventLog}
+        />
+      </ResultSheet>
 
       <footer className="mt-8 py-3 text-sm text-text-muted border-t border-border">
         We find it. You sort it. A signpost to official public services, not advice.{" "}
