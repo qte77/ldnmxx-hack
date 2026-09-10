@@ -130,6 +130,7 @@ ADR 0005's source palette, no forced deviations were needed here.** Still spot-c
 later row introduces; don't assume the whole ramp is safe by extension.
 
 ### Current `ui/` — keep / rewrite / delete
+
 | Keep as-is | Rewrite (P0–P4) | Delete |
 |---|---|---|
 | `agent/{useAgentSSE,applyA2UIEvent,contract}.ts`, `config.ts`, `devmode.ts`, `coverage.ts`, `useCoverage.ts`, `suggestions.ts`, `useRotatingPlaceholder.ts`, `globals.d.ts`, `vite-env.d.ts`, `_headers`, `_redirects`, `robots.txt`, `sitemap.xml`, all 6 `ui/tests/*.test.ts` | `App.tsx` (split into shell/screens), `main.tsx` (font imports), `usecase.ts` (signature grows), `tokens.css`, `index.css` (keep `.sr-only`, reduced-motion, `.a2ui-surface` structural rules — retheme values only), `a2uiTheme.ts` (hooks unchanged, values follow tokens.css), `index.html` head (`theme-color`), `favicon.svg`, `404.html` palette, `check-bundle-size.mjs` ceiling, `ui/README.md`, `public/theme-init.js` (extend for 3-state appearance, see below), `tests/e2e/ui_sweep.py` (row 8 only) | `variant-init.js`, `.brand-mark`/`.gh-icon` CSS + `src/assets/icons/github-*.svg`, `VariantToggle` component, `ThemeToggle` header icon (moves into Settings as the Appearance segmented control), `@fontsource/inter` (superseded by Lora for body copy; keep `@fontsource/jetbrains-mono` for the dev console) |
