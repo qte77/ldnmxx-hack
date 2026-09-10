@@ -23,6 +23,14 @@ export interface CatalogEntry {
   keywords: string[];
   example: string;
   blurb: string;
+  // 024 P0.3: Home-screen category-card provenance. Both ABSENT for the two never-auto-routed demo
+  // flows (sort-my-route, founders-copilot) — they have no honest single "official source" to name.
+  source?: string;
+  officialLink?: { text: string; url: string };
+  // A key into GET /api/freshness's corpora[].corpus — absent where no single honest date exists.
+  freshnessKey?: string;
+  // true ONLY for sort-my-scam-check today: synthetic bundled sample, no D1 table, no freshness row.
+  sampleData?: boolean;
 }
 export type Routable = Pick<CatalogEntry, "id" | "title" | "keywords">;
 
@@ -32,6 +40,20 @@ export type Routable = Pick<CatalogEntry, "id" | "title" | "keywords">;
 function requireNonEmptyString(label: string, val: unknown): string {
   if (typeof val !== "string" || val.length === 0) throw new Error(`${label} must be a non-empty string`);
   return val;
+}
+
+function requireOptionalNonEmptyString(label: string, val: unknown): void {
+  if (val === undefined) return;
+  if (typeof val !== "string" || val.length === 0) throw new Error(`${label} must be a non-empty string when present`);
+}
+
+function requireOptionalOfficialLink(id: string, val: unknown): void {
+  if (val === undefined) return;
+  const text = typeof val === "object" && val !== null ? (val as Record<string, unknown>)["text"] : undefined;
+  const url = typeof val === "object" && val !== null ? (val as Record<string, unknown>)["url"] : undefined;
+  if (typeof text !== "string" || text.length === 0 || typeof url !== "string" || url.length === 0) {
+    throw new Error(`catalog ${id}: officialLink must be {text, url} with both non-empty when present`);
+  }
 }
 
 export function assertCatalogEntry(x: unknown): void {
@@ -45,6 +67,13 @@ export function assertCatalogEntry(x: unknown): void {
   }
   requireNonEmptyString(`catalog ${id}: example`, d["example"]);
   requireNonEmptyString(`catalog ${id}: blurb`, d["blurb"]);
+  // 024 P0.3: all four optional, same "authoring slip -> startup error" light-touch style as above.
+  requireOptionalNonEmptyString(`catalog ${id}: source`, d["source"]);
+  requireOptionalOfficialLink(id, d["officialLink"]);
+  requireOptionalNonEmptyString(`catalog ${id}: freshnessKey`, d["freshnessKey"]);
+  if (d["sampleData"] !== undefined && typeof d["sampleData"] !== "boolean") {
+    throw new Error(`catalog ${id}: sampleData must be a boolean when present`);
+  }
 }
 
 function load(raw: unknown): CatalogEntry {
@@ -57,6 +86,12 @@ function load(raw: unknown): CatalogEntry {
     keywords: Array.isArray(kw) ? (kw as string[]) : [],
     example: d["example"] as string,
     blurb: d["blurb"] as string,
+    ...(d["source"] !== undefined ? { source: d["source"] as string } : {}),
+    ...(d["officialLink"] !== undefined
+      ? { officialLink: d["officialLink"] as { text: string; url: string } }
+      : {}),
+    ...(d["freshnessKey"] !== undefined ? { freshnessKey: d["freshnessKey"] as string } : {}),
+    ...(d["sampleData"] !== undefined ? { sampleData: d["sampleData"] as boolean } : {}),
   };
 }
 

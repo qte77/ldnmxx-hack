@@ -56,10 +56,34 @@ export interface UsecaseDef {
   // and is the single authored source of truth. See shared/usecaseCatalog.ts.
   example?: string;
   blurb?: string;
+  // 024 P0.3: Home-screen category-card provenance, same optional-here / catalog-owns-the-meaning
+  // pattern as example/blurb above. ABSENT for the two never-auto-routed demo flows (route, founders)
+  // — they carry no honest single "official source" to point at. See shared/usecaseCatalog.ts.
+  source?: string;
+  officialLink?: { text: string; url: string };
+  // Matches a corpus key in the GET /api/freshness response (worker/src/freshness.ts). Absent where
+  // no single honest ingest date exists (e.g. sort-my-wander unions two sources — see registry.ts's
+  // own dateLabel: "omit").
+  freshnessKey?: string;
+  // true ONLY for sort-my-scam-check: a synthetic bundled sample, no D1 table, no freshness row — the
+  // Home card and result sheet must say so rather than imply a live official lookup.
+  sampleData?: boolean;
 }
 
 // Allow-lists for the strict load guard below. Keep in sync with UsecaseDef / StageDef.
-const USECASE_KEYS: readonly string[] = ["id", "title", "render", "stages", "keywords", "example", "blurb"];
+const USECASE_KEYS: readonly string[] = [
+  "id",
+  "title",
+  "render",
+  "stages",
+  "keywords",
+  "example",
+  "blurb",
+  "source",
+  "officialLink",
+  "freshnessKey",
+  "sampleData",
+];
 const STAGE_KEYS: readonly string[] = ["name", "kind", "events", "exec", "corpus"];
 
 // Narrow to unknown[] (not the any[] that Array.isArray infers, which would defeat the type-safety lints).
@@ -139,6 +163,24 @@ function assertOptionalNonEmptyString(id: string, field: string, val: unknown): 
   }
 }
 
+// 024 P0.3: officialLink, if present, is {text, url} with both non-empty strings — same light-touch
+// style as the rest of this guard (an authoring slip becomes a startup error, not a URL-format audit).
+function assertOptionalOfficialLink(id: string, val: unknown): void {
+  if (val === undefined) return;
+  const text = typeof val === "object" && val !== null ? (val as Record<string, unknown>)["text"] : undefined;
+  const url = typeof val === "object" && val !== null ? (val as Record<string, unknown>)["url"] : undefined;
+  if (typeof text !== "string" || text.length === 0 || typeof url !== "string" || url.length === 0) {
+    throw new Error(`usecase ${id}: officialLink must be {text, url} with both non-empty when present`);
+  }
+}
+
+function assertOptionalBoolean(id: string, field: string, val: unknown): void {
+  if (val === undefined) return;
+  if (typeof val !== "boolean") {
+    throw new Error(`usecase ${id}: ${field} must be a boolean when present`);
+  }
+}
+
 // Tiny load-time guard. Usecases are trusted, build-time JSON (bundled like data/demo/*.json), so this
 // is not external-input validation — it just turns an authoring slip into a clear startup error.
 // Checks the shared workflow-definition/v1 contract core first (id, non-empty ordered stages[].name —
@@ -164,6 +206,10 @@ export function assertUsecaseDef(x: unknown): asserts x is UsecaseDef {
   assertKeywords(id, (d as { keywords?: unknown }).keywords);
   assertOptionalNonEmptyString(id, "example", (d as { example?: unknown }).example);
   assertOptionalNonEmptyString(id, "blurb", (d as { blurb?: unknown }).blurb);
+  assertOptionalNonEmptyString(id, "source", (d as { source?: unknown }).source);
+  assertOptionalOfficialLink(id, (d as { officialLink?: unknown }).officialLink);
+  assertOptionalNonEmptyString(id, "freshnessKey", (d as { freshnessKey?: unknown }).freshnessKey);
+  assertOptionalBoolean(id, "sampleData", (d as { sampleData?: unknown }).sampleData);
   assertStageShapes(id, d.stages);
 }
 
