@@ -23,4 +23,12 @@ describe("withLocationAnchor", () => {
   it("appends the borough as a location anchor when the ask names no location of its own", () => {
     expect(withLocationAnchor("GP near me", "Camden")).toBe("GP near me, Camden");
   });
+
+  it("leaves an empty/whitespace-only ask empty even with a borough set — never invents a query", () => {
+    // A bare borough is not an ask: the router would otherwise see ", Camden" instead of "" and might
+    // guess a workflow, brushing the locked "no silent default" decision (ADR — one input, no
+    // mount-time flagship fallback). An empty ask must reach the router exactly as empty.
+    expect(withLocationAnchor("", "Camden")).toBe("");
+    expect(withLocationAnchor("   ", "Camden")).toBe("   ");
+  });
 });

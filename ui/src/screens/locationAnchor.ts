@@ -9,6 +9,10 @@ import { resolvePlace } from "../../../shared/places";
 
 export function withLocationAnchor(text: string, borough: string | null): string {
   if (!borough) return text;
+  // An empty/whitespace-only ask is not an ask — anchoring it would turn "" into ", Camden", which
+  // could reach the router as a non-empty prompt and make it guess a workflow instead of correctly
+  // seeing an empty ask (ADR: one input, no silent mount-time/default fallback).
+  if (!text.trim()) return text;
   if (normalisePostcode(text) !== null) return text;
   if (resolvePlace(text) !== null) return text;
   return `${text}, ${borough}`;

@@ -357,16 +357,21 @@ function SampleCard() {
 function CategoryCard({
   entry,
   onPick,
+  disabled,
 }: {
   entry: CatalogEntry;
   onPick: (text: string, usecaseId: string) => void;
+  disabled: boolean;
 }) {
   const isDemo = entry.keywords.length === 0;
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={() => onPick(entry.example, entry.id)}
-      className="text-left p-4 rounded-[var(--radius-card)] bg-surface-lift border border-border hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      // 024 P2 fix: submitPrompt no-ops while a run is in flight (never relabels the sheet mid-stream) —
+      // disable the visible affordance too, so that no-op has a reason instead of reading as broken.
+      className="text-left p-4 rounded-[var(--radius-card)] bg-surface-lift border border-border hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
     >
       <span className="flex items-center justify-between gap-2">
         <span className="font-semibold text-text">{entry.title}</span>
@@ -388,13 +393,19 @@ function CategoryCard({
 // (results live in the ResultSheet overlay, not inline, so there is no "collapse after first search"
 // reason to hide this the way the Hero's own extras collapse). No service-notice band, no "Recently
 // looked up" — both dropped per the plan (no honest backing data yet).
-function CategoryCardList({ onPick }: { onPick: (text: string, usecaseId: string) => void }) {
+function CategoryCardList({
+  onPick,
+  disabled,
+}: {
+  onPick: (text: string, usecaseId: string) => void;
+  disabled: boolean;
+}) {
   return (
     <section className="mt-8">
       <h2 className="text-lg font-bold text-text">Common questions</h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {CATEGORY_CARDS.map((entry) => (
-          <CategoryCard key={entry.id} entry={entry} onPick={onPick} />
+          <CategoryCard key={entry.id} entry={entry} onPick={onPick} disabled={disabled} />
         ))}
       </div>
     </section>
@@ -527,8 +538,15 @@ export function Home() {
   // another:" chips, and category-card taps alike — gets the same default-location ANCHOR, one place,
   // DRY. `readBorough()` is read fresh per submit (no state needed: it is write-once in Settings,
   // read-only here, and Home remounts on every tab switch anyway).
+  // 024 P2 fix: mirror useAgentSSE's own `if (isRunning) return` — `run()` already silently no-ops a
+  // tap while a request is in flight, but this callback used to update activeUsecaseId/dismissed FIRST,
+  // so a card tap during a still-streaming run would relabel the sheet ("Showing: Sort My Care", no
+  // sample-data note) and reopen it over results that are still the PREVIOUS run's (e.g. synthetic Scam
+  // Check cards streaming in under a "Sort My Care" title) — the exact honesty failure row 5 exists to
+  // prevent. Bailing out before any state changes keeps a tap during a run a true no-op, everywhere.
   const submitPrompt = useCallback(
     (text: string, usecaseId?: string) => {
+      if (isRunning) return;
       setPrompt(text);
       setActiveUsecaseId(usecaseId ?? bypass ?? undefined);
       setDismissed(false);
@@ -536,7 +554,7 @@ export function Home() {
       const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
       void run(anchored, byok, false, usecaseId ?? bypass ?? undefined);
     },
-    [run, apiKey, model, bypass],
+    [run, apiKey, model, bypass, isRunning],
   );
 
   const onSubmit = useCallback(
@@ -600,7 +618,7 @@ export function Home() {
 
         {/* 024 P1: always visible, independent of search state — results now live in the ResultSheet
             overlay below, not inline, so there is no "hide after first search" reason to hide this too. */}
-        <CategoryCardList onPick={submitPrompt} />
+        <CategoryCardList onPick={submitPrompt} disabled={isRunning} />
       </main>
 
       {/* 024 P2: results moved out of <main> into a bottom-sheet overlay, driven by the same
