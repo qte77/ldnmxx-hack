@@ -35,3 +35,13 @@ exists, so the preflight step fails fast by design. **This arc's agent-executabl
 | 9 | Version + release (v2.0.0) | shipped, PR [#299](https://github.com/qte77/ldnmxx-hack/pull/299) + tag [v2.0.0](https://github.com/qte77/ldnmxx-hack/releases/tag/v2.0.0) |
 | 10 | Deploy + live verification | dispatched, blocked on owner ([run 34520670498](https://github.com/qte77/ldnmxx-hack/actions/runs/34520670498): `waiting` on Environment approval; secrets also absent) |
 | 11 | Handoffs README housekeeping | done — resume pointer fixed early this arc (`docs/handoffs/README.md`), this progress table + the plan's remaining-work table done in PR [#298](https://github.com/qte77/ldnmxx-hack/pull/298) and this closing pass |
+
+## Post-close follow-ups (not plan rows — requested after the arc closed)
+
+| Item | Status |
+|---|---|
+| Resolve `ui/` npm audit (8 vulns: 4 moderate, 4 high) | shipped, PR [#301](https://github.com/qte77/ldnmxx-hack/pull/301) — `npm audit fix` (no `--force`); `package-lock.json` only |
+| Perf quick wins (lazy-load Settings, vendor chunk split, prune dead CSS, preload body font) + drop the GitHub footer links | shipped, PR [#302](https://github.com/qte77/ldnmxx-hack/pull/302) |
+| Match the design artifact's full visual fidelity (outline buttons incl. `.qte-button`, transparent+bordered `.qte-card`/category cards, ResultSheet restructured to the design's `.dialog` anatomy with a Source/Updated meta row) | shipped, PR [#303](https://github.com/qte77/ldnmxx-hack/pull/303) |
+
+Row 10 (deploy) is still unresolved as of this pass — not re-verified since the closing note above; treat as still owner-gated until re-checked.
