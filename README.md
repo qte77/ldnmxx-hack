@@ -62,10 +62,13 @@ User types one ask ─▶ UI ─▶ POST /api/run (prompt) ─▶ router: heuris
 
 **URL parameters** (all optional): `?usecase=<id>` selects the workflow (`founders-copilot` · `sort-my-route` ·
 `sort-my-care` · `sort-my-wander` · `sort-my-scam-check` · `sort-my-food-hygiene`); `?theme=light|dark` forces
-the theme (else system); `?variant=thames|indigo|green` picks the London accent (else Thames Teal; persisted
-in `localStorage`, cycled by the swatch button beside the theme toggle); `?dev=1` reveals the AG-UI/A2UI dev
-console + ⚙ Key panel (also `Ctrl+K` / `Ctrl+I`; persisted in `localStorage`); `?demo=1` forces the Worker's
-deterministic path. No secret is ever read from the URL or inlined into the SPA bundle.
+the theme (else system; also settable from **Settings → Appearance**, 024); `?dev=1` reveals the AG-UI/A2UI dev
+console + ⚙ Key panel (also `Ctrl+K` / `Ctrl+I`; persisted in `localStorage`). No secret is ever read from the
+URL or inlined into the SPA bundle.
+
+> **Screenshots below predate the 024 app-shell redesign** (civic navy/red palette, serif type,
+> tab-based Home/Settings) — retaking them needs a human with a browser, tracked as an open item on
+> plan 024's row 7 PR rather than attempted here.
 
 <details>
 <summary>Screenshot — Founder's Copilot</summary>
@@ -114,12 +117,10 @@ keyless OGL sources and publishes normalised artifacts to the rolling
 and every corpus degrades to its bundled sample whenever D1 is unbound, failing, or not yet swapped.
 
 **Switches:** `?usecase=founders-copilot|sort-my-route|sort-my-care|sort-my-wander|sort-my-scam-check|sort-my-food-hygiene`
-picks the workflow (every `sort-my-*` corpus flow is deterministic — model-free + fetch-free)
-· a **Demo⇄Live toggle** in the header
-(or `?demo=1`) forces the keyless deterministic stub even with a model key set — the events header then
-shows an honest chip (`LIVE · <model> · ~N tok` / `DEMO · deterministic` / `STUB · fell back`) · `?theme=light|dark`
-overrides the theme · `?variant=thames|indigo|green` picks the London accent (ADR 0005)
-· BYOK sends `Authorization: Bearer <key>` to the Worker instead of its server-side key.
+picks the workflow (every `sort-my-*` corpus flow is deterministic — model-free + fetch-free) · the
+events header shows an honest chip on every run (`LIVE · <model> · ~N tok` / `DEMO · deterministic` /
+`STUB · fell back`) · `?theme=light|dark` overrides the theme, or set it from **Settings → Appearance**
+(024) · BYOK sends `Authorization: Bearer <key>` to the Worker instead of its server-side key.
 
 ## Why
 
@@ -140,10 +141,11 @@ agent built in a day joins what incumbents can't, and swaps between both from on
 - **Arize** — LLM tracing: one span per stage (`plan → tool → render`), exported to Arize over **OTLP** when
   `ARIZE_API_KEY`+`ARIZE_SPACE_ID` are set (console otherwise); browser spans forward via `POST /trace`.
 - **UI** (React 19 · Tailwind v4 · A2UI) — a static Pages bundle that issues **no external request**: the CSP
-  is `script/style/font-src 'self'`, so Inter + JetBrains Mono ship self-hosted via `@fontsource` and even
-  axe-core is vendored. The theme is **project-owned** ([ADR 0005](docs/adr/0005-project-owned-theme.md)):
-  fo Linear neutrals plus three London accent variants (`?variant=`), light + dark, every pair
-  contrast-measured and gated by the e2e sweep's variant × scheme axe matrix.
+  is `script/style/font-src 'self'`, so Cormorant Garamond + Lora + JetBrains Mono ship self-hosted via
+  `@fontsource` and even axe-core is vendored. A two-tab **Home/Settings** shell (`ui/src/shell/`) replaces
+  the old single-page layout. The theme is **project-owned** ([ADR 0006](docs/adr/0006-civic-navy-red-palette.md),
+  superseding ADR 0005): one sourced civic navy/red palette, light + dark, both schemes copied verbatim
+  from the design's own hex ramps and contrast-measured, gated by the e2e sweep's scheme axe matrix.
 
 ## Refs
 

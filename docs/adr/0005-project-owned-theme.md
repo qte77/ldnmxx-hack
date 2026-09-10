@@ -1,6 +1,6 @@
 ---
 title: "ADR 0005 — sortmy.london owns its theme: diverge from the vendored qte77 brand default"
-status: accepted
+status: superseded
 date: 2026-07-23
 ---
 
@@ -8,8 +8,14 @@ date: 2026-07-23
 
 ## Status
 
-**Accepted** (2026-07-23) and shipped with **plan 017 · P1**. Governs `ui/src/tokens.css` and every
-consumer of its tokens.
+**Superseded (2026-09-10) by [ADR 0006](0006-civic-navy-red-palette.md).** The fo Linear neutrals and
+the three accent variants (`[data-variant]`) described below are gone from `ui/src/tokens.css` — plan
+024 replaced them with one sourced civic navy/red palette. The **project-owns-its-theme** principle
+this ADR established (do not re-vendor `qte77/brand`; measure contrast independently) still holds and
+carries forward into ADR 0006. Kept below for historical record.
+
+**Originally accepted** (2026-07-23) and shipped with **plan 017 · P1**. Governs `ui/src/tokens.css` and
+every consumer of its tokens.
 
 ## Context
 

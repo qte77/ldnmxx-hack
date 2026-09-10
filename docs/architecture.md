@@ -3,8 +3,9 @@
 ## One core, three seams
 
 One `POST /run?usecase=<id>` endpoint → a small `runUsecase` interpreter (plan → tool → render) → an A2UI
-HUD. The SPA flips between the two demo workflows (**Founder's Copilot ⇄ Sort My Route**) via a toggle over the
-`?usecase=` param; each workflow's stage choreography is a `usecases/*.json` read at runtime
+HUD. The SPA is single-input (024: behind a two-tab Home/Settings shell) — a free-text ask on Home
+auto-routes to a workflow (ADR 0004); `?usecase=` is an explicit bypass for deep links, e.g.
+**Founder's Copilot** / **Sort My Route**. Each workflow's stage choreography is a `usecases/*.json` read at runtime
 (`worker/src/usecases.ts`), and render + deterministic query dispatch **by name** through the
 `worker/src/workflows.ts` **registry** (`render` by mode — `founders`/`route`/`corpus`/`scam`; `query` by
 exec) — so adding a **corpus** (nearest-N) workflow is **register-only**, never an engine edit (open/closed;
@@ -96,9 +97,12 @@ forwarded to the Worker as an `Authorization` header and resolved **server-side*
 leaked browser-BYOK path (`liveAgent` → OpenRouter) was deleted and no `VITE_*` var can inline a key into
 the bundle. `tests/e2e/ui_sweep.py` fails if any request reaches a model host.
 
-**Civic-clean UI + gated dev mode (013 · B).** The default UI is task-first — prompt + Run + the A2UI
-surface. The AG-UI event console and the ⚙ Key panel are dev-only, revealed by `?dev=1` / `Ctrl+K`
-(persisted in `localStorage["qte77-dev"]`), so the civic default exposes nothing model- or key-related.
+**Civic-clean UI + gated dev mode (013 · B; shell 024).** The app ships behind a two-tab shell
+(`ui/src/shell/AppShell.tsx` + `TabBar.tsx`, replacing the prior single-page layout) — **Home**
+(task-first: prompt + Run + the A2UI surface) and **Settings** (preferences; an Appearance
+System/Light/Dark control ships now, `ui/src/prefs.ts`/`screens/Settings.tsx`, ADR 0006). The AG-UI
+event console and the ⚙ Key panel stay dev-only within Home, revealed by `?dev=1` / `Ctrl+K` (persisted
+in `localStorage["qte77-dev"]`), so the civic default exposes nothing model- or key-related.
 
 **Per-stage model dispatch (#18).** On the keyless free-chain path, a stage tagged `exec` in its
 `usecases/*.json` runs a forced tool (`assess_stage` / `search_opportunities`) through the SAME provider
