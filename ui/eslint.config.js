@@ -71,6 +71,25 @@ export default tseslint.config(
       "@typescript-eslint/no-confusing-void-expression": "off",
       complexity: ["error", 12],
       "sonarjs/cognitive-complexity": ["error", 15],
+      // Design-adherence nudges (arc 024, ported from the Claude Design system's own lint config —
+      // see docs/plans/024-app-shell-redesign.md). "warn", not "error": pre-existing literal values
+      // (44px hit targets, --radius-card's 14px) are legitimate one-offs, not violations to force-fix.
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+          message: "Raw hex colour — use a token via var(--color-*) instead.",
+        },
+        {
+          selector: "Literal[value=/\\b\\d+px\\b/]",
+          message: "Raw px value — use a spacing/radius token via var(--space-*|--radius-*) instead.",
+        },
+        {
+          selector:
+            "Literal[value=/font-family\\s*:\\s*(?!['\"]?(?:Cormorant Garamond|Lora|JetBrains Mono))/i]",
+          message: "Font not in the design system. Available: Cormorant Garamond, Lora, JetBrains Mono.",
+        },
+      ],
     },
   },
   // Disable type-aware rules on plain JS config files (e.g. eslint.config.js itself).

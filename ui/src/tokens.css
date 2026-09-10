@@ -1,128 +1,126 @@
 /*
- * tokens.css — sortmy.london design tokens (Tailwind v4 @theme). PROJECT-OWNED — see ADR 0005.
+ * tokens.css — sortmy.london design tokens (Tailwind v4 @theme). PROJECT-OWNED — see ADR 0006.
  *
- * History: this file was VENDORED byte-identical from qte77/brand (EyeRest: amber on parchment) and
- * its old header said "do not hand-tune — re-vendor upstream". Arc 017 P1 deliberately ENDS that:
- * the app now owns its theme, built on the fo `linear.css` system (near-black/white neutrals, one
- * accent, one glow) adapted to London via three trademark-safe accent variants. A future session
- * must NOT "fix" this by re-vendoring EyeRest — read ADR 0005 first.
+ * History: arc 017 (ADR 0005) built this on fo's linear.css system with three trademark-safe accent
+ * variants (Thames Teal / Heritage Indigo / Westminster Green). Arc 024 supersedes that: the app now
+ * follows a Claude Design mockup ("Mobile app design planning" project, SortMyLondon.dc.html) — one
+ * civic navy/red palette (a toned-down London Underground navy + roundel red), sourced for BOTH light
+ * and dark (the design defines its own appearance: system|light|dark control), replacing the 3-variant
+ * system entirely. See ADR 0006 for the full rationale.
  *
- * Token NAMES are unchanged from the vendored file (plus two additions), so every Tailwind utility
+ * Token NAMES are unchanged from the prior file (plus new additions below), so every Tailwind utility
  * already in use — bg-bg, text-primary, border-border, text-data-negative, … — keeps working.
  *
- * Every colour pair below is WCAG-measured, not eyeballed (P1, 2026-07-23). Three results forced
- * deviations from the upstream palettes; each is marked MEASURED with its ratio:
- *   1. fo's dark indigo #5e6ad2 is 3.89:1 on the dark card surface — fails AA as text.
- *   2. fo's semantic trio (#e5484d / #0ca30c / #e5a50a) is tuned for dark UI and fails AA on the
- *      light neutrals (3.59 / 3.08 / 1.98), so light mode carries deepened equivalents.
- *   3. fo's hairline --border is ~1.4:1 — correct for a decorative card edge, but a form control's
- *      border IS its affordance (WCAG 1.4.11 needs 3:1), hence --color-border-strong.
+ * Colour values below are copied VERBATIM from the design's own source script, not derived or
+ * eyeballed. Contrast was independently verified (WCAG relative-luminance formula, 2026-09-10) —
+ * every pairing below clears AA with real margin (6.4:1 or better), so unlike ADR 0005 no forced
+ * deviations from the source palette were needed. Full numbers: docs/plans/024-app-shell-redesign.md
+ * "Source map". --color-primary-2 (the design's red accent-2 role) is deliberately NOT added here —
+ * its one use in the source (a "service notice" band) has no honest backing data in this app and was
+ * dropped from the rebuild, so the token would ship unconsumed; add it if a later row finds a real use.
  *
  * Consumed by index.css:  @import "tailwindcss"; @import "./tokens.css";
  */
 @theme {
-  /* Neutrals — fo linear.css, light scheme, WARMED for a reassuring civic feel (020 P4b): bg/surface/
-   * hairline carry a faint warm cast while the CONTRAST-CRITICAL pairs are untouched — the card lift
-   * stays pure #ffffff (the measured 4.96:1 accent + AA link ratios hold), text/border-strong unchanged.
-   * Dark swaps at runtime in the two blocks below. */
-  --color-bg: #fdfcf9;
-  --color-surface: #f4f2ed;
-  /* Cards sit on --surface-lift: in light it is pure white (a warm-neutral page lifting to a clean
-   * card), with the soft --shadow-card giving a gentle, reassuring elevation; in dark the lift itself
-   * is the separation. */
+  /* Light scheme (default) — the design's LIGHT palette. */
+  --color-bg: #f5f6f8;
+  --color-surface: #e8eaf0;
+  /* Cards sit on --surface-lift: pure white for a clean lift off the tinted page (same intensity
+   * pattern as the prior palette), with --shadow-card giving a gentle elevation. */
   --color-surface-lift: #ffffff;
-  --color-border: #d7d3cb;
-  /* Interactive-control borders only (inputs, toggles) — 3.84:1 light / 3.31:1 dark. MEASURED. */
-  --color-border-strong: #767c88;
-  --color-text: #0d0e0f;
-  --color-text-muted: #4b515b;
+  --color-border: color-mix(in srgb, #132687 20%, transparent);
+  /* Interactive-control borders only (inputs, toggles) — 3.82:1 on --surface. MEASURED. */
+  --color-border-strong: #6f7587;
+  --color-text: #141a26;
+  --color-text-muted: #535a6b;
 
-  /* Accent — variant A "Thames Teal", the default. B/C swap the pair via [data-variant] below.
-   * 4.96:1 on the card surface, 5.28:1 for the button label on the accent. MEASURED. */
-  --color-primary: #0e7581;
-  --color-primary-on: #fcfcfd;
-  --color-glow: rgb(14 117 129 / 0.07);
+  /* Accent — the design's one navy palette (no variants). 6.48:1 for a filled-button label on
+   * --surface, 11.74:1 for the deeper accent-700 icon/active-tab role. MEASURED. */
+  --color-primary: #2f4cc9;
+  --color-primary-on: #ffffff;
+  --color-glow: rgb(47 76 201 / 0.07);
 
-  /* Semantic status accents (event/status chips, error alerts). Light values are DEEPENED from
-   * fo's — see header note 2. Light: 5.38 / 5.43 / 5.15. MEASURED. */
+  /* Semantic status accents — unchanged from ADR 0005 (already WCAG-measured). The design has no
+   * equivalent tokens; these aren't part of what arc 024 is matching. */
   --color-data-positive: #157347;
   --color-data-caution: #8a5a00;
   --color-data-negative: #c62828;
 
-  /* Inter (UI/prose) + JetBrains Mono (numerals/code), self-hosted via @fontsource in main.tsx. */
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Cormorant Garamond (headings, weight 600 — the design's only heading weight) + Lora (body)
+   * replace Inter; JetBrains Mono stays for the dev console. Self-hosted via @fontsource in main.tsx. */
+  --font-heading: "Cormorant Garamond", system-ui, sans-serif;
+  --font-heading-weight: 600;
+  --font-body: Lora, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
   --radius-card: 14px;
-  /* 020 P4b: a soft, WARM-tinted elevation (was a near-invisible whisper) so cards feel gently raised
-   * and reassuring — subtle, not a heavy drop shadow. Dark keeps its own stronger shadow below. */
-  --shadow-card: 0 1px 2px rgb(60 50 35 / 0.05), 0 8px 20px rgb(60 50 35 / 0.08);
+  --shadow-card: 0 1px 2px rgb(20 26 38 / 0.05), 0 8px 20px rgb(20 26 38 / 0.08);
+
+  /* New scale for the app-shell/Home/Settings/sheet screens (arc 024) — fractional values copied
+   * verbatim from the Claude Design "Classical" system (do not round to a 4/8px grid). Shadows are
+   * ink-tinted to OUR --color-text/--color-neutral-900-equivalent rather than the DS's own ink hex,
+   * same structure and alpha steps as the source. */
+  --space-1: 4.6px;
+  --space-2: 9.2px;
+  --space-3: 13.8px;
+  --space-4: 18.4px;
+  --space-6: 27.6px;
+  --space-8: 36.8px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 7px;
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #222834 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #222834 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #222834 22%, transparent);
 }
 
-/*
- * The three London accent variants. Each rule sets ONLY the accent PAIR (light + dark) — the
- * scheme blocks below pick from the pair — so a variant is two colours, never a duplicated palette.
- * Default (no attribute) is A Thames Teal, already literal in @theme above.
- * Read before first paint by ui/public/variant-init.js: ?variant= › localStorage › default.
- */
 :root {
   color-scheme: light dark;
-  --accent-l: #0e7581;
-  --accent-d: #2ea9b6;
-  --accent-rgb: 14 117 129;
-}
-/* B "Heritage Indigo". Dark is #7b86e3, NOT fo's #5e6ad2 — see header note 1. 5.77 / 5.54. */
-:root[data-variant="indigo"] {
-  --accent-l: #4b53c4;
-  --accent-d: #7b86e3;
-  --accent-rgb: 75 83 196;
-  --color-primary: var(--accent-l);
-}
-/* C "Westminster Green". 5.49 light / 6.99 dark on the card surface. MEASURED. */
-:root[data-variant="green"] {
-  --accent-l: #2f6f4f;
-  --accent-d: #4fae82;
-  --accent-rgb: 47 111 79;
-  --color-primary: var(--accent-l);
 }
 
 /*
  * Dark scheme, twice: once for system-dark when no explicit light is forced, once for the explicit
- * html[data-theme="dark"] attribute (set by the toggle / anti-FOUC guard). Both carry (0,2,0)
- * specificity — the SAME as a [data-variant] rule — so they must stay AFTER the variant blocks:
- * source order is what makes dark+variant resolve to the variant's dark accent.
+ * html[data-theme="dark"] attribute (set by the Settings Appearance control / anti-FOUC guard in
+ * theme-init.js). Values are the design's own sourced DARK palette (not derived) — see the plan's
+ * source map. Both blocks carry (0,2,0) specificity, so they must stay in this source order.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-bg: #08090a;
-    --color-surface: #0f1011;
-    --color-surface-lift: #141516;
-    --color-border: #23252a;
-    --color-border-strong: #62666e;
-    --color-text: #f7f8f8;
-    --color-text-muted: #8a8f98;
-    --color-primary: var(--accent-d);
-    --color-primary-on: #08090a;
-    --color-glow: rgb(var(--accent-rgb) / 0.1);
+    --color-bg: #11151f;
+    --color-surface: #1a2030;
+    --color-surface-lift: #232b3d;
+    --color-border: #3b4356;
+    --color-border-strong: #9aa3b5;
+    --color-text: #eceef3;
+    --color-text-muted: #c3c9d6;
+    --color-primary: #7f96e9;
+    --color-primary-on: #11151f;
+    --color-glow: rgb(127 150 233 / 0.1);
     --color-data-positive: #4cc38a;
     --color-data-caution: #e5a50a;
     --color-data-negative: #f2555a;
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 3px 10px rgb(0 0 0 / 0.35);
+    --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.5);
   }
 }
 :root[data-theme="dark"] {
-  --color-bg: #08090a;
-  --color-surface: #0f1011;
-  --color-surface-lift: #141516;
-  --color-border: #23252a;
-  --color-border-strong: #62666e;
-  --color-text: #f7f8f8;
-  --color-text-muted: #8a8f98;
-  --color-primary: var(--accent-d);
-  --color-primary-on: #08090a;
-  --color-glow: rgb(var(--accent-rgb) / 0.1);
+  --color-bg: #11151f;
+  --color-surface: #1a2030;
+  --color-surface-lift: #232b3d;
+  --color-border: #3b4356;
+  --color-border-strong: #9aa3b5;
+  --color-text: #eceef3;
+  --color-text-muted: #c3c9d6;
+  --color-primary: #7f96e9;
+  --color-primary-on: #11151f;
+  --color-glow: rgb(127 150 233 / 0.1);
   --color-data-positive: #4cc38a;
   --color-data-caution: #e5a50a;
   --color-data-negative: #f2555a;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 3px 10px rgb(0 0 0 / 0.35);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.5);
 }

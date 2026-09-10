@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Anti-FOUC theme + accent-variant init — external (not inline) so the page CSP stays strict
-         (script-src 'self'). Blocking in <head>, so both still run before first paint. -->
+    <!-- Anti-FOUC theme init — external (not inline) so the page CSP stays strict (script-src
+         'self'). Blocking in <head>, so it still runs before first paint. Arc 024 dropped the
+         3-variant system (and its variant-init.js sibling) — theme-init.js already handles the
+         system/light/dark cases the Settings Appearance control needs. -->
     <script src="/theme-init.js"></script>
-    <script src="/variant-init.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="https://sortmy.london/" />
     <!-- The one hex that cannot be a token: a meta attribute takes no var(). Keep in sync with
-         --color-primary's default (variant A Thames Teal) in ui/src/tokens.css. -->
-    <meta name="theme-color" content="#0e7581" />
+         --color-primary's light-scheme value in ui/src/tokens.css. -->
+    <meta name="theme-color" content="#2f4cc9" />
     <title>sortmy.london — ask in your own words, get the official source</title>
     <meta
       name="description"
