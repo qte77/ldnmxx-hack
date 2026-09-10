@@ -2,21 +2,22 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [022 — nearest-N depth](022-nearest-n-depth.md) — start at P6 (owner deploy + live re-probe)
+## ▶ Resume point: [024 — App shell redesign](024-app-shell-redesign.md) — P0 row 1 (tokens & fonts) in progress
 
-Arc 021 **shipped + DEPLOYED**: the landing fold now shows the value proposition — covered categories,
-the **live** record count read from `/api/freshness` (112,000+), a sample answer card, and a place-less
-ask that reads as one step short of an answer rather than a form error (#265/#266; live sweep PASS,
-axe 0/0). Arc 022 carries the same idea into the **answer**: **5 results by default** (free — `BBOX_CAP`
-already reads up to 50 nearest rows) and a provenance line naming the pool, "Nearest 5 · from 67,082
-official records", read from `corpus_meta`. Everything is merged; only the **owner deploy + live
-re-probe** remain. Predecessors 018–021 CLOSED.
+Arc 024 rebuilds the sortmy.london UI to match a Claude Design mockup: a tab-based app shell
+(Home/Settings) replacing the single-page layout, a sourced civic navy/red palette (light + dark, both
+directly from the design) replacing the three locked accent variants, and Cormorant Garamond + Lora
+serif type replacing Inter — superseding ADR 0005 and handoff 017's 3-variant decision (ADR 0006 lands
+in row 7). See the plan's Handoff section for the full loop, owner gates, and watch-outs. Predecessors
+018–023 CLOSED (023's placeholder-date fix shipped; see its own handoff for detail).
 
 ## Index
 
 | # | Handoff | State |
 |---|---|---|
-| 022 | [Nearest-N depth](022-nearest-n-depth.md) | **OPEN** — start at P6 (owner deploy) |
+| 024 | [App shell redesign](024-app-shell-redesign.md) | **OPEN** — P0 row 1 in progress |
+| 023 | [Placeholder dates](023-placeholder-dates.md) | closed — shipped |
+| 022 | [Nearest-N depth](022-nearest-n-depth.md) | closed — shipped + deployed |
 | 021 | [Value-proposition fold](021-value-prop-fold.md) | closed — shipped + deployed; live sweep PASS |
 | 020 | [UX overhaul](020-ux-overhaul.md) | closed — routing · place-names · examples · visual/a11y |
 | 019 | [Backlog clear](019-backlog-clear.md) | closed — freshness watchdog |
