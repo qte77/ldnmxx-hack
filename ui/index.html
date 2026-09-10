@@ -10,6 +10,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="https://sortmy.london/" />
+    <!-- Perf: Lora 400 (body text) is the highest-traffic font — used everywhere, unlike the lower-
+         traffic Cormorant Garamond 600 / Lora 600 / JetBrains Mono. Preloading it cuts FOUT/layout
+         shift on first paint. The hashed filename is content-derived by Vite (stable across builds
+         while the @fontsource/lora package version is unchanged) — if a font-package bump ever
+         changes it, this preload silently stops matching and the optimization is lost, not broken;
+         re-run `npm run build` and update the hash here when that happens. -->
+    <link
+      rel="preload"
+      href="/assets/lora-latin-400-normal-DnxXpLNu.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <!-- The one hex that cannot be a token: a meta attribute takes no var(). Keep in sync with
          --color-primary's light-scheme value in ui/src/tokens.css. -->
     <meta name="theme-color" content="#2f4cc9" />
