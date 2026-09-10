@@ -12,8 +12,8 @@ the full onboarding (status, next steps in order, the loop, owner gates, command
 complete source map (exact sourced light+dark palette, file/function line refs, token strategy), and
 the single remaining-work table (rows 1–11).
 
-**Current state (2026-09-10):** P0 row 1 (tokens & fonts) in progress. Rows 2–11 not started. This
-stub becomes the living handoff — its Progress table below gets ticked per row as PRs land (per
+**Current state (2026-09-10):** P0 row 1 (tokens & fonts) shipped, PR [#288](https://github.com/qte77/ldnmxx-hack/pull/288) open pending CI. Rows 2–11 not started. This stub becomes the living
+handoff — its Progress table below gets ticked per row as PRs land (per
 `handoff-numbering-convention`: one plan + one living handoff per arc, no new handoff number until the
 arc closes).
 
@@ -21,7 +21,7 @@ arc closes).
 
 | Row | Item | Status |
 |---|---|---|
-| 1 | Tokens & fonts | in progress |
+| 1 | Tokens & fonts | PR [#288](https://github.com/qte77/ldnmxx-hack/pull/288) open, pending CI |
 | 2 | Shared contracts (shell split, `prefs.ts`) | not started |
 | 3 | Catalog fields | not started |
 | 4 | Home screen | not started |
