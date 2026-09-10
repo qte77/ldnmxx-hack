@@ -2,20 +2,22 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [024 — App shell redesign](024-app-shell-redesign.md) — P0 row 1 (tokens & fonts) in progress
+## ▶ Resume point: [024 — App shell redesign](024-app-shell-redesign.md) — v2.0.0 shipped; start at row 10 (owner deploy)
 
-Arc 024 rebuilds the sortmy.london UI to match a Claude Design mockup: a tab-based app shell
+Arc 024 rebuilt the sortmy.london UI to match a Claude Design mockup: a tab-based app shell
 (Home/Settings) replacing the single-page layout, a sourced civic navy/red palette (light + dark, both
 directly from the design) replacing the three locked accent variants, and Cormorant Garamond + Lora
-serif type replacing Inter — superseding ADR 0005 and handoff 017's 3-variant decision (ADR 0006 lands
-in row 7). See the plan's Handoff section for the full loop, owner gates, and watch-outs. Predecessors
-018–023 CLOSED (023's placeholder-date fix shipped; see its own handoff for detail).
+serif type replacing Inter — superseding ADR 0005 and handoff 017's 3-variant decision (see
+[ADR 0006](../adr/0006-civic-navy-red-palette.md)). Rows 1–9 and 11 are merged and **v2.0.0 is tagged +
+released**. Only row 10 (deploy) remains — dispatched and sitting on the `production` Environment's
+required-reviewer approval (a deliberate owner checkpoint), with `CLOUDFLARE_API_TOKEN`/
+`CLOUDFLARE_ACCOUNT_ID` also unprovisioned. Predecessors 018–023 CLOSED.
 
 ## Index
 
 | # | Handoff | State |
 |---|---|---|
-| 024 | [App shell redesign](024-app-shell-redesign.md) | **OPEN** — P0 row 1 in progress |
+| 024 | [App shell redesign](024-app-shell-redesign.md) | v2.0.0 shipped — **OPEN**, row 10 owner deploy only |
 | 023 | [Placeholder dates](023-placeholder-dates.md) | closed — shipped |
 | 022 | [Nearest-N depth](022-nearest-n-depth.md) | closed — shipped + deployed |
 | 021 | [Value-proposition fold](021-value-prop-fold.md) | closed — shipped + deployed; live sweep PASS |

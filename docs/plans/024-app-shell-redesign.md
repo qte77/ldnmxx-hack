@@ -1,7 +1,7 @@
 ---
 title: "App shell redesign — civic navy/red palette, serif type, tab IA"
 type: plan
-status: "P0 in progress (2026-09-10)"
+status: "rows 1-9,11 shipped; row 10 (deploy) blocked on owner approval (2026-09-10)"
 refs:
   - docs/adr/0005-project-owned-theme.md (superseded by this arc's ADR 0006)
   - docs/handoffs/017-single-input-london-theme.md (3-variant decision, also superseded)
@@ -30,20 +30,29 @@ to one palette is unaffected and reinforced (the design never offered a variant 
 
 ## Handoff (read this first)
 
-**Status: P0–P4 shipped (rows 1–7 merged); P5 in progress (row 8, PR #298).** Rows 9–10 (version
-bump/release, deploy) remain; row 10 is owner-gated.
+**Status: rows 1–9 and 11 shipped. Row 10 (deploy) is dispatched and blocked on the owner.** v2.0.0 is
+tagged and [released](https://github.com/qte77/ldnmxx-hack/releases/tag/v2.0.0). This arc's code/docs
+work is complete; only the production deploy remains, and it is a HUMAN checkpoint, not a missing
+step an agent can finish.
 
 **What shipped:** row 1 tokens/fonts (#288), row 2 shell/contracts (#293), row 3 catalog fields (#289),
-rows 4+5 Home category cards + Result sheet, combined (#297 — row 2's `ResultSheet` deviation coupled
-them), row 6 Settings full build-out (#296), row 7 docs/ADR 0006 (#295). Row 8 (e2e sweep + this
-housekeeping pass) is PR #298 — see the "Row 8 findings" note below for a real bug it found and fixed.
+rows 4+5 Home category cards + Result sheet combined (#297 — row 2's `ResultSheet` deviation coupled
+them), row 6 Settings full build-out (#296), row 7 docs/ADR 0006 (#295), row 8 e2e sweep fix + rows
+1-3/6/7 table housekeeping (#298), row 9 version bump to v2.0.0 + CHANGELOG conversion + tag + GitHub
+release (#299 + the `v2.0.0` tag). Row 11 (handoffs housekeeping) landed inside #298.
 
-**What's next, in order:**
-1. **Row 9** — `make bump VERSION=2.0.0`, `CHANGELOG.md` `## [2.0.0]`, tag + push. Agent-executable.
-2. **Row 10** — deploy + live verification. **Owner-gated**: no `CLOUDFLARE_API_TOKEN` in this
-   devcontainer, and per `cf-ci-secret-gate` memory the token was never provisioned to GitHub Actions
-   either — `deploy.yml` is expected to be a no-op/failure until the owner provisions it or deploys
-   manually. Say so plainly when attempting this row rather than claiming a deploy that didn't happen.
+**Row 10 — deploy + live verification — current state (2026-09-10):**
+[dispatched](https://github.com/qte77/ldnmxx-hack/actions/runs/34520670498) and confirmed via the GitHub API to be
+sitting in `status: waiting` — held by the `production` GitHub Environment's required-reviewer
+approval gate, which is a deliberate owner checkpoint (`deploy.yml`'s own header comment: "add required
+reviewers there to make it an approval"). **Do not approve this run as an agent** — that gate exists
+specifically so a human signs off on a production deploy. Separately and independently confirmed via
+`gh secret list`: this repo has no `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` secret (only
+`NPM_READ_TOKEN` exists) — so even after an approval, the job's own preflight step will fail fast with
+a readable message (by design) rather than attempt a credential-free deploy. The owner needs to either
+(a) approve the pending run AND provision both secrets first, or (b) run `make deploy` locally with
+their own Cloudflare credentials (needs a root `.env` or `~/.cf-token` per the Makefile), or (c) cancel
+the pending run and deploy whenever convenient — none of these are agent-executable from here.
 
 **Row 8 findings worth knowing before touching `ui_sweep.py` again:** the sweep's `close_sheet()`
 helper (NOT the generic `click()` helper) is load-bearing — `ResultSheet.tsx`'s full-viewport backdrop
@@ -51,9 +60,7 @@ and its visible ✕ button share the identical accessible name ("Close results")
 `.first` resolves to the backdrop, whose click-point coincides with the dialog's own area on ≥640px
 viewports (the sheet is centered there, not bottom-anchored) — the click lands on the dialog instead
 and the sheet never closes, which then blocks the NEXT flow's `#civic-query` fill. Confirmed empirically
-by running the sweep twice locally (once broken, once fixed) — see this row's PR description.
-4. **Row 11** — housekeeping: this arc's living handoff doc + the `docs/handoffs/README.md` pointer
-   (already stale at 022 before this arc even started — fix in the same PR).
+by running the sweep twice locally (once broken, once fixed) — see PR #298's description.
 
 **The loop:** for each row — read its done-when, do the work on its own branch/worktree, run its verify
 commands, open a CI-gated PR, squash-merge on green (standing authorization, see `workflow-preferences`
@@ -207,8 +214,8 @@ border-strong/text/text-muted/primary/primary-on/glow/data-positive/caution/nega
 | 6 | ✅ shipped (PR [#296](https://github.com/qte77/ldnmxx-hack/pull/296)) — **P3 — Settings screen** (worktree, branch `feat/024-p3-settings`, needs rows 1–3): **Appearance** segmented control (System/Light/Dark, `.seg`/`.seg-opt` DS pattern, writes via `prefs.ts`/`theme-init.js` scheme) ABOVE **Text size** (Standard/Large/X-large) ABOVE high-contrast toggle; borough `<select>` (33 boroughs, `data/places.json`), persisted, used only as the Home-screen location anchor; About block reuses existing footer copy. Notifications/service-notice: dropped (no backend, CSP blocks push); feedback stays a link to GitHub issues. | agent | New `ui/tests/prefs.test.ts` covers read/write + appearance/text-size/high-contrast application; no dead/no-op controls render; `cd ui && npm run lint && npm run typecheck && npm test && npm run build` green in the isolated worktree. |
 | 7 | ✅ shipped (PR [#295](https://github.com/qte77/ldnmxx-hack/pull/295)) — **P4 — Docs** (worktree, branch `docs/024-p4-docs`, needs row 1 for final token values): write `docs/adr/0006-*.md` explicitly superseding ADR 0005 and handoff 017's 3-variant decision — record that dark mode is DIRECTLY SOURCED from the design (not an extension, correcting the plan's original framing), the measured contrast numbers, and the single-palette rationale ("user chose after the conflict was surfaced, 2026-09-10; design updated mid-arc to add dark mode"); full rewrite of `docs/design.md`; update `README.md` (drop `?variant=` docs, UI stack section), `docs/architecture.md` UI section, `CHANGELOG.md` `## [Unreleased]`. | agent | `npx --yes markdownlint-cli2 "**/*.md"` clean; no remaining reference to the 3-variant system or EyeRest in touched docs; ADR 0006 cross-links this plan (024). |
 | 8 | ✅ shipped (PR [#298](https://github.com/qte77/ldnmxx-hack/pull/298)) — **P5 — E2E + CI + bundle ceiling**: updated `tests/e2e/ui_sweep.py` — dropped the `data-variant` axis (single navy/red palette, no variant to scan); `#civic-query`/"Find it" unchanged (verified still valid, no edit needed); theme-toggle detection moved from a header glyph click to Settings' Appearance control (`Settings`/`Dark`/`Home` tab-bar + segmented-control clicks); added `close_sheet()` — a REAL bug fix, not anticipated in the original row wording: the sheet must be closed between flows or it blocks the next flow's `#civic-query` fill (see the Handoff note above for the root cause). `flows.json` markers needed NO changes — `ResultSheet.tsx` renders the "Showing: …" title as visible header text, not just an `aria-label`, so the existing marker/`routedTo` assertions still hold. Bundle ceiling NOT raised — still under budget (145,771/150,000 B JS, 6,130/8,000 B CSS on the fully-merged `main`), flagged as thin headroom (97.2%) for row 9. | agent | Sweep run twice locally against `npm run preview` (no CF creds here, so flows correctly FAIL on `/api/run` 502 — the honest-FAIL ceiling this devcontainer allows, per `verify-live-not-just-mocks` memory): the FIRST run caught the sheet-blocking bug (flows 2–5 failed with "CTA 'Find it' not found" on every viewport ≥640px); the SECOND run (post-fix) shows every flow correctly reaching "did not route/render" (button always found, sheet always closes) on all 5 configs, 0 model-host hits, axe 0 critical/0 serious on both light and dark; `npm run build && npm run size` pass under the existing ceiling; `ci.yml` green on the PR. |
-| 9 | **P5 — Version + release**: `make bump VERSION=2.0.0` (major — full UX rebuild, current tag v1.9.0); `CHANGELOG.md` `## [2.0.0]`; tag `v2.0.0`, push. | agent | `release.yml` runs green off the pushed tag; GitHub release created with the changelog body. |
-| 10 | **P5 — Deploy + live verification**: run `deploy.yml`; once live, run `tests/e2e/ui_sweep.py` against `https://sortmy.london` (axe critical+serious gate, 0 model-host, all flagship flows, both appearance schemes). | **owner** (no `CLOUDFLARE_API_TOKEN` here) | `deploy.yml` green; live sweep PASS appended to `tests/e2e/runs.jsonl`; post-deploy MIME check (#178 guard) passes. |
+| 9 | ✅ shipped (PR [#299](https://github.com/qte77/ldnmxx-hack/pull/299) + tag [v2.0.0](https://github.com/qte77/ldnmxx-hack/releases/tag/v2.0.0)) — **P5 — Version + release**: `make bump VERSION=2.0.0` (major — full UX rebuild, current tag v1.9.0); `CHANGELOG.md` `## [2.0.0]`; tag `v2.0.0`, push. | agent | `release.yml` runs green off the pushed tag; GitHub release created with the changelog body. |
+| 10 | ⏳ dispatched, blocked on the owner ([run 34520670498](https://github.com/qte77/ldnmxx-hack/actions/runs/34520670498), `status: waiting` on the `production` Environment's required-reviewer approval) — **P5 — Deploy + live verification**: run `deploy.yml`; once live, run `tests/e2e/ui_sweep.py` against `https://sortmy.london` (axe critical+serious gate, 0 model-host, all flagship flows, both appearance schemes). | **owner** (no `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` secret exists — confirmed via `gh secret list`, not assumed from memory) | `deploy.yml` green; live sweep PASS appended to `tests/e2e/runs.jsonl`; post-deploy MIME check (#178 guard) passes. |
 | 11 | **Housekeeping**: update `docs/handoffs/README.md` "▶ Resume point" and index table to point at handoff 024 (stale at 022); write `docs/handoffs/024-app-shell-redesign.md` as the ONE living handoff for this arc, Progress table ticked per row above as PRs land. | agent | `docs/handoffs/README.md` reflects 024 as current; handoff 024's Progress table matches the state of rows 1–10 at last edit. |
 
 ## Verification (repo-wide, run after every merge)
