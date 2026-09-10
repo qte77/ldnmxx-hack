@@ -35,6 +35,98 @@ body {
   margin: 0;
 }
 
+/* 024 P6 (design-match): the design's own styles.css rule, verbatim — every semantic heading picks up
+ * Cormorant Garamond automatically. This DOES reach real <h1>-<h4> tags inside the A2UI surface too —
+ * a Text component with usageHint h1/h2/h3 renders markdown ("# text"), which markdown-it turns into a
+ * literal heading tag nested inside the qte-text-h1/h2/h3 <section> (checked against the installed
+ * @a2ui/react package source, chunk-MSVIM4WN.js). Whether that inner tag's own library-injected CSS
+ * (a named @layer, per the same source) would out-cascade a plain tag selector here is genuinely
+ * unclear without a live render this devcontainer can't produce (Workers AI needs --remote, which
+ * needs a CLOUDFLARE_API_TOKEN this box doesn't have — devcontainer-unattended-limits memory). Rather
+ * than trust that analysis, the explicit override below removes the question: A2UI heading tags keep
+ * --font-body regardless of what this rule or the library's own styles resolve to. */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+}
+.a2ui-surface h1,
+.a2ui-surface h2,
+.a2ui-surface h3,
+.a2ui-surface h4 {
+  font-family: var(--font-body);
+  font-weight: inherit;
+}
+
+/* For a title that isn't semantically a heading level (e.g. a card title inside a <button>, where an
+ * h-tag would be invalid nested-in-button markup) but should still carry the design's heading type. */
+.font-heading {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+}
+
+/* 024 P6 (design-match): outline buttons — the design's .btn-primary/.btn-ghost (styles.css), ported to
+ * our token names. "Never filled" is explicit in the design: transparent background always, a border or
+ * plain text carries the affordance, and hover/active read as a tinted wash, not a colour swap. */
+.btn-outline-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-primary);
+  background-color: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.btn-outline-primary:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+.btn-outline-primary:active {
+  background-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+.btn-outline-primary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.btn-outline-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Low-emphasis dismiss action (ResultSheet's Close) — the design's .btn-ghost: no border, a text colour
+ * that only shows a background wash on hover/focus, never a filled state. */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-ghost:hover {
+  background-color: color-mix(in srgb, var(--color-text) 7%, transparent);
+  color: var(--color-text);
+}
+.btn-ghost:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 /* ---- a11y baseline (ported from qte77 ui-kit/a11y.css) ---- */
 
 /* Screen-reader-only: the live-region announce text is hidden but read aloud. */
@@ -82,9 +174,9 @@ body {
   color: var(--color-text);
 }
 
-/* Card — fo's surface model (017 P1): the card sits on --surface-lift and is separated by a
- * hairline, not by a drop shadow. In light the lift is a step up from the page; in dark the lift
- * IS the separation and the hairline merely sharpens the edge. */
+/* Card — 024 P6 (design-match): the design's .card is transparent with just a 1px divider border, no
+ * fill, no shadow (its own "never fill cards or buttons" rule). Supersedes the prior filled/shadowed
+ * --surface-lift model (017 P1) — border-only now carries the separation in BOTH schemes. */
 /* 020 P4c: a gentle card enter — cards fade + rise in as results land, so the answer feels alive
  * rather than snapping in. Reduced-motion is honoured globally (the rule above neutralises it). */
 @keyframes qte-card-in {
@@ -98,44 +190,42 @@ body {
   }
 }
 .a2ui-surface .qte-card {
-  background-color: var(--color-surface-lift);
+  background-color: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
   padding: 1.25rem;
   animation: qte-card-in 0.3s ease both;
 }
 
-/* Button — filled primary with hover / active / keyboard-focus affordances. */
+/* Button — 024 P6 (design-match): outline, never filled (design's .btn-primary) — see
+ * .btn-outline-primary above for the shared definition; A2UI's Button routes through this same qte-*
+ * class hook, so restate it here scoped to .a2ui-surface rather than importing the app-level class
+ * (this file's two halves — app chrome above, A2UI theming below — stay independently portable). */
 .a2ui-surface .qte-button {
-  background-color: var(--color-primary);
-  color: var(--color-primary-on);
-  border: none;
-  border-radius: 8px;
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
   padding: 0.5rem 1rem;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.05s ease;
-}
-/* fo's one glow, in its one place: a soft accent halo on hover/focus rather than a colour change.
- * --color-glow is derived from the active variant's accent, so it follows A/B/C automatically. */
-.a2ui-surface .qte-button:hover,
-.a2ui-surface .qte-button:focus-visible {
-  box-shadow: 0 0 0 3px var(--color-glow);
+  transition: background-color 0.15s ease, transform 0.05s ease;
 }
 .a2ui-surface .qte-button:hover {
-  opacity: 0.9;
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 .a2ui-surface .qte-button:active {
+  background-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
   transform: translateY(1px);
 }
 .a2ui-surface .qte-button:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
-/* A Button wraps a child Text component whose .qte-text color (page text — near-white in
- * dark) would otherwise override the button's dark-on-amber label → illegible. Inherit. */
+/* A Button wraps a child Text component whose .qte-text color (page text) would otherwise override
+ * the button's --color-primary label → wrong colour, not illegible now that it's outlined, but still
+ * not the button's own colour. Inherit. */
 .a2ui-surface .qte-button .qte-text,
 .a2ui-surface .qte-button [class*="qte-text"] {
   color: inherit;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { useFreshnessDate } from "./useFreshnessDate";
 
 // 024 P2: the bottom-sheet overlay hosting a run's results. Row 2 deliberately did not create this —
 // it had no driver until row 1's category cards existed (YAGNI/AHA). Deliberately a plain fixed-position
@@ -16,6 +17,14 @@ export function ResultSheet({
   isRunning,
   onStop,
   label = "Search results",
+  // 024 P6 (design-match): the dialog anatomy from SortMyLondon.dc.html's `.dialog` — title, summary,
+  // a hairline `.hr`, a "Source: X" / "Updated Y" meta row, and an outlined "Open official source"
+  // link. All four are optional: the two never-auto-routed demo flows (Route, Founders) carry none of
+  // them (no honest single source to name), so the block renders nothing for those, same as today.
+  summary,
+  source,
+  officialLink,
+  freshnessKey,
   children,
 }: {
   open: boolean;
@@ -30,9 +39,17 @@ export function ResultSheet({
   // focus lands on it/its close button regardless of mount timing, so Home passes the same "Showing:
   // …" text here instead of relying solely on the inner live region.
   label?: string;
+  // Required (not `?:`) and unioned with undefined — Home.tsx always passes these explicitly (from a
+  // possibly-absent catalog entry), and exactOptionalPropertyTypes forbids assigning `undefined` to an
+  // optional `?:` key. Same idiom ResultBody's `activeTitle: string | undefined` already uses.
+  summary: string | undefined;
+  source: string | undefined;
+  officialLink: { text: string; url: string } | undefined;
+  freshnessKey: string | undefined;
   children: ReactNode;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const asOf = useFreshnessDate(freshnessKey);
 
   // aria-modal hides the background from assistive tech, so focus must follow into the sheet — land it
   // on the close control, the one action always present.
@@ -75,9 +92,11 @@ export function ResultSheet({
         aria-label={label}
         className="relative z-10 w-full sm:max-w-lg max-h-[85vh] overflow-y-auto bg-surface border border-border rounded-t-[var(--radius-lg)] sm:rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-[var(--space-4)]"
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold text-text-muted">{label}</span>
-          <div className="flex items-center gap-2">
+        <div className="flex items-start justify-between gap-2">
+          {/* 024 P6 (design-match): a real <h2> (not a styled span) — the global h1-h4 rule
+              (index.css) gives it Cormorant Garamond for free, matching the design's .dialog-title. */}
+          <h2 className="text-lg text-text">{label}</h2>
+          <div className="flex items-center gap-2 shrink-0">
             {isRunning && (
               <button
                 type="button"
@@ -87,17 +106,38 @@ export function ResultSheet({
                 Stop
               </button>
             )}
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={onClose}
-              aria-label="Close results"
-              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded border border-border-strong text-text-muted hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
+            {/* 024 P6 (design-match): ghost close (design's .btn-ghost) — no border box, a text colour
+                that only shows a background wash on hover/focus. */}
+            <button ref={closeRef} type="button" onClick={onClose} aria-label="Close results" className="btn-ghost">
               ✕
             </button>
           </div>
         </div>
+
+        {summary && <p className="mt-2 text-sm text-text-muted">{summary}</p>}
+
+        {(source ?? asOf) && (
+          <>
+            {/* The design's .hr: a 1px divider, not a shadow or a heavier rule. */}
+            <hr className="my-[var(--space-4)] h-px border-0 bg-[var(--color-border)]" />
+            <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
+              {source && <span>Source: {source}</span>}
+              {asOf && <span>Updated {asOf}</span>}
+            </div>
+          </>
+        )}
+
+        {officialLink && (
+          <a
+            href={officialLink.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-outline-primary mt-3"
+          >
+            {officialLink.text}
+          </a>
+        )}
+
         <div className="mt-3">{children}</div>
       </div>
     </div>
