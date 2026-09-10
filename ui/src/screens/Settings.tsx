@@ -28,9 +28,11 @@ const BOROUGHS = boroughLabels();
 const FOCUS_RING_CLASS =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const SEG_WRAP_CLASS = "inline-flex rounded border border-border-strong overflow-hidden";
+// 024 P6 (design-match): the design's .seg-opt:has(input:checked) never fills — an inset 1px ring in
+// the accent colour marks the active option, text switches to the accent colour. Never bg-primary.
 function segOptClass(active: boolean): string {
   return `min-h-[44px] px-4 text-sm font-semibold ${FOCUS_RING_CLASS} ${
-    active ? "bg-primary text-primary-on" : "text-text-muted hover:text-text"
+    active ? "text-primary shadow-[inset_0_0_0_1px_var(--color-primary)]" : "text-text-muted hover:text-text"
   }`;
 }
 

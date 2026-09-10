@@ -327,13 +327,14 @@ function CoverageLine({ count }: { count: string | null }) {
 // Built from the card TOKENS rather than the `.qte-card` class: that rule is scoped under
 // `.a2ui-surface` in index.css (the library's reset root), and borrowing the class outside that scope
 // would couple this static card to the A2UI surface's styling contract. A few duplicated utilities beat
-// the wrong abstraction here (AHA).
+// the wrong abstraction here (AHA). 024 P6: transparent+bordered, matching qte-card's own design-match
+// retheme — this card exists to preview what a real result card looks like, so it should look like one.
 function SampleCard() {
   return (
     <div className="mt-6">
       <p className="text-sm text-text-muted">Here&apos;s what you get:</p>
       <div
-        className="mt-2 max-w-prose p-4 rounded-[var(--radius-card)] bg-surface-lift border border-border"
+        className="mt-2 max-w-prose p-4 rounded-[var(--radius-card)] border border-border"
         role="note"
         aria-label="Example of a result card"
       >
@@ -371,10 +372,12 @@ function CategoryCard({
       onClick={() => onPick(entry.example, entry.id)}
       // 024 P2 fix: submitPrompt no-ops while a run is in flight (never relabels the sheet mid-stream) —
       // disable the visible affordance too, so that no-op has a reason instead of reading as broken.
-      className="text-left p-4 rounded-[var(--radius-card)] bg-surface-lift border border-border hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+      // 024 P6: transparent + shadow-sm matches the design's `.card.elev-sm` (Common questions cards) —
+      // border-only with a whisper of shadow, not the filled --surface-lift card model.
+      className="text-left p-4 rounded-[var(--radius-card)] shadow-[var(--shadow-sm)] border border-border hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
     >
       <span className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-text">{entry.title}</span>
+        <span className="font-heading text-text">{entry.title}</span>
         {isDemo && (
           <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-text-muted/15 text-text-muted">
             Demo
@@ -387,6 +390,19 @@ function CategoryCard({
       )}
     </button>
   );
+}
+
+// 024 P6 (design-match): the ResultSheet's dialog-anatomy props, bundled off one catalog entry. A
+// standalone function (not 4 separate `activeDef?.x` accesses inline at the call site) keeps Home()'s
+// own cyclomatic complexity in budget — each optional-chain access is a branch the `complexity` rule
+// counts, and Home() already carries several from its own state derivations.
+function sheetMeta(entry: CatalogEntry | undefined) {
+  return {
+    summary: entry?.blurb,
+    source: entry?.source,
+    officialLink: entry?.officialLink,
+    freshnessKey: entry?.freshnessKey,
+  };
 }
 
 // 024 P1: always visible on Home, independent of search state — a standing way to ask a next question
@@ -460,10 +476,7 @@ function Hero({
             Stop
           </button>
         ) : (
-          <button
-            type="submit"
-            className="min-h-[44px] inline-flex items-center justify-center px-5 py-2 rounded bg-primary text-primary-on font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
+          <button type="submit" className="btn-outline-primary">
             Find it
           </button>
         )}
@@ -528,6 +541,7 @@ export function Home() {
   const activeDef = USECASES.find((u) => u.id === (resolved?.usecase ?? activeUsecaseId));
   const activeTitle = activeDef?.title;
   const showSampleNote = activeDef?.sampleData === true;
+  const activeSheetMeta = sheetMeta(activeDef);
 
   // 018 P5: shared submit — a chip click and the form both funnel through here. Pass the text DIRECTLY
   // (not the `prompt` state, which setPrompt hasn't committed yet on a chip click) to dodge a stale closure.
@@ -630,7 +644,15 @@ export function Home() {
         onClose={() => setDismissed(true)}
         isRunning={isRunning}
         onStop={stop}
-        label={activeTitle ? `Showing: ${activeTitle}` : "Search results"}
+        // 024 P6 (design-match): the visible title is now the plain workflow name (matching the
+        // design's dialog-title, e.g. "Sort My Care") — the "Showing: …" phrasing survives only in the
+        // sr-only live-region announcement below, which is what a screen-reader actually needs to hear
+        // on a mid-session change.
+        label={activeTitle ?? "Search results"}
+        summary={activeSheetMeta.summary}
+        source={activeSheetMeta.source}
+        officialLink={activeSheetMeta.officialLink}
+        freshnessKey={activeSheetMeta.freshnessKey}
       >
         <ResultBody
           error={error}

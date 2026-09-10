@@ -25,8 +25,9 @@
   /* Light scheme (default) — the design's LIGHT palette. */
   --color-bg: #f5f6f8;
   --color-surface: #e8eaf0;
-  /* Cards sit on --surface-lift: pure white for a clean lift off the tinted page (same intensity
-   * pattern as the prior palette), with --shadow-card giving a gentle elevation. */
+  /* 024 P6 (design-match): cards no longer sit on --surface-lift (the design's .card is transparent,
+   * border-only) — this token now backs only small filled elements with no design equivalent (the
+   * high-contrast switch's knob, Settings.tsx). Pure white keeps that knob legible on --surface. */
   --color-surface-lift: #ffffff;
   --color-border: color-mix(in srgb, #132687 20%, transparent);
   /* Interactive-control borders only (inputs, toggles) — 3.82:1 on --surface. MEASURED. */
@@ -34,11 +35,11 @@
   --color-text: #141a26;
   --color-text-muted: #535a6b;
 
-  /* Accent — the design's one navy palette (no variants). 6.48:1 for a filled-button label on
-   * --surface, 11.74:1 for the deeper accent-700 icon/active-tab role. MEASURED. */
+  /* Accent — the design's one navy palette (no variants). 11.74:1 for the deeper accent-700
+   * icon/active-tab role. MEASURED. 024 P6: --color-primary-on (a filled-button label colour) was
+   * removed here — every button is now outlined (design's "never fill" rule), so nothing sits ON the
+   * accent colour any more. */
   --color-primary: #2f4cc9;
-  --color-primary-on: #ffffff;
-  --color-glow: rgb(47 76 201 / 0.07);
 
   /* Semantic status accents — unchanged from ADR 0005 (already WCAG-measured). The design has no
    * equivalent tokens; these aren't part of what arc 024 is matching. */
@@ -54,7 +55,6 @@
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
   --radius-card: 14px;
-  --shadow-card: 0 1px 2px rgb(20 26 38 / 0.05), 0 8px 20px rgb(20 26 38 / 0.08);
 
   /* New scale for the app-shell/Home/Settings/sheet screens (arc 024) — fractional values copied
    * verbatim from the Claude Design "Classical" system (do not round to a 4/8px grid). Shadows are
@@ -94,12 +94,9 @@
     --color-text: #eceef3;
     --color-text-muted: #c3c9d6;
     --color-primary: #7f96e9;
-    --color-primary-on: #11151f;
-    --color-glow: rgb(127 150 233 / 0.1);
     --color-data-positive: #4cc38a;
     --color-data-caution: #e5a50a;
     --color-data-negative: #f2555a;
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow-md: 0 3px 10px rgb(0 0 0 / 0.35);
     --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.5);
@@ -114,12 +111,9 @@
   --color-text: #eceef3;
   --color-text-muted: #c3c9d6;
   --color-primary: #7f96e9;
-  --color-primary-on: #11151f;
-  --color-glow: rgb(127 150 233 / 0.1);
   --color-data-positive: #4cc38a;
   --color-data-caution: #e5a50a;
   --color-data-negative: #f2555a;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 3px 10px rgb(0 0 0 / 0.35);
   --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.5);
