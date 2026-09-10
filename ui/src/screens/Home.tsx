@@ -602,7 +602,13 @@ export function Home() {
           submitPrompt funnel that opens it. Closing only hides the sheet — the run underneath (and its
           eventLog/status/error state, held in this component) is untouched, so reopening by searching
           again shows it continuing or its finished result. */}
-      <ResultSheet open={sheetOpen} onClose={() => setDismissed(true)} isRunning={isRunning} onStop={stop}>
+      <ResultSheet
+        open={sheetOpen}
+        onClose={() => setDismissed(true)}
+        isRunning={isRunning}
+        onStop={stop}
+        label={activeTitle ? `Showing: ${activeTitle}` : "Search results"}
+      >
         <ResultBody
           error={error}
           errorMsg={errorMsg}

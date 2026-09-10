@@ -15,12 +15,21 @@ export function ResultSheet({
   onClose,
   isRunning,
   onStop,
+  label = "Search results",
   children,
 }: {
   open: boolean;
   onClose: () => void;
   isRunning: boolean;
   onStop: () => void;
+  // 024 P2 fix: a live region only announces a CHANGE — content already present when the region first
+  // mounts is generally not announced (most screen-reader/browser combos). On a category-card tap the
+  // sheet mounts WITH `activeTitle` already known, so the moved aria-live "Showing: …" paragraph inside
+  // `children` never fires (it only worked for the hero-search path, where the sheet mounts empty and
+  // USECASE_RESOLVED changes the text afterwards). The dialog's own accessible NAME is announced when
+  // focus lands on it/its close button regardless of mount timing, so Home passes the same "Showing:
+  // …" text here instead of relying solely on the inner live region.
+  label?: string;
   children: ReactNode;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -45,16 +54,18 @@ export function ResultSheet({
         type="button"
         aria-label="Close results"
         onClick={onClose}
-        className="absolute inset-0 bg-text/40 cursor-default"
+        // 024 P2 fix: --color-text is near-white in dark mode, so a text-tinted scrim would invert into
+        // a LIGHT overlay on a dark UI — bg-black/40 darkens correctly in both schemes.
+        className="absolute inset-0 bg-black/40 cursor-default"
       />
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Search results"
+        aria-label={label}
         className="relative z-10 w-full sm:max-w-lg max-h-[85vh] overflow-y-auto bg-surface border border-border rounded-t-[var(--radius-lg)] sm:rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-[var(--space-4)]"
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold text-text-muted">Results</span>
+          <span className="text-sm font-semibold text-text-muted">{label}</span>
           <div className="flex items-center gap-2">
             {isRunning && (
               <button
