@@ -12,7 +12,7 @@
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   line-height: 1.6;
   margin: 0;
 }
@@ -85,7 +85,7 @@ body {
 
 /* Surface baseline: font + text colour inherit past the library's `all: revert` reset. */
 .a2ui-surface {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   color: var(--color-text);
 }
 
@@ -163,7 +163,7 @@ body {
 
 /* Text — restore our font + a coherent type ramp (library leaves body/caption unset). */
 .a2ui-surface .qte-text {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   color: var(--color-text);
 }
 .a2ui-surface .qte-text-h1 {
