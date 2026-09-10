@@ -4,6 +4,12 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-10
+
+A major version bump: arc 024 rebuilds the UI's palette, typography and information architecture (a
+real UX break, not a patch), bundled with plans 019-023's already-on-`main` work that had no tagged
+release since 1.9.0.
+
 ### Plan 024 — app shell redesign: civic navy/red palette, serif type, tab IA
 
 - **One sourced civic navy/red palette replaces the three ADR 0005 accent variants.** `ui/src/tokens.css`
@@ -39,9 +45,28 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
   `superseded`); `docs/design.md` fully rewritten (was still describing the pre-017 EyeRest/BluBlock
   palette); `README.md` and `docs/architecture.md` updated to drop `?variant=` and the single-page/
   3-variant framing.
-- **Still in flight, not covered above:** Home category cards + a result sheet (row 4/5), the full
-  Settings screen — text size, high contrast, borough (row 6) — are parallel worktree PRs not yet merged
-  as of this entry.
+- **Home's single-page results become a category-card list + a bottom-sheet overlay.** `ui/src/screens/Home.tsx`
+  gains a "Common questions" card list from `usecaseCatalog()` — the 4 real usecases first, then
+  `sort-my-route` and `founders-copilot` last with a "Demo" badge (never auto-routed, ADR 0004); Scam Check's card and its
+  result both carry a "sample data" note (synthetic bundle, no D1 table). `ui/src/sheet/ResultSheet.tsx`
+  (new) hosts the existing `A2UISurface`/`EventStream`/`useAgentSSE` result rendering, moved out of the
+  inline page, not duplicated. A borough location anchor (`ui/src/screens/locationAnchor.ts`) appends the
+  Settings-saved borough to a postcode-less, place-less ask — a starting point for the router, never a
+  filter. 60/60 UI tests green, 15 new (RED-first) (#297).
+- **The Settings screen is complete.** Text size (Standard/Large/X-large → a `--fs` custom property,
+  `calc(var(--fs) * 85%)` chosen so the existing default resolves to exactly the prior fixed 106.25% —
+  no visual change for a visitor who never opens Settings), a High-contrast toggle (stronger borders +
+  darker muted text, tokens-only), and a "Your area" borough `<select>` (33 London boroughs derived from
+  `data/places.json`, not hand-duplicated) join the Appearance control shipped earlier. Notifications are
+  deliberately absent (no backend, CSP blocks push). 54 UI tests green in this PR alone (#296).
+- **The e2e sweep is caught up with the new shell** — and caught a real bug doing it.
+  `tests/e2e/ui_sweep.py` drops the retired `data-variant` axis and moves its theme-toggle check from a
+  header glyph to Settings' Appearance control. `ResultSheet`'s full-viewport backdrop and its visible
+  close button shared one accessible name ("Close results"); the generic click helper's default match
+  resolved to the backdrop, whose click-point coincides with the dialog's own area on ≥640px viewports —
+  the click landed on the dialog instead, the sheet never closed, and the next flow's search-input fill
+  failed against the now-obscured input. Fixed with a close helper that targets the actual close button.
+  Verified empirically by running the full local sweep twice (broken, then fixed) — see #298.
 
 ### Plan 023 — a placeholder is not a date ("inspected 1901-01-01")
 
