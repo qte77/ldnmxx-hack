@@ -4,6 +4,45 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 024 — app shell redesign: civic navy/red palette, serif type, tab IA
+
+- **One sourced civic navy/red palette replaces the three ADR 0005 accent variants.** `ui/src/tokens.css`
+  (#288) rewrites every colour value verbatim from a Claude Design mockup's own light **and** dark hex
+  ramps — not derived — and drops all three `[data-variant]` blocks; `?variant=` and the header swatch
+  are gone. WCAG relative-luminance contrast independently verified: light text-on-bg 16.11:1, light
+  accent-500 6.48:1, dark text-on-bg 15.72:1, dark accent-500 6.46:1 — no forced deviations needed this
+  time (unlike ADR 0005). See **[ADR 0006](docs/adr/0006-civic-navy-red-palette.md)**, which supersedes
+  ADR 0005.
+- **Cormorant Garamond + Lora replace Inter.** `@fontsource/cormorant-garamond` (weight 600, headings)
+  and `@fontsource/lora` (weights 400/600, body) self-hosted via `ui/src/main.tsx` (#288); JetBrains
+  Mono is unchanged for the dev console. `--font-heading`/`--font-body` tokens ship in `tokens.css`;
+  wiring them onto actual heading markup is a later row, still in flight.
+- **A new spacing/radius/shadow scale for the app-shell screens** — `--space-1..8`, `--radius-sm/md/lg`,
+  `--shadow-sm/md/lg` — added to `ui/src/tokens.css` (#288), copied verbatim from the design's
+  fractional grid (not rounded to 4/8px). The bundle-size guard's existing ceiling held with no raise
+  needed: measured gzip JS 141,185 B (limit 150,000 B), CSS 5,059 B (limit 8,000 B).
+- **The single-page Dashboard is now a two-tab app shell.** `ui/src/shell/AppShell.tsx` + `TabBar.tsx`
+  (Home/Settings, in-memory screen state, never a path route — `ui/public/404.html` disables the Pages
+  SPA fallback) replace `ui/src/App.tsx`; `ui/src/screens/Home.tsx` carries the old Dashboard's behaviour
+  over unchanged minus the header's accent-variant/theme-toggle icons; `ui/src/screens/Settings.tsx`
+  ships a minimal Appearance control (System/Light/Dark) as a 1:1 replacement for the removed header
+  toggle (#293, #294).
+- **A new shared preference contract, `ui/src/prefs.ts`** (Appearance/font-scale/high-contrast/borough,
+  pure and testable, mirrors `devmode.ts`'s pattern) — 11 new test cases, 49/49 total UI tests green
+  (#293).
+- **The usecase catalog gains provenance fields.** `source`, `officialLink`, `freshnessKey?`,
+  `sampleData?: boolean` added to `shared/usecaseCatalog.ts` and the four real corpus `usecases/*.json`
+  entries (care, wander, scam-check, food-hygiene); `worker/src/usecases.ts`'s allow-list mirrors them,
+  8 new worker test cases, 303/303 worker tests green (#289).
+- **Docs brought in line with the shipped palette/typography/IA** (this entry): new
+  [ADR 0006](docs/adr/0006-civic-navy-red-palette.md) (supersedes ADR 0005, which is now marked
+  `superseded`); `docs/design.md` fully rewritten (was still describing the pre-017 EyeRest/BluBlock
+  palette); `README.md` and `docs/architecture.md` updated to drop `?variant=` and the single-page/
+  3-variant framing.
+- **Still in flight, not covered above:** Home category cards + a result sheet (row 4/5), the full
+  Settings screen — text size, high contrast, borough (row 6) — are parallel worktree PRs not yet merged
+  as of this entry.
+
 ### Plan 023 — a placeholder is not a date ("inspected 1901-01-01")
 
 - **Fixed: 6,361 live food-hygiene rows claimed an inspection that never happened.** Verifying arc 022
