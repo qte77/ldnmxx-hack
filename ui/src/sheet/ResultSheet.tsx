@@ -35,10 +35,21 @@ export function ResultSheet({
   const closeRef = useRef<HTMLButtonElement>(null);
 
   // aria-modal hides the background from assistive tech, so focus must follow into the sheet — land it
-  // on the close control, the one action always present. Escape is a standard dismiss affordance too.
+  // on the close control, the one action always present.
+  // 024 P2 fix: split from the Escape-key effect below and keyed on `open` ALONE (not `onClose` too).
+  // Home passes `onClose={() => setDismissed(true)}` — a fresh arrow every render — and Home re-renders
+  // on every streamed SSE frame (setEventLog per dispatched event). A single combined effect keyed on
+  // both would re-run (and re-focus the ✕ button) on every one of those renders while a run streams,
+  // yanking focus away from wherever the user — keyboard or AT — had moved it (Stop, a result link…).
+  // Keying on `open` alone runs this only on the false→true open transition, exactly once per open.
+  useEffect(() => {
+    if (open) closeRef.current?.focus();
+  }, [open]);
+
+  // Escape is a standard dismiss affordance — this one DOES need the latest `onClose`, but re-adding a
+  // window listener on every render (harmless — it can't steal focus) is a fair price for that.
   useEffect(() => {
     if (!open) return;
-    closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
