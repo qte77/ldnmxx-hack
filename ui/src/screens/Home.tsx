@@ -647,28 +647,8 @@ export function Home() {
       </ResultSheet>
 
       <footer className="mt-8 py-3 text-sm text-text-muted border-t border-border">
-        We find it. You sort it. A signpost to official public services, not advice.{" "}
-        <a
-          href="https://github.com/qte77/ldnmxx-hack/issues"
-          className="underline underline-offset-2 hover:text-primary"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Built to WCAG 2.1 AA — report an accessibility issue
-        </a>
-        .{" "}
-        {/* 021 P5: the builder/engine story lives HERE, not above the fold — the fold speaks only to a
-            Londoner with an errand. Each workflow is a JSON stage-def read at runtime; add one, add a
-            workflow. */}
-        <a
-          href="https://github.com/qte77/ldnmxx-hack"
-          className="underline underline-offset-2 hover:text-primary"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Open source — each workflow is a JSON file, not a rebuild
-        </a>
-        .{" "}
+        We find it. You sort it. A signpost to official public services, not advice. Built to WCAG 2.1
+        AA.{" "}
         <span title="deployed release" className="whitespace-nowrap font-mono">
           v{__APP_VERSION__}
         </span>

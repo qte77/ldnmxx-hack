@@ -35,31 +35,6 @@ body {
   margin: 0;
 }
 
-/* Shared header brand mark — neutral via currentColor, theme-adaptive (zero-blue).
- * Same class + rule as the qte77 sibling sites, for cross-repo brand parity. */
-.brand-mark {
-  color: var(--color-text);
-  flex: none;
-}
-
-/* GitHub mark — brand.github.com forbids recoloring, so we show GitHub's actual black/white marks
- * (vendored from the qte77 brand kit) and swap them by theme: black on light, white on dark.
- * Mirrors the kit's brand/ui-kit/github-links.html. */
-.gh-icon {
-  width: 14px;
-  height: 14px;
-  flex: none;
-  background: center / contain no-repeat url("./assets/icons/github-black.svg");
-}
-:root[data-theme="dark"] .gh-icon {
-  background-image: url("./assets/icons/github-white.svg");
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .gh-icon {
-    background-image: url("./assets/icons/github-white.svg");
-  }
-}
-
 /* ---- a11y baseline (ported from qte77 ui-kit/a11y.css) ---- */
 
 /* Screen-reader-only: the live-region announce text is hidden but read aloud. */

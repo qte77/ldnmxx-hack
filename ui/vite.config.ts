@@ -13,7 +13,20 @@ export default defineConfig({
     // Same-origin dev: the SPA fetches /api/*, Vite proxies it to the local `wrangler dev` worker.
     proxy: { "/api": { target: "http://localhost:8787", changeOrigin: true } },
   },
-  build: { target: "es2022" },
+  build: {
+    target: "es2022",
+    rollupOptions: {
+      output: {
+        // Perf: vendor deps (react/react-dom/@a2ui/react/zod) change far less often than ui/src/, so
+        // splitting them into their own chunk lets Cloudflare's edge cache keep serving it unchanged
+        // across most releases instead of invalidating everything (one hashed bundle) on every deploy.
+        // Vite 8's bundler (Rolldown) requires the function form — the plain-object shorthand throws.
+        manualChunks(id: string) {
+          if (/node_modules\/(?:react|react-dom|@a2ui\/react|zod)\//.test(id)) return "vendor";
+        },
+      },
+    },
+  },
   // Footer version: injected at build time from the npm-run env (`make bump` stamps package.json);
   // falls back to "dev" outside an npm script so a bare `vite` run stays honest.
   define: { __APP_VERSION__: JSON.stringify(nodeEnv.npm_package_version ?? "dev") },
