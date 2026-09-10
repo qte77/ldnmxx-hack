@@ -4,9 +4,27 @@
 @import "./tokens.css";
 
 /* 020 P4a: a gentle global readability bump for elderly / less-technical users — ~17px base so no
- * civic copy sits at the small end, with roomy line-height so prose and result lines breathe. */
+ * civic copy sits at the small end, with roomy line-height so prose and result lines breathe.
+ * 024 P3: the fixed 106.25% is now the DEFAULT of a user-adjustable scale (Settings' "Text size"
+ * control, Standard/Large/X-large -> prefs.ts's FontScale 1/1.25/1.5, ui/src/textSize.ts). --fs's
+ * default here (1.25) and the 85 multiplier are chosen so this resolves to EXACTLY 106.25% at the
+ * default scale (1.25 * 85 = 106.25) — no visual change for a visitor who never opens Settings.
+ * public/theme-init.js overwrites --fs as an inline style pre-paint from a persisted preference,
+ * which (per CSS specificity) wins over this token default; screens/Settings.tsx overwrites it live
+ * on a control change. */
 :root {
-  font-size: 106.25%;
+  --fs: 1.25;
+  font-size: calc(var(--fs) * 85%);
+}
+
+/* 024 P3: High contrast (Settings) — stronger borders + darker secondary text, using ONLY tokens
+ * that already exist in tokens.css (no new hex; tokens.css stays row-1-owned). Lands after
+ * tokens.css's dark-scheme blocks in the cascade, so var(--color-border-strong)/var(--color-text)
+ * resolve to whichever scheme (light/dark) is currently active — this rule composes with Appearance
+ * rather than overriding it. */
+:root[data-high-contrast="true"] {
+  --color-border: var(--color-border-strong);
+  --color-text-muted: var(--color-text);
 }
 
 body {
