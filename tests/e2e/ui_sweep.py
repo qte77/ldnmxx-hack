@@ -58,6 +58,24 @@ def click(page, name, exact=False, t=2500):
         return False
 
 
+def close_sheet(page):
+    """ResultSheet.tsx's full-viewport backdrop AND its visible ✕ button share the SAME accessible
+    name ("Close results" via aria-label) — click()'s .first resolves to the backdrop, whose
+    click-point (Playwright clicks a target's geometric center) coincides with the DIALOG's own area
+    on >=640px viewports (Tailwind `sm:items-center sm:justify-center` centers the sheet there), so the
+    click lands on the dialog instead of reaching the backdrop underneath and the sheet never closes.
+    Confirmed empirically: every viewport >=640px (desktop/tablet/mobile-landscape) left the sheet open
+    and blocking #civic-query for the next flow; only mobile-portrait's bottom-anchored sheet (no
+    center collision) worked. .last is always the dialog's own ✕ button (DOM order: backdrop first,
+    dialog's ✕ second) — on top regardless of viewport width."""
+    try:
+        page.get_by_role("button", name="Close results").last.click(timeout=2500)
+        page.wait_for_timeout(400)
+        return True
+    except Exception:
+        return False
+
+
 # The civic flows this sweep drives live in flows.json (a DATA manifest), so a new workflow is a
 # manifest edit, not a change to this test source. P3 (017): each entry is a TYPED ask — `query` (with
 # a routing keyword), `markers` (rendered result incl. its own summary line so flows sharing one surface
@@ -115,7 +133,15 @@ def sweep(page, out, tag):
             print(f"    shot {n}: {e}")
 
     shot("01-load")
-    (click(page, "☾", exact=True) or click(page, "☀", exact=True)) and shot("02-theme")
+    # 024 (ADR 0006): the header's light/dark glyph toggle is gone — Appearance moved into Settings as
+    # a System/Light/Dark control (ui/src/screens/Settings.tsx). Visit Settings, set Dark (deterministic,
+    # unlike the old toggle's "flip whatever's current"), screenshot, then back to Home — every flow
+    # below needs #civic-query, which only exists on the Home screen.
+    if click(page, "Settings", exact=True):
+        page.wait_for_timeout(200)
+        (click(page, "Dark", exact=True) or click(page, "Light", exact=True)) and shot("02-theme")
+        click(page, "Home", exact=True)
+        page.wait_for_selector("#civic-query", timeout=5000)
     # P3 (017): each flow is a TYPED ask into the one input; the Worker's router picks the workflow.
     # A flow's own summary line is in its markers, so a leftover render from a prior flow can never
     # false-pass a broken one; the no-match flow asserts the discovery card.
@@ -123,6 +149,11 @@ def sweep(page, out, tag):
     for f in FLOWS:
         rendered = run_typed_flow(page, out, tag, f, f"run-{f['name']}")
         ok = ok and rendered
+        # 024: a result now opens in a modal ResultSheet whose backdrop covers #civic-query (z-40) —
+        # close it before the next flow, or that flow's page.fill("#civic-query", ...) fails against
+        # an obscured element. See close_sheet()'s docstring for why it's NOT click(page, "Close
+        # results") — that resolves to the backdrop, which is occluded by the sheet itself above 640px.
+        close_sheet(page)
     return ok
 
 
@@ -209,39 +240,37 @@ def run_axe(page, name):
     return len(critical), len(serious)
 
 
-# The three London accent variants (ADR 0005) x the two colour schemes. Contrast is THE
-# variant-sensitive axe rule — every variant swaps --color-primary, which paints links, the CTA and
-# the status chips — so scanning only the default would leave five of six combinations unverified.
-# (P1 caught fo's dark indigo at 3.89:1 this way, before it ever shipped.)
-VARIANTS = ("thames", "indigo", "green")
+# 024 (ADR 0006) replaced the three ADR-0005 accent variants with ONE sourced civic navy/red palette,
+# in both light and dark — there is no data-variant axis left to scan. Contrast is still
+# scheme-sensitive (light/dark swap --color-primary/-text/-bg/... — the same axe rule that caught fo's
+# dark indigo at 3.89:1 under ADR 0005, before it ever shipped), so the matrix collapses to schemes only.
 SCHEMES = ("light", "dark")
 
 
-def set_appearance(page, variant, scheme):
-    """Drive the same two attributes the app's own init scripts + toggles write."""
+def set_appearance(page, scheme):
+    """Drive the same data-theme attribute the app's own init script + Settings' Appearance control
+    write (ui/public/theme-init.js, ui/src/prefs.ts)."""
     page.evaluate(
-        "([v, s]) => { const r = document.documentElement; "
-        "r.setAttribute('data-variant', v); r.setAttribute('data-theme', s); }",
-        [variant, scheme],
+        "(s) => { document.documentElement.setAttribute('data-theme', s); }",
+        scheme,
     )
     page.wait_for_timeout(150)  # let the repaint land before axe reads computed styles
 
 
 def axe_matrix(page, out, name):
-    """Full WCAG scan per accent-variant x scheme combination, with a screenshot of each so the
-    appearance is reviewable and not just the pass/fail. Returns summed (critical, serious)."""
+    """Full WCAG scan per colour scheme, with a screenshot of each so the appearance is reviewable and
+    not just the pass/fail. Returns summed (critical, serious)."""
     crit = ser = 0
-    for variant in VARIANTS:
-        for scheme in SCHEMES:
-            set_appearance(page, variant, scheme)
-            try:
-                page.screenshot(path=f"{out}/{name}-variant-{variant}-{scheme}.png")
-            except Exception as e:
-                print(f"    shot {variant}/{scheme}: {e}")
-            print(f"    -- variant={variant} scheme={scheme}")
-            c, s = run_axe(page, f"{name}-{variant}-{scheme}")
-            crit += c
-            ser += s
+    for scheme in SCHEMES:
+        set_appearance(page, scheme)
+        try:
+            page.screenshot(path=f"{out}/{name}-{scheme}.png")
+        except Exception as e:
+            print(f"    shot {scheme}: {e}")
+        print(f"    -- scheme={scheme}")
+        c, s = run_axe(page, f"{name}-{scheme}")
+        crit += c
+        ser += s
     return crit, ser
 
 
@@ -287,8 +316,8 @@ def run_config(pw, name, kw, video):
     axe_crit, axe_ser = 0, 0
     if name == "desktop":
         snapshot_a11y(page)
-        # Desktop carries the full 3-variant x 2-scheme matrix (017 P1); mobile-portrait keeps a
-        # single scan so the narrow-viewport layout is still gated without 6x the runtime.
+        # Desktop carries the full light/dark scheme matrix; mobile-portrait keeps a single scan so
+        # the narrow-viewport layout is still gated without doubling the runtime.
         axe_crit, axe_ser = axe_matrix(page, OUT, name)
     elif name == "mobile-portrait":
         axe_crit, axe_ser = run_axe(page, name)
@@ -312,14 +341,13 @@ def report(model_hits, unf, broken, a11y_crit, a11y_ser):
         ok = False
     if a11y_crit or a11y_ser:
         print(f"FAIL: axe-core found {a11y_crit} critical + {a11y_ser} serious WCAG 2 A/AA "
-              f"violation(s) across the desktop variant x scheme matrix + mobile "
+              f"violation(s) across the desktop light/dark scheme matrix + mobile "
               f"(see results/{LABEL}/axe-<config>.json).")
         ok = False
     if not ok:
         return 1
     print("PASS: no browser→model-host request, no openrouter/401 console line, every corpus flow "
-          "rendered, and 0 critical/serious axe violations across all 3 accent variants x "
-          "light/dark on desktop, plus mobile.")
+          "rendered, and 0 critical/serious axe violations across light/dark on desktop, plus mobile.")
     return 0
 
 
