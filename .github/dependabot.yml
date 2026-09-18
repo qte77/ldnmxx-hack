@@ -9,7 +9,15 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      # Security fixes get their OWN group — they bypass the weekly schedule/cooldown and land as one
+      # bundled PR the moment an advisory lands, instead of one-PR-per-CVE (17 separate alerts across
+      # worker/ alone, 2026-09). `update-types`/`dependency-type` aren't valid on a security-updates
+      # group (Dependabot rejects the config) — `patterns` is the only filter it supports.
+      npm-security:
+        applies-to: "security-updates"
+        patterns: ["*"]
       npm:
+        applies-to: "version-updates"
         patterns: ["*"]
     labels: ["dependencies", "npm"]
     commit-message:
@@ -36,6 +44,11 @@ updates:
       # the renderer, not an auto-bump.
       - dependency-name: "zod"
         update-types: ["version-update:semver-major"]
+      # vitest 5 was deferred (2026-09) rather than auto-bumped — it kept riding along in the grouped
+      # npm PR, forcing a close-and-regenerate every week to get the OTHER safe minors/patches out.
+      # Ignoring the major here lets the group stay mergeable; revisit as its own migration PR.
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "npm"
     directory: "/worker"
     schedule:
@@ -43,7 +56,11 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      npm-security:
+        applies-to: "security-updates"
+        patterns: ["*"]
       npm:
+        applies-to: "version-updates"
         patterns: ["*"]
     labels: ["dependencies", "npm"]
     commit-message:
@@ -55,6 +72,9 @@ updates:
       # typescript-eslint can't parse TS 7 yet — worker+ui stay aligned on TS 6 (AGENTS.md gotcha).
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # Same vitest-5 deferral as ui/'s ignore above — see that comment.
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -62,7 +82,11 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      github-actions-security:
+        applies-to: "security-updates"
+        patterns: ["*"]
       github-actions:
+        applies-to: "version-updates"
         patterns: ["*"]
     labels: ["dependencies", "github-actions"]
     commit-message:
