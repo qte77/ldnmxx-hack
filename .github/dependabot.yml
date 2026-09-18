@@ -49,6 +49,16 @@ updates:
       # Ignoring the major here lets the group stay mergeable; revisit as its own migration PR.
       - dependency-name: "vitest"
         update-types: ["version-update:semver-major"]
+      # react-dom 19.3.0's production client bundle grew ~17% (536KB -> 625KB raw; new
+      # <ViewTransition/>/addTransitionType, Fragment refs, independently-rendering transitions —
+      # core reconciler code, not tree-shakeable) — enough to blow the gzip budget
+      # (check-bundle-size.mjs). Pinned to this ONE version, not a blanket minor-ignore: react/react-dom
+      # patches and the NEXT minor should still flow normally; only 19.3.0 needs a deliberate decision
+      # (raise the ceiling, or accept it) before it lands. Revisit/remove once that decision is made.
+      - dependency-name: "react"
+        versions: ["19.3.0"]
+      - dependency-name: "react-dom"
+        versions: ["19.3.0"]
   - package-ecosystem: "npm"
     directory: "/worker"
     schedule:
