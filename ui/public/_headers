@@ -20,3 +20,10 @@
   Content-Type: text/markdown; charset=utf-8
 /llms.txt
   Content-Type: text/plain; charset=utf-8
+/index.md
+  Content-Type: text/markdown; charset=utf-8
+
+# RFC 8288 Link headers on the homepage — advertise the sitemap, the markdown twin, and the API
+# discovery surface without an agent having to parse the HTML/robots.txt first.
+/
+  Link: </sitemap.xml>; rel="sitemap", </index.md>; rel="alternate"; type="text/markdown", </openapi.json>; rel="service-desc"; type="application/json", </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"
