@@ -1,7 +1,7 @@
 ---
 title: "Agent-native surface: a real MCP server + the remaining agent-readiness backlog"
 type: plan
-status: "not started (2026-09-19)"
+status: "row 1 (ADR 0007) shipped; rows 2-9 not started (2026-09-19)"
 refs:
   - docs/adr/0003-no-agent-framework.md (this arc EXTENDS its scope to the MCP server, does not reopen it)
   - docs/handoffs/024-app-shell-redesign.md (arc 024 status — design/perf/dependency work, separate concern)
@@ -9,13 +9,15 @@ refs:
   - github.com/qte77/agent-readiness-kit/issues/25 (external remediation tracker, comment-only, never edit its body — bot-owned)
   - "/workspaces/sfsanity/sfclarity/workers/mcp-server/ (reference implementation — read before writing worker/src/mcp/*)"
   - "/workspaces/sfsanity/sfclarity/docs/plans/0047-agent-native-surface-and-backlog.md (sfclarity's own plan for the same problem — read its §Explicitly declined section)"
+  - docs/adr/0007-mcp-server-deterministic-tools.md (this arc's own ADR, row 1 — extends ADR 0003 to MCP tools, same-Worker default, 4-of-6 usecase filter)
 ---
 
 # Plan 025 — Agent-native surface: MCP server + remaining backlog
 
 ## Handoff (read this first)
 
-**Status: not started — this is a brand-new arc.** Everything below was scoped across a single long
+**Status: row 1 (ADR 0007, PR [#319](https://github.com/qte77/ldnmxx-hack/pull/319)) shipped; rows
+2-9 not started.** Everything below was scoped across a single long
 session (2026-09-18/19) that (a) shipped the "safe quick wins" tier already (PRs #315, #316 — llms.txt,
 JSON-LD, api-catalog, agent-skills index, auth.md, markdown twin, AGENTS.md link, RFC 8288 Link headers,
 sitemap lastmod), raising sortmy.london off its 23/F baseline, and (b) explored two sibling repos
@@ -174,7 +176,7 @@ has the exact rows this arc should strike; `agent-readiness-kit#25` gets a comme
 
 | # | Item | Gate | Done-when |
 |---|---|---|---|
-| 1 | **P0 — ADR 0007**: write `docs/adr/0007-*.md` extending ADR 0003's "no agent framework" scope explicitly to MCP tools; document the same-Worker-vs-separate-Worker decision (default: same Worker) and the 4-tools-not-6 decision, both with the reasoning already captured in this plan's Handoff section (don't re-derive, cite/summarize). | agent | ADR merged; cross-linked from this plan's `refs` frontmatter (already done) and from row 2's PR description. |
+| 1 | ✅ shipped (PR [#319](https://github.com/qte77/ldnmxx-hack/pull/319)) — **P0 — ADR 0007**: write `docs/adr/0007-*.md` extending ADR 0003's "no agent framework" scope explicitly to MCP tools; document the same-Worker-vs-separate-Worker decision (default: same Worker) and the 4-tools-not-6 decision, both with the reasoning already captured in this plan's Handoff section (don't re-derive, cite/summarize). | agent | ADR merged; cross-linked from this plan's `refs` frontmatter (already done) and from row 2's PR description. |
 | 2 | **P1 — JSON-RPC dispatch**: add `POST /api/mcp` to `worker/src/worker.ts`'s route dispatch; `initialize` + `tools/list` (returns the 4 real tools' name/description/inputSchema, derived from `shared/usecaseCatalog.ts`'s routable-and-real subset) + `tools/call` (dispatches to the 4 wrapper functions below). Hand-rolled JSON-RPC 2.0, no new dependency (mirrors sfclarity — no `@modelcontextprotocol/sdk`). CORS `*` (public, unauthenticated, matches this app's "no account" ethos). | agent | `worker/test/mcp/dispatch.test.ts` (RED-first) covers `initialize`/`tools/list`/`tools/call` + malformed-request error shapes; `cd worker && npm run lint && npm run typecheck && npm test` green. |
 | 3 | **P1 — 4 tool wrappers**: one per real usecase, each a thin adapter calling the EXISTING `corpus/query.ts` (`sort-my-care`, `sort-my-wander`, `sort-my-food-hygiene`) / `scam/query.ts` (`sort-my-scam-check`) functions — no new query logic, no D1/fallback changes. Rate-limited via a NEW `ratelimits` binding added to `worker/wrangler.toml` (separate limit from `RATE_LIMITER`, since MCP callers are a different traffic shape than the SPA — pick a starting limit, e.g. 20/60s matching the existing one, adjust later if real traffic says otherwise). | agent | Same test file as row 2 covers all 4 tools' happy-path + empty-result shapes; a manual `curl -X POST /api/mcp` (or the Patchright-adjacent plain-HTTP check, local `wrangler dev`) round-trips one real query end-to-end. |
 | 4 | **P1 — `/.well-known/mcp/server-card.json`**: decide (per the source-map note) whether this is Worker-served or a static Pages file; publish it either way with real `name`/`description`/`version`/`serverUrl`/`tools[]` matching row 2/3's actual implementation, not aspirational copy. | agent | `curl https://sortmy.london/.well-known/mcp/server-card.json` (once deployed) returns valid JSON matching the MCP server-card schema; `tools[]` lists exactly the 4 real tools. |
