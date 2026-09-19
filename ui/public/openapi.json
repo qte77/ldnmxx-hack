@@ -1,0 +1,98 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "sortmy.london API",
+    "description": "A free civic wayfinder for London public services. No account, no cookies, no API key. Results are a snapshot of official registers, not a live search — see GET /api/freshness for how current the data is.",
+    "version": "2.0.0",
+    "contact": { "url": "https://github.com/qte77/ldnmxx-hack" }
+  },
+  "servers": [{ "url": "https://sortmy.london" }],
+  "paths": {
+    "/api/run": {
+      "post": {
+        "summary": "Run a civic-lookup workflow",
+        "description": "Routes a free-text prompt to one of the site's workflows (see /.well-known/agent-skills/index.json) and streams its results. Rate-limited per IP (429 on excess).",
+        "operationId": "runWorkflow",
+        "parameters": [
+          {
+            "name": "usecase",
+            "in": "query",
+            "required": false,
+            "description": "Bypass auto-routing and run a specific workflow id directly.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "demo",
+            "in": "query",
+            "required": false,
+            "description": "Force a deterministic demo run instead of a live model call.",
+            "schema": { "type": "string", "enum": ["1"] }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "prompt": { "type": "string", "description": "The question in plain English, e.g. \"GP near E8 3GT\"." },
+                  "model": { "type": "string", "description": "Optional BYOK model override." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AG-UI protocol event stream (Server-Sent Events) of the routed workflow's results.",
+            "content": { "text/event-stream": { "schema": { "type": "string" } } }
+          },
+          "400": {
+            "description": "Unknown usecase id.",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
+              }
+            }
+          },
+          "429": { "description": "Rate limit exceeded for this client IP." }
+        }
+      }
+    },
+    "/api/freshness": {
+      "get": {
+        "summary": "Corpus freshness and row counts",
+        "description": "Read-only, credential-free. States the last-ingested date and row count for every backing corpus, so a caller can judge how current a result is before trusting it.",
+        "operationId": "getFreshness",
+        "responses": {
+          "200": {
+            "description": "Freshness payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generatedAt": { "type": "string", "format": "date-time" },
+                    "corpora": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "corpus": { "type": "string" },
+                          "ingestedAt": { "type": "string", "format": "date-time", "nullable": true },
+                          "asOf": { "type": "string", "nullable": true },
+                          "rowCount": { "type": "integer", "nullable": true }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

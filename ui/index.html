@@ -51,6 +51,24 @@
       content="Ask about London public services in your own words — we point you to the official record. Free, no sign-up, no cookies."
     />
     <meta name="twitter:image" content="https://sortmy.london/og.png" />
+    <!-- Agent/LLM discovery: a markdown twin of this page's content (llms.txt-adjacent convention). -->
+    <link rel="alternate" type="text/markdown" href="/README.md" />
+    <!-- schema.org structured data — one type, truthfully backed by the real site (no fabricated
+         Organization/FAQPage/SearchAction entries just to widen type breadth). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "sortmy.london",
+        "url": "https://sortmy.london/",
+        "description": "A free civic wayfinder for London public services. Ask in your own words and get pointed to the official public-service record — GPs, pharmacies, hospitals and dentists (CQC), parks and listed heritage sites (Historic England / Ordnance Survey), food hygiene ratings (FSA), and firm/scam checks (FCA).",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any (web)",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+        "areaServed": { "@type": "City", "name": "London", "addressCountry": "GB" }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -3,4 +3,26 @@ User-agent: *
 Allow: /
 Content-Signal: ai-input=yes, ai-train=no
 
+# Explicit per-bot allow for known AI crawlers/agents (the wildcard rule above already allows
+# everyone — these lines exist so a scanner that only checks for named AI user-agents, not
+# wildcard coverage, can see the intent stated explicitly too).
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: CCBot
+Allow: /
+
 Sitemap: https://sortmy.london/sitemap.xml

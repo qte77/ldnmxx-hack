@@ -10,3 +10,13 @@
 # skip revalidation. index.html stays on the default (revalidate) so redeploys land.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Agent-readiness well-known files: extensionless/non-standard-extension static files need an
+# explicit Content-Type — Pages' default MIME guess (application/octet-stream) would otherwise
+# make api-catalog fail its RFC 9727-required media type, and .md serve unrecognised.
+/.well-known/api-catalog
+  Content-Type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
+/auth.md
+  Content-Type: text/markdown; charset=utf-8
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
