@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useFreshnessDate } from "./useFreshnessDate";
+import { sourceSentence } from "./sourceSentence";
 
 // 024 P2: the bottom-sheet overlay hosting a run's results. Row 2 deliberately did not create this —
 // it had no driver until row 1's category cards existed (YAGNI/AHA). Deliberately a plain fixed-position
@@ -50,6 +51,7 @@ export function ResultSheet({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const asOf = useFreshnessDate(freshnessKey);
+  const meta = sourceSentence(source, asOf);
 
   // aria-modal hides the background from assistive tech, so focus must follow into the sheet — land it
   // on the close control, the one action always present.
@@ -116,14 +118,13 @@ export function ResultSheet({
 
         {summary && <p className="mt-2 text-sm text-text-muted">{summary}</p>}
 
-        {(source ?? asOf) && (
+        {meta && (
           <>
             {/* The design's .hr: a 1px divider, not a shadow or a heavier rule. */}
             <hr className="my-[var(--space-4)] h-px border-0 bg-[var(--color-border)]" />
-            <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
-              {source && <span>Source: {source}</span>}
-              {asOf && <span>Updated {asOf}</span>}
-            </div>
+            {/* 024 P6b (design re-sync): one sentence (design's dialog-body meta line), not two
+                floating "Source: X" / "Updated Y" labels — see sourceSentence.ts. */}
+            <p className="text-xs text-text-muted">{meta}</p>
           </>
         )}
 
