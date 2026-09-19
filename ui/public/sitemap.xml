@@ -2,6 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://sortmy.london/</loc>
+    <!-- No finer-grained per-deploy tracking exists yet — stamped at last edit of this file
+         (2026-09-19), not auto-updated per release. Revisit if that drifts too far from reality. -->
+    <lastmod>2026-09-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>

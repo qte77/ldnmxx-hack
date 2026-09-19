@@ -55,3 +55,5 @@ official page so nothing here should be trusted as the final word.
   rebuild; see `usecases/*.json` and `shared/usecaseCatalog.ts` for the single source of truth
   this file and the JSON catalogs above are both generated from by hand — open an issue if
   either drifts from `usecases/*.json`.
+- [AGENTS.md](https://github.com/qte77/ldnmxx-hack/blob/main/AGENTS.md) — operating rules for AI
+  coding agents working in this repo (conventions, workflow, locked decisions).
