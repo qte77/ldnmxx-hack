@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   readAppearance,
   writeAppearance,
@@ -21,6 +21,58 @@ const APPEARANCE_OPTIONS: { id: Appearance; label: string }[] = [
 ];
 
 const BOROUGHS = boroughLabels();
+
+// 024 P6b (design re-sync): the design groups Settings controls under small icon+label section
+// headers ("Display", "Location") — SortMyLondon.dc.html, re-pulled 2026-09-19. Icons ported verbatim
+// (same SVG paths); `aria-hidden` since the adjacent text already names the section. A <p>, not an
+// <h3> — the design's own h6 for these is explicitly body-font/600, and an h3 would pick up the app's
+// global `h1,h2,h3,h4{font-family:var(--font-heading)}` rule (index.css) unintentionally.
+function SectionHeading({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <p className="mt-8 mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text">
+      {icon}
+      {children}
+    </p>
+  );
+}
+
+function DisplayIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 12h8M12 8v8" />
+    </svg>
+  );
+}
+
+function LocationIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 21s-7-6.5-7-11a7 7 0 1114 0c0 4.5-7 11-7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
 
 // Shared control styling — same 44px touch-target + focus-ring pattern as Home.tsx's CONTROL_CLASS/
 // CHIP_CLASS (WCAG 2.5.5 / 2.4.7), duplicated here rather than imported so Settings stays
@@ -209,6 +261,7 @@ export function Settings() {
     <div className="pt-6 sm:pt-10 pb-6">
       <h2 className="text-xl font-bold text-text">Settings</h2>
 
+      <SectionHeading icon={<DisplayIcon />}>Display</SectionHeading>
       <SegmentedControl
         legendId="appearance-label"
         legend="Appearance"
@@ -227,6 +280,7 @@ export function Settings() {
 
       <HighContrastSwitch value={highContrast} onToggle={toggleHighContrast} />
 
+      <SectionHeading icon={<LocationIcon />}>Location</SectionHeading>
       <BoroughSelect value={borough} onChange={pickBorough} />
 
       <AboutSection />
