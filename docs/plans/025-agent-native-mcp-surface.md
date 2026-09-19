@@ -9,6 +9,7 @@ refs:
   - github.com/qte77/agent-readiness-kit/issues/25 (external remediation tracker, comment-only, never edit its body — bot-owned)
   - "/workspaces/sfsanity/sfclarity/workers/mcp-server/ (reference implementation — read before writing worker/src/mcp/*)"
   - "/workspaces/sfsanity/sfclarity/docs/plans/0047-agent-native-surface-and-backlog.md (sfclarity's own plan for the same problem — read its §Explicitly declined section)"
+  - docs/adr/0007-mcp-server-deterministic-tools.md (this arc's own ADR, row 1 — extends ADR 0003 to MCP tools, same-Worker default, 4-of-6 usecase filter)
 ---
 
 # Plan 025 — Agent-native surface: MCP server + remaining backlog
