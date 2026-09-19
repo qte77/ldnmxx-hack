@@ -1,0 +1,20 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://sortmy.london/",
+      "service-desc": [
+        { "href": "https://sortmy.london/openapi.json", "type": "application/json" }
+      ],
+      "item": [
+        {
+          "href": "https://sortmy.london/api/run",
+          "title": "Run a civic-lookup workflow (POST, text/event-stream response)"
+        },
+        {
+          "href": "https://sortmy.london/api/freshness",
+          "title": "Corpus freshness and row counts (GET, application/json)"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": "0.1.0",
+  "site": "https://sortmy.london",
+  "description": "A free civic wayfinder for London public services. Hand-maintained here from this repo's single source of truth for workflow metadata (usecases/*.json, shared/usecaseCatalog.ts) — open an issue at https://github.com/qte77/ldnmxx-hack if this drifts.",
+  "skills": [
+    {
+      "id": "sort-my-care",
+      "title": "Sort My Care",
+      "description": "Find NHS and public health services near a postcode — GPs, pharmacies, hospitals, dentists.",
+      "example": "GP near E8 3GT",
+      "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-care" },
+      "source": "Care Quality Commission",
+      "officialLink": "https://www.nhs.uk/service-search",
+      "sampleData": false
+    },
+    {
+      "id": "sort-my-wander",
+      "title": "Sort My Wander",
+      "description": "Find parks, green spaces and listed heritage sites to explore near a postcode.",
+      "example": "parks to wander near SW9 9SL",
+      "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-wander" },
+      "source": "Historic England & Ordnance Survey",
+      "officialLink": "https://historicengland.org.uk/listing/the-list/",
+      "sampleData": false
+    },
+    {
+      "id": "sort-my-food-hygiene",
+      "title": "Sort My Food Hygiene",
+      "description": "Look up official food hygiene ratings for restaurants and takeaways near a postcode.",
+      "example": "food hygiene near SW9 9SL",
+      "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-food-hygiene" },
+      "source": "Food Standards Agency",
+      "officialLink": "https://ratings.food.gov.uk/",
+      "sampleData": false
+    },
+    {
+      "id": "sort-my-scam-check",
+      "title": "Sort My Scam Check",
+      "description": "Check whether a firm is on the FCA's register of authorised financial businesses.",
+      "example": "is Thames Capital Partners a scam",
+      "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-scam-check" },
+      "source": "Financial Conduct Authority",
+      "officialLink": "https://register.fca.org.uk/",
+      "sampleData": true
+    },
+    {
+      "id": "sort-my-route",
+      "title": "Sort My Route",
+      "description": "Plan a step-free public transport route between two London places. Demo only — canned, not backed by a live transport API.",
+      "example": "step-free from E8 3GT to Westminster",
+      "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-route" },
+      "sampleData": true,
+      "demoOnly": true
+    },
+    {
+      "id": "founders-copilot",
+      "title": "Founder's Copilot",
+      "description": "A demo copilot matching London startup founders to funding and incorporation steps. Demo only.",
+      "example": "an AI copilot for London founders",
+      "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=founders-copilot" },
+      "sampleData": true,
+      "demoOnly": true
+    }
+  ]
+}

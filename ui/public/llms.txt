@@ -1,0 +1,57 @@
+# sortmy.london
+
+> A free civic wayfinder for London. Ask a question in plain English (plus a postcode or
+> place), and it signposts you to the official public-service record — it never gives advice,
+> never invents an answer, and always shows the date + a link to confirm at the source.
+
+sortmy.london answers questions about London public services by routing them to one of a small
+set of real workflows, each backed by an official public register. No account, no cookies, no
+tracking beyond anonymous page-view counts. Results are a weekly-to-daily snapshot of official
+data, not a live scrape — every result states its own freshness date and links back to the
+official page so nothing here should be trusted as the final word.
+
+## API
+
+- [POST /api/run](https://sortmy.london/api/run) — run a civic-lookup workflow. JSON body
+  `{"prompt": "<free text>"}`, optional `?usecase=<id>` to bypass routing, optional
+  `?demo=1` for a deterministic sample run. Returns a `text/event-stream` (Server-Sent Events,
+  AG-UI protocol) stream of the routed workflow's results. Rate-limited per IP.
+- [GET /api/freshness](https://sortmy.london/api/freshness) — JSON: the last-ingested date and
+  row count for every backing corpus, so a caller can verify how current the data is before
+  trusting a result.
+- [/openapi.json](https://sortmy.london/openapi.json) — machine-readable description of both
+  endpoints above.
+
+## Workflows (skills)
+
+- [Sort My Care](https://sortmy.london/?usecase=sort-my-care) — find NHS and public health
+  services near a postcode (GPs, pharmacies, hospitals, dentists). Source: Care Quality
+  Commission.
+- [Sort My Wander](https://sortmy.london/?usecase=sort-my-wander) — find parks, green spaces
+  and listed heritage sites near a postcode. Source: Historic England & Ordnance Survey.
+- [Sort My Food Hygiene](https://sortmy.london/?usecase=sort-my-food-hygiene) — official food
+  hygiene ratings for restaurants and takeaways near a postcode. Source: Food Standards Agency.
+- [Sort My Scam Check](https://sortmy.london/?usecase=sort-my-scam-check) — check whether a
+  firm is on the FCA's register of authorised financial businesses. Source: Financial Conduct
+  Authority. **Sample data only** — not a live regulatory lookup; always confirm on the real
+  FCA register.
+
+## Demo-only (never auto-routed; reachable only via an explicit link)
+
+- [Sort My Route](https://sortmy.london/?usecase=sort-my-route) — plans a step-free public
+  transport route between two London places. Canned demo, no live transport API behind it.
+- [Founder's Copilot](https://sortmy.london/?usecase=founders-copilot) — a demo copilot
+  matching London startup founders to funding and incorporation steps. Canned demo.
+
+## Optional
+
+- [/.well-known/agent-skills/index.json](https://sortmy.london/.well-known/agent-skills/index.json) —
+  the same workflow list above, machine-readable.
+- [/.well-known/api-catalog](https://sortmy.london/.well-known/api-catalog) — RFC 9727 API
+  catalog for the two endpoints above.
+- [/auth.md](https://sortmy.london/auth.md) — this API needs no authentication; see for the
+  actual constraints (rate limiting, no API key).
+- [Source (GitHub)](https://github.com/qte77/ldnmxx-hack) — each workflow is a JSON file, not a
+  rebuild; see `usecases/*.json` and `shared/usecaseCatalog.ts` for the single source of truth
+  this file and the JSON catalogs above are both generated from by hand — open an issue if
+  either drifts from `usecases/*.json`.
