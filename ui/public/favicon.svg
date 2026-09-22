@@ -1,16 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="qte77 mark">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="sortmy.london mark" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
   <style>
-    /* Civic navy palette (arc 024, ADR 0006) — bg/fg/accent track --color-surface / --color-text /
-       --color-primary in their respective scheme (dark shown by default, light overridden below). */
-    .mark-bg { fill: #1a2030; }
-    .mark-fg { fill: #eceef3; }
-    .mark-accent { fill: #7f96e9; }
+    /* Arc 026 row 1: the real sortmy.london "sort" glyph replaces the placeholder "qte77 mark" — a
+       vertical line with an up-chevron top / down-chevron bottom, two arrows, one each direction,
+       echoing "sortmy". Design source: Claude Design project b8ac2137-75ac-4283-b730-3da64859a2f4,
+       file SortMyLondon.dc.html (stroke, no fill, viewBox 0 0 40 40, stroke-width 1.6) — re-pulled
+       2026-09-19. The mark tracks --color-primary in its respective scheme (dark shown by default,
+       light overridden below); a standalone favicon SVG has no access to the host page's CSS custom
+       properties, so the two hex values are copied verbatim — same mechanism the prior mark used. No
+       background tile — the design's own swatch is transparent, letting the browser's own tab-chrome
+       background show through. */
+    .mark { stroke: #7f96e9; }
     @media (prefers-color-scheme: light) {
-      .mark-bg { fill: #e8eaf0; }
-      .mark-fg { fill: #141a26; }
-      .mark-accent { fill: #2f4cc9; }
+      .mark { stroke: #2f4cc9; }
     }
   </style>
-  <rect class="mark-bg" x="0" y="0" width="80" height="80" rx="12" />
-  <g><path d="M383 561Q383 399 437.0 307.0Q491 215 586 215Q681 215 736.0 307.0Q791 399 791 561Q791 723 736.0 815.0Q681 907 586 907Q491 907 437.0 815.0Q383 723 383 561ZM791 158Q737 64 665.5 17.5Q594 -29 504 -29Q305 -29 197.5 123.0Q90 275 90 559Q90 839 196.0 993.0Q302 1147 494 1147Q595 1147 669.5 1098.0Q744 1049 791 952V1120H1083V-426H791Z" transform="translate(14.7126,47.2900) scale(0.013672,-0.013672)" class="mark-fg" /><path d="M135 1493H1079V1284L573 0H272L758 1233H135Z" transform="translate(31.5700,47.2900) scale(0.013672,-0.013672)" class="mark-fg" /></g><rect class="mark-accent" x="48.43" y="44.29" width="16.86" height="3" rx="1.5" />
+  <path class="mark" d="M20 5v30M13 12l7-7 7 7M13 28l7 7 7-7" />
 </svg>
