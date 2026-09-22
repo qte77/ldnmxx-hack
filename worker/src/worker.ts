@@ -19,6 +19,7 @@ import { ASSESS_STAGE_TOOL, isValidAssessResult, type AssessResult } from "../..
 import { SEARCH_OPPORTUNITIES_TOOL, isValidSearchResult, type SearchResult, type OpportunityMatch } from "../../shared/searchTool";
 import { detectInjection } from "../../shared/guard";
 import opportunitiesData from "../../data/demo/opportunities.sample.json";
+import { handleMcp } from "./mcp/dispatch";
 
 export interface Env {
   ARIZE_API_KEY?: string;
@@ -30,6 +31,7 @@ export interface Env {
   DEFAULT_MODEL?: string;
   PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
   RATE_LIMITER?: RateLimit; // per-IP limiter (wrangler [[ratelimits]]); absent in tests → skipped
+  MCP_RATE_LIMITER?: RateLimit; // per-IP limiter for /api/mcp (ADR 0007) — separate shape from RATE_LIMITER
   AI?: Ai; // Cloudflare Workers AI binding (first keyless free provider); absent → skipped
   DB?: D1Database; // CF D1 corpus store (W6, ADR 0002); absent → bundled sample corpora serve
   WORKERS_AI_MODEL?: string; // override the default Workers AI model id
@@ -105,6 +107,31 @@ async function renderBatch(
   } finally {
     clearTimeout(timer);
   }
+}
+
+// /api/mcp is a public, unauthenticated MCP endpoint (ADR 0007) — arbitrary agent clients, not just
+// this app's own SPA, so it gets a fixed permissive CORS rather than corsHeaders()'s ALLOWED_ORIGINS
+// allowlist (which exists to protect the SPA's own credentialed-ish surface, not this one).
+const MCP_CORS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type",
+};
+
+// Isolated from fetch()'s main branch to keep its complexity down — method check, rate limit, dispatch.
+async function respondMcp(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "POST") return new Response("Method Not Allowed", { status: 405, headers: MCP_CORS });
+  if (env.MCP_RATE_LIMITER) {
+    const ip = request.headers.get("CF-Connecting-IP") ?? "anon";
+    const { success } = await env.MCP_RATE_LIMITER.limit({ key: ip });
+    if (!success) {
+      return new Response(
+        JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32000, message: "Too Many Requests" } }),
+        { status: 429, headers: { ...MCP_CORS, "content-type": "application/json" } }
+      );
+    }
+  }
+  return handleMcp(request, env, MCP_CORS);
 }
 
 function corsHeaders(request: Request, env: Env): Record<string, string> {
@@ -468,6 +495,87 @@ export async function runUsecase(
   write({ type: "RUN_FINISHED" });
 }
 
+// /api/mcp's OPTIONS + dispatch, isolated so `fetch` itself stays a thin two-way router (its own
+// complexity budget is spent entirely on the pre-existing /api/run|/trace logic below).
+async function mcpRoute(request: Request, env: Env): Promise<Response> {
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: MCP_CORS });
+  return respondMcp(request, env);
+}
+
+// Everything /api/run and /api/trace need — unchanged from before ADR 0007 added /api/mcp as a
+// sibling route; `fetch` now just picks which of the two this request is.
+async function handleAppRequest(request: Request, env: Env, ctx: ExecutionContext, url: URL): Promise<Response> {
+  const cors = corsHeaders(request, env);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+
+  const fresh = await freshnessResponse(request, url, env, cors);
+  if (fresh) return fresh;
+
+  const isRun = url.pathname === "/api/run";
+  const isTrace = url.pathname === "/api/trace";
+  if (!isRun && !isTrace) return new Response("Not found", { status: 404, headers: cors });
+  if (request.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405, headers: cors });
+  }
+
+  // Per-IP rate-limit (wrangler [[ratelimits]] binding) for both endpoints. Absent in unit tests → skipped.
+  if (env.RATE_LIMITER) {
+    const ip = request.headers.get("CF-Connecting-IP") ?? "anon";
+    const { success } = await env.RATE_LIMITER.limit({ key: ip });
+    if (!success) return new Response("Too Many Requests", { status: 429, headers: cors });
+  }
+
+  // /trace: forward a browser-collected span batch to Arize (keeps ARIZE_API_KEY Worker-only).
+  if (isTrace) {
+    ctx.waitUntil(exportSpans(env, await readSpans(request)));
+    return new Response(null, { status: 202, headers: cors });
+  }
+
+  // Read the POST body ONCE here (a Request body can't be read twice) and thread it into BOTH the
+  // router and resolveRun — the classifier needs `prompt` BEFORE the usecase resolves (017 P2 gotcha).
+  const { prompt, bodyModel } = await readRunBody(request);
+  const demo = url.searchParams.get("demo") === "1";
+  const emitter = makeEmitter(env);
+  const target = await resolveTarget(url.searchParams.get("usecase") ?? "", prompt, demo, env, emitter);
+  if (target.unknownUsecase !== undefined) {
+    return new Response(
+      JSON.stringify({ error: `unknown usecase: ${target.unknownUsecase}; valid: ${usecaseIds.join(", ")}` }),
+      { status: 400, headers: { ...cors, "content-type": "application/json" } }
+    );
+  }
+  const { def, routed } = target;
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const write = (e: AgentEvent): void => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
+      };
+      if (def) {
+        if (routed) {
+          const resolved: UsecaseResolvedEvent = { type: "USECASE_RESOLVED", usecase: def.id, title: def.title };
+          write(resolved);
+        }
+        const { modelCtx, runAttrs, paceMs } = resolveRun(request, env, def, demo, prompt, bodyModel);
+        await runUsecase(def, emitter, write, runAttrs, modelCtx, paceMs);
+      } else {
+        streamNoMatch(write, emitter);
+      }
+      controller.close();
+    },
+  });
+  ctx.waitUntil(emitter.flush());
+
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      ...cors,
+      "content-type": "text/event-stream; charset=utf-8",
+      "cache-control": "no-cache",
+    },
+  });
+}
+
 export default {
   // P1 (#182): the daily corpus-ingest cron (wrangler.toml [triggers]) — release asset -> shadow ->
   // validate -> swap (corpus/ingest.ts). Handler glue only; the planner is module-TDD'd. No DB
@@ -476,77 +584,11 @@ export default {
     if (env.DB) ctx.waitUntil(runIngest(env.DB));
   },
 
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  // ADR 0007: /api/mcp is a fourth route on this SAME Worker, not a second one — just a pathname
+  // check ahead of the pre-existing /api/run|/trace logic, which is otherwise untouched.
+  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
-    const cors = corsHeaders(request, env);
-
-    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-
-    const fresh = await freshnessResponse(request, url, env, cors);
-    if (fresh) return fresh;
-
-    const isRun = url.pathname === "/api/run";
-    const isTrace = url.pathname === "/api/trace";
-    if (!isRun && !isTrace) return new Response("Not found", { status: 404, headers: cors });
-    if (request.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405, headers: cors });
-    }
-
-    // Per-IP rate-limit (wrangler [[ratelimits]] binding) for both endpoints. Absent in unit tests → skipped.
-    if (env.RATE_LIMITER) {
-      const ip = request.headers.get("CF-Connecting-IP") ?? "anon";
-      const { success } = await env.RATE_LIMITER.limit({ key: ip });
-      if (!success) return new Response("Too Many Requests", { status: 429, headers: cors });
-    }
-
-    // /trace: forward a browser-collected span batch to Arize (keeps ARIZE_API_KEY Worker-only).
-    if (isTrace) {
-      ctx.waitUntil(exportSpans(env, await readSpans(request)));
-      return new Response(null, { status: 202, headers: cors });
-    }
-
-    // Read the POST body ONCE here (a Request body can't be read twice) and thread it into BOTH the
-    // router and resolveRun — the classifier needs `prompt` BEFORE the usecase resolves (017 P2 gotcha).
-    const { prompt, bodyModel } = await readRunBody(request);
-    const demo = url.searchParams.get("demo") === "1";
-    const emitter = makeEmitter(env);
-    const target = await resolveTarget(url.searchParams.get("usecase") ?? "", prompt, demo, env, emitter);
-    if (target.unknownUsecase !== undefined) {
-      return new Response(
-        JSON.stringify({ error: `unknown usecase: ${target.unknownUsecase}; valid: ${usecaseIds.join(", ")}` }),
-        { status: 400, headers: { ...cors, "content-type": "application/json" } }
-      );
-    }
-    const { def, routed } = target;
-
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream<Uint8Array>({
-      async start(controller) {
-        const write = (e: AgentEvent): void => {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
-        };
-        if (def) {
-          if (routed) {
-            const resolved: UsecaseResolvedEvent = { type: "USECASE_RESOLVED", usecase: def.id, title: def.title };
-            write(resolved);
-          }
-          const { modelCtx, runAttrs, paceMs } = resolveRun(request, env, def, demo, prompt, bodyModel);
-          await runUsecase(def, emitter, write, runAttrs, modelCtx, paceMs);
-        } else {
-          streamNoMatch(write, emitter);
-        }
-        controller.close();
-      },
-    });
-    ctx.waitUntil(emitter.flush());
-
-    return new Response(stream, {
-      status: 200,
-      headers: {
-        ...cors,
-        "content-type": "text/event-stream; charset=utf-8",
-        "cache-control": "no-cache",
-      },
-    });
+    if (url.pathname === "/api/mcp") return mcpRoute(request, env);
+    return handleAppRequest(request, env, ctx, url);
   },
 };

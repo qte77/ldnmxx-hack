@@ -29,6 +29,14 @@ name = "RATE_LIMITER"
 namespace_id = "1001"
 simple = { limit = 20, period = 60 }
 
+# Per-IP throttle on POST /api/mcp (ADR 0007) → binding `MCP_RATE_LIMITER`. Separate namespace/limit
+# from RATE_LIMITER since MCP callers (arbitrary agent clients) are a different traffic shape than the
+# SPA — same starting limit, adjust later if real traffic says otherwise.
+[[ratelimits]]
+name = "MCP_RATE_LIMITER"
+namespace_id = "1002"
+simple = { limit = 20, period = 60 }
+
 # Cloudflare Workers AI — the first (free, keyless) render provider → binding `AI` (env.AI).
 [ai]
 binding = "AI"
