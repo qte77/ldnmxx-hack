@@ -1,7 +1,7 @@
 ---
 title: "Design parity completion: logo, hero, category-card icons, trust bar, recents"
 type: plan
-status: "rows 1-5 shipped; rows 6-8 not started (2026-09-22)"
+status: "rows 1-6 shipped; rows 7-8 not started (2026-09-22)"
 refs:
   - docs/plans/024-app-shell-redesign.md (the design-match arc this plan closes out — CLOSED, do not reopen its own table, this is the migrated remainder)
   - docs/adr/0006-civic-navy-red-palette.md (palette/token source this plan reuses verbatim, no new tokens needed)
@@ -12,13 +12,14 @@ refs:
 
 ## Handoff (read this first)
 
-**Status: rows 1-5 all shipped** — row 1 (logo, PR [#321](https://github.com/qte77/ldnmxx-hack/pull/321)),
+**Status: rows 1-6 all shipped** — row 1 (logo, PR [#321](https://github.com/qte77/ldnmxx-hack/pull/321)),
 row 2 (hero rewrite, PR [#323](https://github.com/qte77/ldnmxx-hack/pull/323)), row 3 (category icons,
 PR [#325](https://github.com/qte77/ldnmxx-hack/pull/325)), row 4 (trust bar, PR
 [#324](https://github.com/qte77/ldnmxx-hack/pull/324)), row 5 (recently looked up, PR
-[#327](https://github.com/qte77/ldnmxx-hack/pull/327)). **Bundle headroom is now VERY thin — 598 B /
-150,000 B JS ceiling (~99.6%) — decide whether to raise the ceiling before row 6/7's e2e+docs work,
-which shouldn't add JS, or before any future UI row, which likely will.** Rows 6-8 not started.
+[#327](https://github.com/qte77/ldnmxx-hack/pull/327)), row 6 (e2e click-through, PR
+[#329](https://github.com/qte77/ldnmxx-hack/pull/329)). **Bundle headroom is still VERY thin — 598 B /
+150,000 B JS ceiling (~99.6%, row 6 added no JS) — decide whether to raise the ceiling before any
+future UI row, which likely will need it.** Row 7 (docs sync) next; row 8 (owner deploy) after.
 Scoped from a direct design↔live diff
 run in the prior session (2026-09-19): the design canvas was re-pulled fresh via `DesignSync` and
 compared item-by-item against the deployed site. Two categories came out of that diff — **real gaps**
@@ -188,7 +189,7 @@ decision); strike this plan's own rows as they ship (this table is authoritative
 | 3 | ✅ shipped (PR [#325](https://github.com/qte77/ldnmxx-hack/pull/325)) — **P1 — Category-card icon grid**: 2-col grid, icon-only cards (drop the blurb from the card face — it moves to a `title` attribute or stays reachable via the existing result-dialog summary, don't just delete the information). Icon choice per usecase (decide-by-default, override with reasoning in the PR if you pick differently): Care → a cross/stethoscope glyph, Wander → a tree/leaf glyph, Scam Check → a shield glyph, Food Hygiene → a fork-and-knife or star-rating glyph, Founder's Copilot → a briefcase glyph, Route → a map-pin glyph. Reuse the mock's own 24×24 stroke-icon style (`stroke-width:1.8`, `stroke-linecap/linejoin:round`) for visual consistency with the rest of the ported design. | agent | All 6 real usecases render with a distinct icon in both themes at the mock's 2-col grid layout; `disabled` (mid-run) state still works per the existing `CategoryCard` behaviour; a11y: each icon is `aria-hidden` with the card's own accessible name carrying the label (mirror the existing pattern already used for section-heading icons in `Settings.tsx`, PR #314). |
 | 4 | ✅ shipped (PR [#324](https://github.com/qte77/ldnmxx-hack/pull/324)) — **P1 — Dismissible trust bar**: "Free · No sign-up · No cookies" bar above the category grid, with a × dismiss that PERSISTS (new `prefs.ts` key `trustBarDismissed`, unlike the mock which resets every mount — this app should remember the user's choice, matching how every other Settings-driven preference already persists). | agent | Dismissing hides the bar; a reload (fresh `readAppearance`-style read) keeps it hidden; `ui/tests/prefs.test.ts` gets a RED-first case for the new read/write pair, matching its existing style exactly. |
 | 5 | ✅ shipped (PR [#327](https://github.com/qte77/ldnmxx-hack/pull/327)) — **P2 — "Recently looked up"**: a ring buffer of the last 3 distinct usecase ids the user actually opened a result for (not just hovered/typed — mirror the mock's `selectCategory` trigger point, which fires on actual selection), rendered as outline chips above/below the category grid, tapping one re-runs that usecase's example query (reuse the existing `submitPrompt(text, usecaseId)` call already wired for category-card taps). | agent | A RED-first pure function (mirror `categoryCards.ts`'s test style) covers the ring-buffer dedup/max-3/most-recent-first logic; Patchright confirms 3 real taps produce 3 chips in the right order, a 4th evicts the oldest. |
-| 6 | **P3 — E2E verification**: per the "E2E verification requirement" section above. | agent | Local sweep PASS; live sweep PASS once row 8 ships (documented in the closing PR). |
+| 6 | ✅ shipped (PR [#329](https://github.com/qte77/ldnmxx-hack/pull/329)) — **P3 — E2E verification**: per the "E2E verification requirement" section above. | agent | Local sweep PASS; live sweep PASS once row 8 ships (documented in the closing PR). |
 | 7 | **P3 — Docs sync**: CHANGELOG + `docs/design.md` per the "Docs & issues audit" section above. | agent | Both updated in the same PR(s) that ship rows 1–5, not a trailing cleanup PR. |
 | 8 | **P4 — Deploy**: `bash scripts/provision_cf.sh`, confirmed with the user first regardless of any earlier deploy this session. | **owner** | Live site independently verified (Patchright, both themes) to show the new logo/hero/cards/trust-bar/recents — not just a green exit code from the deploy script. |
 
