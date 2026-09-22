@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type SyntheticEvent } from "react";
+import { useCallback, useEffect, useState, type ReactNode, type SyntheticEvent } from "react";
 import { A2UISurface } from "../A2UISurface";
 import { EventStream } from "../EventStream";
 import { matchesToggle, readDevMode, writeDevMode } from "../devmode";
@@ -381,10 +381,79 @@ function SampleCard() {
   );
 }
 
-// 024 P1: one card per catalog entry. The 4 real, routable usecases render like an ordinary corpus
-// lookup; the 2 never-auto-routed demo flows (ADR 0004 — no keywords, a card tap is the ONLY way to
-// reach them) carry a visibly distinct "Demo" badge so they never read as a real signpost. Scam Check
-// additionally carries a "sample data" note — it has no live corpus, a synthetic sample only.
+// 026 P1: per-usecase decorative glyph for the icon-only category-card grid (SortMyLondon.dc.html,
+// re-pulled 2026-09-19 — 24x24 stroke icons, stroke-width 1.8, round caps/joins, same stroke-icon
+// family as Logo() above and Settings.tsx's SectionHeading icons). Keyed by catalog `id` (stable —
+// titles could theoretically change) so this needs no changes to shared/usecaseCatalog.ts or
+// usecases/*.json. The wrapping icon-circle (CategoryIcon below) already supplies the circular
+// badge, so none of these paths draw their own outer circle/frame.
+const CATEGORY_ICON_PATHS: Record<string, ReactNode> = {
+  // Care — a medical cross.
+  "sort-my-care": <path d="M12 5v14M5 12h14" />,
+  // Wander — a two-tier conifer (canopy + trunk). A single triangle read too close to the Logo's own
+  // up-chevron mark in review (screenshot check) — the second, wider tier's "shoulders" are what make
+  // this read as a tree rather than an arrow.
+  "sort-my-wander": (
+    <>
+      <path d="M12 2 17 9H14.5L19 16H5L9.5 9H7z" />
+      <path d="M12 16v5" />
+    </>
+  ),
+  // Scam Check — a shield.
+  "sort-my-scam-check": <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+  // Food Hygiene — a 5-point star: the FSA's own 0-5 hygiene-rating unit, so this is the most literal
+  // (not just decorative) icon of the six — chosen over a fork/knife for that reason.
+  "sort-my-food-hygiene": (
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  ),
+  // Founder's Copilot — a briefcase.
+  "founders-copilot": (
+    <>
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </>
+  ),
+  // Route — a map pin (same glyph as Settings.tsx's LocationIcon — both are location-flavoured).
+  "sort-my-route": (
+    <>
+      <path d="M12 21s-7-6.5-7-11a7 7 0 1 1 14 0c0 4.5-7 11-7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </>
+  ),
+};
+
+// aria-hidden: decorative only. The button's own text content (title + Demo/sample-data labels, when
+// present) carries the accessible name — the same division of labour Settings.tsx's section-heading
+// icons already use (PR #314), just applied to a button's accessible name instead of adjacent text.
+function CategoryIcon({ id }: { id: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex items-center justify-center w-[2.4em] h-[2.4em] rounded-full bg-primary/10 border border-primary/40 text-primary"
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {CATEGORY_ICON_PATHS[id]}
+      </svg>
+    </span>
+  );
+}
+
+// 024 P1 / 026 P1: one card per catalog entry. The 4 real, routable usecases render like an ordinary
+// corpus lookup; the 2 never-auto-routed demo flows (ADR 0004 — no keywords, a card tap is the ONLY way
+// to reach them) carry a visibly distinct "Demo" badge so they never read as a real signpost. Scam
+// Check additionally carries a "sample data" note — it has no live corpus, a synthetic sample only.
+// 026 P1 (design-match): icon-only card face — the blurb no longer renders on the card itself; it moves
+// to the button's native `title` tooltip AND stays reachable after a tap via the ResultSheet's own
+// summary line (sheetMeta() below already reads entry.blurb for that), so no information is lost.
 function CategoryCard({
   entry,
   onPick,
@@ -400,24 +469,22 @@ function CategoryCard({
       type="button"
       disabled={disabled}
       onClick={() => onPick(entry.example, entry.id)}
+      title={entry.blurb}
       // 024 P2 fix: submitPrompt no-ops while a run is in flight (never relabels the sheet mid-stream) —
       // disable the visible affordance too, so that no-op has a reason instead of reading as broken.
       // 024 P6: transparent + shadow-sm matches the design's `.card.elev-sm` (Common questions cards) —
       // border-only with a whisper of shadow, not the filled --surface-lift card model.
-      className="text-left p-4 rounded-[var(--radius-card)] shadow-[var(--shadow-sm)] border border-border hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+      // 026 P1: centred column layout (icon + title, no blurb) replacing the old left-aligned row.
+      className="flex flex-col items-center gap-2 text-center p-4 rounded-[var(--radius-card)] shadow-[var(--shadow-sm)] border border-border hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
     >
-      <span className="flex items-center justify-between gap-2">
-        <span className="font-heading text-text">{entry.title}</span>
-        {isDemo && (
-          <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-text-muted/15 text-text-muted">
-            Demo
-          </span>
-        )}
-      </span>
-      <span className="block mt-1 text-sm text-text-muted">{entry.blurb}</span>
-      {entry.sampleData && (
-        <span className="block mt-1 text-xs text-data-caution">Sample data — not a live check</span>
+      <CategoryIcon id={entry.id} />
+      <span className="font-heading text-text">{entry.title}</span>
+      {isDemo && (
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-text-muted/15 text-text-muted">
+          Demo
+        </span>
       )}
+      {entry.sampleData && <span className="text-xs text-data-caution">Sample data — not a live check</span>}
     </button>
   );
 }
@@ -449,7 +516,10 @@ function CategoryCardList({
   return (
     <section className="mt-8">
       <h2 className="text-lg font-bold text-text">Common questions</h2>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      {/* 026 P1 (design-match): 2 columns at every width, not just from sm: up — the design's own
+          grid-template-columns:1fr 1fr has no responsive fallback, and icon-only cards are compact
+          enough to keep 2-up on a phone. */}
+      <div className="mt-3 grid gap-3 grid-cols-2">
         {CATEGORY_CARDS.map((entry) => (
           <CategoryCard key={entry.id} entry={entry} onPick={onPick} disabled={disabled} />
         ))}
