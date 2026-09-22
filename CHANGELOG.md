@@ -4,6 +4,11 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-22
+
+A minor version bump: both arcs add real capabilities (an MCP surface, design-parity UI polish) with
+no breaking changes to existing behaviour.
+
 ### Plan 025 — agent-native surface: a real MCP server
 
 - **`POST /api/mcp`, a fourth route on the existing Worker (not a second one).** Hand-rolled JSON-RPC
