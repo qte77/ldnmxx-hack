@@ -1,0 +1,36 @@
+# Credential-free local-dev config for the HTTP contract test (worker/test/mcp/contract.live.test.ts,
+# plan 025 row 6). A bare `wrangler dev --config wrangler.toml` fails in an unattended/CI environment
+# with "necessary to set a CLOUDFLARE_API_TOKEN" because the [ai] binding proxies to a REMOTE Workers AI
+# session even in local dev mode (D1 + ratelimits both run purely local, no auth needed — only [ai] does
+# this). /api/mcp's 4 tools never touch `env.AI` (they wrap corpus/query.ts + scam/query.ts only), so
+# this config is identical to wrangler.toml minus the [ai] block — safe to drop for THIS test's purposes
+# only. NOT used for deploy, NOT a replacement for wrangler.toml — see AGENT_LEARNINGS.md's "Firing a
+# Workers cron for real" entry for the sibling pattern (a temporary wrangler.test.toml for the opposite
+# problem: forcing a REMOTE D1 binding). Kept out of `routes`/`account_id` too since neither is needed for
+# local dev and dropping them avoids any chance of the local run touching the real zone.
+name = "ldnmxx-hack-worker"
+main = "src/worker.ts"
+compatibility_date = "2026-07-01"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[vars]
+ALLOWED_ORIGINS = "http://localhost:5173,https://sortmy.london"
+
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }
+
+[[ratelimits]]
+name = "MCP_RATE_LIMITER"
+namespace_id = "1002"
+simple = { limit = 20, period = 60 }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sortmy_london_corpus"
+database_id = "cc6bb743-4041-455e-bf30-b4ecd5d184c3"
+migrations_dir = "migrations"

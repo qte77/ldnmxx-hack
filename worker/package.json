@@ -14,8 +14,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && npm run lint:shared",
     "lint:shared": "cd .. && worker/node_modules/.bin/eslint shared",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --exclude '**/*.live.test.ts'",
+    "test:watch": "vitest",
+    "test:live": "vitest run test/mcp/contract.live.test.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5",
