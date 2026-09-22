@@ -47,6 +47,25 @@ PR #288); applying it to actual heading markup is expected as rows 4/6 restyle t
 not yet merged when this section was written — check `ui/src/screens/*.tsx` for the current state
 before assuming the serif heading treatment is visible in a running build.
 
+## Logo
+
+Arc 026 row 1 replaced the placeholder "qte77 mark" (a leftover from the template this app was ported
+from — its own `aria-label` gave it away) with the real sortmy.london mark: a "sort" glyph, a vertical
+line with an up-chevron top / down-chevron bottom (two arrows, one each direction, echoing "sortmy").
+Sourced verbatim from the Claude Design canvas (`SortMyLondon.dc.html`, re-pulled 2026-09-19) — stroke
+only, no fill, `stroke-width: 1.6`.
+
+- **`ui/public/favicon.svg`** — the mark alone, transparent background (matching the design's own
+  swatch), scheme-aware colour via its own `<style>` + `@media (prefers-color-scheme)` block (a
+  standalone favicon document has no access to the host page's CSS custom properties, so the two hex
+  values — `--color-primary`'s light/dark values — are copied verbatim, the same mechanism the prior
+  mark used).
+- **`ui/src/screens/Home.tsx`**'s header — the same mark inline (consuming `var(--color-primary)`
+  directly, since it lives in the page DOM) beside a "sortmy.london" wordmark: `.font-heading`
+  (Cormorant Garamond weight 600), with the "." coloured via `text-primary`. This is the first heading-
+  weight text in `Home.tsx` to carry `--font-heading` explicitly via the `.font-heading` utility class
+  (index.css) rather than only the global `h1`-`h4` tag rule.
+
 ## Spacing, radius, and shadow scale
 
 A new fractional scale for the app-shell/Home/Settings/sheet screens, added alongside (not replacing)
@@ -70,7 +89,8 @@ The prior single-page Dashboard is now a two-screen shell:
 - **`ui/src/shell/TabBar.tsx`** — a simple flow-layout (not `position: fixed`) bottom nav switching
   between the two screens.
 - **`ui/src/screens/Home.tsx`** carries the prior single-page Dashboard's behaviour over unchanged: the
-  `sortmy.london` header (wordmark + a "what is this?" help toggle + dev-only ⚙ Key/exit controls), the
+  `sortmy.london` header (mark + wordmark, see "Logo" above — a "what is this?" help toggle + dev-only ⚙
+  Key/exit controls), the
   single free-text search input and its submit, the coverage line, suggestion chips, a sample result
   card, the A2UI result surface, and — dev-mode only (`?dev=1` / `Ctrl+K`) — the AG-UI event console and
   BYOK key panel. The header's old accent-variant swatch and light/dark theme-toggle icon are gone

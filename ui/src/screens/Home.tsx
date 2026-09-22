@@ -84,6 +84,36 @@ function StatusChip({ status }: { status: RunStatus | null }) {
   );
 }
 
+// 026 P0: the real sortmy.london mark + wordmark, replacing the plain-text header label. The mark is
+// the same "sort" glyph as favicon.svg — a vertical line with an up-chevron top / down-chevron bottom
+// (two arrows, one each direction) — inline here (not <img src="/favicon.svg">) so it can consume the
+// page's own --color-primary custom property directly, unlike the standalone favicon document. The
+// wordmark reuses the existing `.font-heading` utility (index.css) for Cormorant Garamond weight 600;
+// the "." is coloured via `text-primary`, matching the design's accent-on-heading treatment (Claude
+// Design project b8ac2137-75ac-4283-b730-3da64859a2f4, SortMyLondon.dc.html, re-pulled 2026-09-19).
+function Logo() {
+  return (
+    <span className="flex items-center gap-2">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 40 40"
+        fill="none"
+        stroke="var(--color-primary)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M20 5v30M13 12l7-7 7 7M13 28l7 7 7-7" />
+      </svg>
+      <span className="font-heading text-[20px] lowercase">
+        sortmy<span className="text-primary">.</span>london
+      </span>
+    </span>
+  );
+}
+
 // Header dev controls (⚙ Key + dev-exit, dev mode only) beside the always-on Help toggle.
 // 024 P0.2: the old accent-variant + theme toggles are gone from here — variants were dropped
 // (tokens.css, row 1) and Appearance now lives in Settings (see screens/Settings.tsx).
@@ -605,7 +635,7 @@ export function Home() {
   return (
     <>
       <header className="flex items-center justify-between gap-3 py-3">
-        <span className="text-lg font-bold text-primary lowercase">sortmy.london</span>
+        <Logo />
         <HeaderControls
           devMode={devMode}
           onToggleHelp={() => setShowHelp((v) => !v)}
