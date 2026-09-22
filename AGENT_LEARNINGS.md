@@ -143,3 +143,25 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
   `curl http://127.0.0.1:<port>/__scheduled?cron=...` → `scheduled()` runs in local workerd against
   the REAL D1 + real outbound fetch. Verified: `ingest gazetteer: swapped=true rows=6656` landed in
   prod D1. Delete the temp config afterwards; the deployed daily cron remains the standing prover.
+
+## A worktree-isolated agent's `git status`/`diff`/`add` gets blocked mid-task by `rtk-rewrite.sh`
+
+- **Pattern:** a subagent dispatched with `isolation: "worktree"` can hit `rtk-rewrite.sh`'s "cannot
+  verify worktree-safety" refusal on `git status`/`diff`/`add` — but NOT uniformly: `git checkout -b`
+  passed through untouched for the same agent in the same run while `status`/`diff`/`add` all got
+  rewritten and blocked. Not predictable per-verb; a fresh worktree agent cannot know in advance which
+  git commands will work. Happened twice: once a worktree agent worked around it with inline
+  `GH_TOKEN= GITHUB_TOKEN= git ...` (WRONG — flagged, do not repeat), once an agent correctly stopped
+  and reported (plan 026 row 1, logo — RIGHT).
+- **Fix (agent-side):** STOP AND REPORT the exact error verbatim the first time this happens. Do not
+  search for a syntactic bypass, even one that "works" — the block exists for a safety reason this
+  session cannot see the other side of.
+- **Fix (coordinator-side, proven — see PR #321):** the blocked agent's file edits are still on disk
+  in its worktree even though git can't see/stage them there. Rescue by (1) `Read` each changed file
+  from the worktree path directly (bypasses git entirely), (2) diff against the same file on `main`
+  with `python3 difflib` (NOT `diff -u`, which mis-aligns on repetitive/whitespace-heavy code and
+  reports a much larger change than actually happened — `SequenceMatcher(..., autojunk=False).
+  get_opcodes()` gives the real, minimal hunks), (3) re-apply just those hunks via `Edit`/`Write` on a
+  **fresh branch off `main`** in the un-blocked main checkout, (4) verify/commit/push/PR normally
+  from there. Never try to fix git INSIDE the blocked worktree.
+- **Refs:** plan 026 row 1 (logo, PR #321); feedback filed on the workaround incident.

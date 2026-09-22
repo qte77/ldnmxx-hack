@@ -1,0 +1,69 @@
+{
+  "name": "sortmy-london-mcp",
+  "description": "Deterministic MCP tools over real London public-service registers (NHS/care, parks & heritage, food hygiene, FCA scam checks) — no LLM call inside a tool, ever (ADR 0007). Unauthenticated, public, rate-limited.",
+  "version": "1.0.0",
+  "serverUrl": "https://sortmy.london/api/mcp",
+  "protocolVersion": "2026-06-18",
+  "tools": [
+    {
+      "name": "sort_my_care",
+      "description": "Find NHS and public health services near a postcode — GPs, pharmacies, hospitals, dentists.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "A UK postcode or London place name (e.g. 'SW9 9SL' or 'Camden') to find nearby NHS/care services."
+          }
+        },
+        "required": ["prompt"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "sort_my_wander",
+      "description": "Find parks, green spaces and listed heritage sites to explore near a postcode.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "A UK postcode or London place name to find nearby parks, green spaces, and heritage sites."
+          }
+        },
+        "required": ["prompt"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "sort_my_scam_check",
+      "description": "Check whether a firm is on the FCA's register of authorised financial businesses.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "A firm name, FCA reference number (FRN), or Companies House number to check against the FCA register."
+          }
+        },
+        "required": ["prompt"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "sort_my_food_hygiene",
+      "description": "Look up official food hygiene ratings for restaurants and takeaways near a postcode.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "A UK postcode or London place name to find nearby food hygiene ratings."
+          }
+        },
+        "required": ["prompt"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 ---
 title: "Agent-native surface: a real MCP server + the remaining agent-readiness backlog"
 type: plan
-status: "rows 1-3 shipped (ADR 0007 + JSON-RPC dispatch + 4 tool wrappers); rows 4-9 not started (2026-09-22)"
+status: "rows 1-4 shipped (ADR 0007 + JSON-RPC dispatch + 4 tool wrappers + server-card.json); rows 5-9 not started (2026-09-22)"
 refs:
   - docs/adr/0003-no-agent-framework.md (this arc EXTENDS its scope to the MCP server, does not reopen it)
   - docs/handoffs/024-app-shell-redesign.md (arc 024 status — design/perf/dependency work, separate concern)
