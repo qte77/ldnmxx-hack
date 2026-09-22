@@ -21,6 +21,10 @@ official page so nothing here should be trusted as the final word.
   trusting a result.
 - [/openapi.json](https://sortmy.london/openapi.json) — machine-readable description of both
   endpoints above.
+- [POST /api/mcp](https://sortmy.london/api/mcp) — MCP (Model Context Protocol) JSON-RPC 2.0
+  endpoint: `initialize`, `tools/list`, `tools/call`. Exposes the 4 real workflows below as
+  MCP tools (`sort_my_care`, `sort_my_wander`, `sort_my_food_hygiene`, `sort_my_scam_check`) —
+  the 2 demo-only workflows are never exposed here either. Unauthenticated, rate-limited.
 
 ## Workflows (skills)
 
@@ -47,6 +51,8 @@ official page so nothing here should be trusted as the final word.
 
 - [/.well-known/agent-skills/index.json](https://sortmy.london/.well-known/agent-skills/index.json) —
   the same workflow list above, machine-readable.
+- [/.well-known/mcp/server-card.json](https://sortmy.london/.well-known/mcp/server-card.json) —
+  machine-readable MCP server card (name/description/version/serverUrl/tools[]).
 - [/.well-known/api-catalog](https://sortmy.london/.well-known/api-catalog) — RFC 9727 API
   catalog for the two endpoints above.
 - [/auth.md](https://sortmy.london/auth.md) — this API needs no authentication; see for the

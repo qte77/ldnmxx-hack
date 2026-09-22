@@ -11,7 +11,8 @@
       "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-care" },
       "source": "Care Quality Commission",
       "officialLink": "https://www.nhs.uk/service-search",
-      "sampleData": false
+      "sampleData": false,
+      "mcpTool": "sort_my_care"
     },
     {
       "id": "sort-my-wander",
@@ -21,7 +22,8 @@
       "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-wander" },
       "source": "Historic England & Ordnance Survey",
       "officialLink": "https://historicengland.org.uk/listing/the-list/",
-      "sampleData": false
+      "sampleData": false,
+      "mcpTool": "sort_my_wander"
     },
     {
       "id": "sort-my-food-hygiene",
@@ -31,7 +33,8 @@
       "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-food-hygiene" },
       "source": "Food Standards Agency",
       "officialLink": "https://ratings.food.gov.uk/",
-      "sampleData": false
+      "sampleData": false,
+      "mcpTool": "sort_my_food_hygiene"
     },
     {
       "id": "sort-my-scam-check",
@@ -41,7 +44,8 @@
       "invoke": { "method": "POST", "url": "https://sortmy.london/api/run?usecase=sort-my-scam-check" },
       "source": "Financial Conduct Authority",
       "officialLink": "https://register.fca.org.uk/",
-      "sampleData": true
+      "sampleData": true,
+      "mcpTool": "sort_my_scam_check"
     },
     {
       "id": "sort-my-route",
