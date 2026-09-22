@@ -125,6 +125,84 @@ def run_typed_flow(page, out, tag, flow, shot_n):
     return True
 
 
+def interactive_smoke(page, out, tag):
+    """026: click-through the NEW interactive elements this arc shipped — the header borough "Change"
+    link, the trust-bar dismiss X, a category-card tap (bypass routing via submitPrompt(text, id), NOT
+    the typed-ask router flows.json/run_typed_flow already cover), and a "Recently looked up" chip
+    re-running its usecase. Desktop + mobile-portrait only, mirroring axe_matrix/run_axe's existing
+    asymmetric richness (full check on the two reference viewports; the typed-flow loop alone still
+    runs on every config)."""
+    ok = True
+
+    # "Change" (BoroughSwitcher, ui/src/screens/Home.tsx) navigates Home -> Settings' borough select,
+    # and back. Its accessible name is "{boroughLine} Change" (both spans concatenate) — a fresh
+    # Patchright context has no localStorage, so boroughLine reads "Set your area"; match on the
+    # stable "Change" suffix only (exact=False), not the full borough-dependent string.
+    if click(page, "Change", exact=False):
+        try:
+            page.wait_for_selector("#borough-select", timeout=3000)
+            page.screenshot(path=f"{out}/{tag}-03-change-settings.png")
+        except Exception as e:
+            print(f"    !! Change nav: borough-select not found: {e}")
+            ok = False
+        click(page, "Home", exact=True)
+        try:
+            page.wait_for_selector("#civic-query", timeout=5000)
+        except Exception as e:
+            print(f"    !! Change nav: back on Home failed: {e}")
+            ok = False
+    else:
+        print("    !! 'Change' link not found")
+        ok = False
+
+    # Trust bar (TrustBar, Home.tsx): dismiss, confirm it's gone. aria-label="Dismiss" is the button's
+    # WHOLE accessible name (an aria-label overrides text content), so exact=True is correct here.
+    if click(page, "Dismiss", exact=True):
+        page.wait_for_timeout(200)
+        try:
+            visible = page.get_by_text("Free · No sign-up · No cookies").is_visible()
+        except Exception:
+            visible = False
+        if visible:
+            print("    !! trust bar still visible after dismiss")
+            ok = False
+        else:
+            page.screenshot(path=f"{out}/{tag}-04-trustbar-dismissed.png")
+    else:
+        print("    !! trust-bar Dismiss button not found")
+        ok = False
+
+    def tap_card_or_chip(name):
+        """A CategoryCard/RecentChips button's accessible name is its title text alone (no Demo/
+        sample-data badge on the 4 real usecases used here) — exact=True is safe. Needs the same
+        ~8s settle as a typed flow, since it drives a real Worker run via submitPrompt's bypass path."""
+        if not click(page, name, exact=True, t=3000):
+            print(f"    !! '{name}' button not found")
+            return False
+        page.wait_for_timeout(8000)
+        try:
+            body = page.inner_text("body")
+        except Exception as e:
+            print(f"    !! '{name}' read: {e}")
+            return False
+        if f"Showing: {name}" not in body:
+            print(f"    !! '{name}' tap did not open the expected result")
+            return False
+        page.screenshot(path=f"{out}/{tag}-05-{name.replace(' ', '-')}.png")
+        close_sheet(page)
+        return True
+
+    ok = tap_card_or_chip("Sort My Care") and ok
+    ok = tap_card_or_chip("Sort My Wander") and ok
+    # "Sort My Care" is now the 2nd (not most-recent) RecentChips entry, not evicted (only 2 of max 3
+    # slots used) — RecentChips renders BEFORE CategoryCardList in the DOM (Home.tsx), so click()'s
+    # .first resolves to the CHIP here, exercising the "tap a chip re-runs its usecase" behaviour, not
+    # the still-present category card of the same name.
+    ok = tap_card_or_chip("Sort My Care") and ok
+
+    return ok
+
+
 def sweep(page, out, tag):
     def shot(n):
         try:
@@ -133,6 +211,11 @@ def sweep(page, out, tag):
             print(f"    shot {n}: {e}")
 
     shot("01-load")
+    # 026: the new interactive elements (borough switcher, trust bar, category-card tap, recent chip)
+    # get their own click-through pass on the two reference viewports before anything else touches the
+    # page state (dismissing the trust bar / accumulating recent-chip history should not perturb the
+    # typed-ask flows below, which key off #civic-query + the router, not these bypass-mode taps).
+    interactive_ok = interactive_smoke(page, out, tag) if tag in ("desktop", "mobile-portrait") else True
     # 024 (ADR 0006): the header's light/dark glyph toggle is gone — Appearance moved into Settings as
     # a System/Light/Dark control (ui/src/screens/Settings.tsx). Visit Settings, set Dark (deterministic,
     # unlike the old toggle's "flip whatever's current"), screenshot, then back to Home — every flow
@@ -145,7 +228,7 @@ def sweep(page, out, tag):
     # P3 (017): each flow is a TYPED ask into the one input; the Worker's router picks the workflow.
     # A flow's own summary line is in its markers, so a leftover render from a prior flow can never
     # false-pass a broken one; the no-match flow asserts the discovery card.
-    ok = True
+    ok = interactive_ok
     for f in FLOWS:
         rendered = run_typed_flow(page, out, tag, f, f"run-{f['name']}")
         ok = ok and rendered
