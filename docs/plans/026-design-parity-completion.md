@@ -1,7 +1,7 @@
 ---
 title: "Design parity completion: logo, hero, category-card icons, trust bar, recents"
 type: plan
-status: "not started (2026-09-19)"
+status: "row 1 (logo) shipped; rows 2-8 not started (2026-09-22)"
 refs:
   - docs/plans/024-app-shell-redesign.md (the design-match arc this plan closes out — CLOSED, do not reopen its own table, this is the migrated remainder)
   - docs/adr/0006-civic-navy-red-palette.md (palette/token source this plan reuses verbatim, no new tokens needed)
@@ -12,11 +12,12 @@ refs:
 
 ## Handoff (read this first)
 
-**Status: not started — this is a brand-new arc**, scoped from a direct design↔live diff run in the
-prior session (2026-09-19): the design canvas was re-pulled fresh via `DesignSync` and compared item-by-
-item against the deployed site. Two categories came out of that diff — **real gaps** (below, this
-plan's scope) and **correct, deliberate non-matches** (NOT this plan's scope, do not "fix" them — see
-"Explicitly out of scope").
+**Status: row 1 (new logo, PR [#321](https://github.com/qte77/ldnmxx-hack/pull/321)) shipped; rows
+2-8 not started — next is P1 (rows 2-4, 3 parallel worktrees).** Scoped from a direct design↔live diff
+run in the prior session (2026-09-19): the design canvas was re-pulled fresh via `DesignSync` and
+compared item-by-item against the deployed site. Two categories came out of that diff — **real gaps**
+(below, this plan's scope) and **correct, deliberate non-matches** (NOT this plan's scope, do not "fix"
+them — see "Explicitly out of scope").
 
 **What's next, in order:**
 1. **P0 (serial, one worktree)** — the new logo (row 1): small, fully decided, no open questions,
@@ -176,7 +177,7 @@ decision); strike this plan's own rows as they ship (this table is authoritative
 
 | # | Item | Gate | Done-when |
 |---|---|---|---|
-| 1 | **P0 — New logo**: replace `favicon.svg`'s mark with the sort-arrows glyph (keep the existing per-scheme CSS-variable structure); add the same mark + "sortmy.london" wordmark (Cormorant Garamond 600, accent-coloured ".") to `Home.tsx`'s header, replacing the current plain-text wordmark. | agent | Favicon renders correctly in both browser light/dark; Home header shows the mark + wordmark in both themes (Patchright-verified); `npm run build && npm run size` green (an inline SVG mark is a few hundred bytes, should not meaningfully move the budget). |
+| 1 | ✅ shipped (PR [#321](https://github.com/qte77/ldnmxx-hack/pull/321)) — **P0 — New logo**: replace `favicon.svg`'s mark with the sort-arrows glyph (keep the existing per-scheme CSS-variable structure); add the same mark + "sortmy.london" wordmark (Cormorant Garamond 600, accent-coloured ".") to `Home.tsx`'s header, replacing the current plain-text wordmark. | agent | Favicon renders correctly in both browser light/dark; Home header shows the mark + wordmark in both themes (Patchright-verified); `npm run build && npm run size` green (an inline SVG mark is a few hundred bytes, should not meaningfully move the budget). |
 | 2 | **P1 — Hero rewrite**: header gains a borough-switcher button (`{borough}, London` from `readBorough()`, defaulting to a neutral placeholder when unset — the mock always has a borough, this app's borough is optional — decide the unset-state copy, e.g. "Set your area" — and a "Change" link that switches to the Settings tab); `<h1>` copy becomes "What do you need sorted?" (was "Ask in your own words. Get the official source." — a deliberate content change, already confirmed with the user this turn). | agent | Patchright: clicking "Change" lands on Settings' "Your area" selector; new copy renders in both themes; existing `ui/tests/*.test.ts` still green (no test currently asserts the old H1 copy verbatim — if one does, update it, don't work around it). |
 | 3 | **P1 — Category-card icon grid**: 2-col grid, icon-only cards (drop the blurb from the card face — it moves to a `title` attribute or stays reachable via the existing result-dialog summary, don't just delete the information). Icon choice per usecase (decide-by-default, override with reasoning in the PR if you pick differently): Care → a cross/stethoscope glyph, Wander → a tree/leaf glyph, Scam Check → a shield glyph, Food Hygiene → a fork-and-knife or star-rating glyph, Founder's Copilot → a briefcase glyph, Route → a map-pin glyph. Reuse the mock's own 24×24 stroke-icon style (`stroke-width:1.8`, `stroke-linecap/linejoin:round`) for visual consistency with the rest of the ported design. | agent | All 6 real usecases render with a distinct icon in both themes at the mock's 2-col grid layout; `disabled` (mid-run) state still works per the existing `CategoryCard` behaviour; a11y: each icon is `aria-hidden` with the card's own accessible name carrying the label (mirror the existing pattern already used for section-heading icons in `Settings.tsx`, PR #314). |
 | 4 | **P1 — Dismissible trust bar**: "Free · No sign-up · No cookies" bar above the category grid, with a × dismiss that PERSISTS (new `prefs.ts` key `trustBarDismissed`, unlike the mock which resets every mount — this app should remember the user's choice, matching how every other Settings-driven preference already persists). | agent | Dismissing hides the bar; a reload (fresh `readAppearance`-style read) keeps it hidden; `ui/tests/prefs.test.ts` gets a RED-first case for the new read/write pair, matching its existing style exactly. |
