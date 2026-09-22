@@ -154,6 +154,15 @@ default; real OTLP export is planned, #21). **AG Grid deferred** → built-in A2
 build risk). **Ops:** a public read-only `GET /api/freshness` (`corpus_meta` stamps, `no-store`) lets the
 CI freshness watchdog (#199) detect a dead ingest cron credential-free — no CF token in CI.
 
+**Agent-native surface (plan 025, [ADR 0007](adr/0007-mcp-server-deterministic-tools.md)):**
+`POST /api/mcp` is a fourth route on this SAME Worker — hand-rolled JSON-RPC 2.0
+(`initialize`/`tools/list`/`tools/call`, no SDK), a separate `MCP_RATE_LIMITER` binding, fixed
+permissive CORS. Exposes exactly the 4 real, deterministic usecases (`sort_my_care`,
+`sort_my_wander`, `sort_my_scam_check`, `sort_my_food_hygiene`) as tools, each a thin adapter over
+the existing `corpus/query.ts`/`scam/query.ts` — no LLM call inside a tool handler, ever, per ADR
+0003's scope. `/.well-known/mcp/server-card.json` is a static Pages file (the route above only
+covers `/api/*`).
+
 ## Source map (reuse — don't rebuild)
 
 | Path | What to take |

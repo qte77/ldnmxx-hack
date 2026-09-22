@@ -1,7 +1,7 @@
 ---
 title: "Agent-native surface: a real MCP server + the remaining agent-readiness backlog"
 type: plan
-status: "rows 1-6 shipped (through e2e verification, incl. an honest local-sweep FAIL, not a regression - see row 6); rows 7-9 not started (2026-09-22)"
+status: "rows 1-7 shipped (docs & issues sync done); rows 8-9 owner-gated (deploy + rescan), not started (2026-09-22)"
 refs:
   - docs/adr/0003-no-agent-framework.md (this arc EXTENDS its scope to the MCP server, does not reopen it)
   - docs/handoffs/024-app-shell-redesign.md (arc 024 status — design/perf/dependency work, separate concern)
@@ -16,14 +16,17 @@ refs:
 
 ## Handoff (read this first)
 
-**Status: rows 1-6 shipped** — row 1 (ADR 0007, PR [#319](https://github.com/qte77/ldnmxx-hack/pull/319)),
+**Status: rows 1-7 all shipped** — row 1 (ADR 0007, PR [#319](https://github.com/qte77/ldnmxx-hack/pull/319)),
 rows 2-3 (JSON-RPC dispatch + 4 tool wrappers, PR [#320](https://github.com/qte77/ldnmxx-hack/pull/320)),
 row 4 (server-card.json, PR [#322](https://github.com/qte77/ldnmxx-hack/pull/322)), row 5 (discovery
 cross-links, PR [#326](https://github.com/qte77/ldnmxx-hack/pull/326)), row 6 (e2e verification, PR
 [#328](https://github.com/qte77/ldnmxx-hack/pull/328) — a new live HTTP contract test for `/api/mcp`,
 PASS; the local UI sweep recorded an honest FAIL, confirmed to be a pre-existing local-sample-data gap,
-**not** a regression from this arc or 026 — see the PR for the full investigation). Rows 7-9 not
-started, next is row 7 (docs & issues sync). Everything below was scoped
+**not** a regression from this arc or 026), row 7 (docs & issues sync, PR
+[#330](https://github.com/qte77/ldnmxx-hack/pull/330) — CHANGELOG/architecture.md/README updated,
+[issue #305](https://github.com/qte77/ldnmxx-hack/issues/305)'s MCP-server row moved to Shipped).
+**Only rows 8-9 remain, both owner-gated** — deploy, then rescan + comment on
+`agent-readiness-kit#25`. Everything below was scoped
 across a single long
 session (2026-09-18/19) that (a) shipped the "safe quick wins" tier already (PRs #315, #316 — llms.txt,
 JSON-LD, api-catalog, agent-skills index, auth.md, markdown twin, AGENTS.md link, RFC 8288 Link headers,
@@ -189,7 +192,7 @@ has the exact rows this arc should strike; `agent-readiness-kit#25` gets a comme
 | 4 | ✅ shipped (PR [#322](https://github.com/qte77/ldnmxx-hack/pull/322)) — **P1 — `/.well-known/mcp/server-card.json`**: decide (per the source-map note) whether this is Worker-served or a static Pages file; publish it either way with real `name`/`description`/`version`/`serverUrl`/`tools[]` matching row 2/3's actual implementation, not aspirational copy. | agent | `curl https://sortmy.london/.well-known/mcp/server-card.json` (once deployed) returns valid JSON matching the MCP server-card schema; `tools[]` lists exactly the 4 real tools. |
 | 5 | ✅ shipped (PR [#326](https://github.com/qte77/ldnmxx-hack/pull/326)) — **P2 — discovery cross-links**: add the MCP endpoint to `ui/public/llms.txt` and `ui/public/.well-known/agent-skills/index.json` (each real skill entry gains an `mcp_tool` or equivalent cross-reference — check the agent-skills-index convention for how it expects this, don't invent a field name unilaterally if the spec has one). | agent | Both files still validate (JSON syntax for the index, plain-text convention for llms.txt) and reference the real, now-live `/api/mcp` path. |
 | 6 | ✅ shipped (PR [#328](https://github.com/qte77/ldnmxx-hack/pull/328)) — **P2 — e2e verification**: extend `tests/e2e/ui_sweep.py` per the "E2E verification requirement" section above (viewport/device variation, click-through, screenshots+video both orientations, console-error + failed-network-request capture, run against BOTH `npm run preview` locally AND the remote `https://sortmy.london` once deployed) to confirm the existing UI has zero regression from this arc's Worker changes; separately, a plain-HTTP contract test (new script or `worker/test/mcp/*.test.ts` if sufficient) exercises the deployed `/api/mcp` JSON-RPC endpoint for real (not just local `wrangler dev`). | agent | Local sweep PASS; a documented (in the PR body) live-deploy sweep PASS once row 8 ships; MCP contract test PASS against the real deployed URL. |
-| 7 | **P3 — docs & issues sync**: `CHANGELOG.md` `## [Unreleased]` entry for this arc; `docs/architecture.md` one-paragraph addition (Stack/Platform notes); strike the "MCP server" row in `ldnmxx-hack#305`'s "Deferred" section with this arc's PR numbers; comment (not edit) on `agent-readiness-kit#25` once deployed, matching the 2026-09-19 comment's pattern. | agent | All four artifacts updated in the closing PR(s) of this arc; no orphaned "TODO" left in any of them. |
+| 7 | ✅ shipped (PR [#330](https://github.com/qte77/ldnmxx-hack/pull/330) + [issue #305](https://github.com/qte77/ldnmxx-hack/issues/305) updated live) — **P3 — docs & issues sync**: `CHANGELOG.md` `## [Unreleased]` entry for this arc; `docs/architecture.md` one-paragraph addition (Stack/Platform notes); strike the "MCP server" row in `ldnmxx-hack#305`'s "Deferred" section with this arc's PR numbers; comment (not edit) on `agent-readiness-kit#25` once deployed, matching the 2026-09-19 comment's pattern. | agent | All four artifacts updated in the closing PR(s) of this arc; no orphaned "TODO" left in any of them. |
 | 8 | **P4 — deploy**: `bash scripts/provision_cf.sh` (local deploy — this devcontainer's `.env` `CLOUDFLARE_API_TOKEN` is valid as of 2026-09-19) or the `deploy.yml` GitHub Actions path — either is fine, but confirm with the user first regardless of any prior-session deploy authorization; production pushes are a standing per-instance checkpoint, not blanket-authorized. | **owner** | Live site verified serving the new `/api/mcp` route + server-card.json (independent verification via curl/Patchright, not just trusting the deploy script's exit code — this session's own established discipline after an earlier false "deploy successful" claim). |
 | 9 | **P4 — rescan**: trigger `agent-readiness-kit`'s scan (`npm run scan` there, or wait for its weekly schedule) and/or orank's `POST https://ora.ai/api/scan` for sortmy.london; record the new score in `ldnmxx-hack#305` and comment the delta on `agent-readiness-kit#25`. | **owner** (needs row 8 live first) | New score recorded in both places; if `oraAi.mcp-server-card`/`cloudflareMcp.mcp-server-card` findings don't clear despite row 4 shipping, investigate why before assuming the scanner is wrong. |
 

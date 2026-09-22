@@ -4,6 +4,51 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Plan 025 — agent-native surface: a real MCP server
+
+- **`POST /api/mcp`, a fourth route on the existing Worker (not a second one).** Hand-rolled JSON-RPC
+  2.0 (`initialize`/`tools/list`/`tools/call`, no `@modelcontextprotocol/sdk`), a new
+  `MCP_RATE_LIMITER` binding (separate traffic shape from the SPA's own `RATE_LIMITER`), and a fixed
+  permissive CORS (public, unauthenticated, matching this app's no-account ethos). See
+  **[ADR 0007](docs/adr/0007-mcp-server-deterministic-tools.md)** (#319) for the design decisions —
+  same-Worker default, and why only 4 of the 6 catalog usecases get a tool.
+- **4 real MCP tools** (`sort_my_care`, `sort_my_wander`, `sort_my_scam_check`,
+  `sort_my_food_hygiene`), each a thin adapter over the EXISTING `corpus/query.ts`/`scam/query.ts` —
+  no new query path, no LLM call inside a tool handler, ever. Tool names/schemas derive mechanically
+  from `usecaseCatalog()`'s `keywords.length > 0` filter, so `sort-my-route`/`founders-copilot` can
+  never appear (#320, 13 new tests in `worker/test/mcp/dispatch.test.ts`).
+- **`/.well-known/mcp/server-card.json`** — a static Pages file (not Worker-served; the route isn't
+  under `sortmy.london/api/*`), matching agent-readiness-kit's own scanner shape and the real
+  `tools/list` output verbatim (#322).
+- **Discovery cross-links**: `/api/mcp` + the server card added to `llms.txt`; a new `mcpTool` field
+  on each of the 4 real entries in `.well-known/agent-skills/index.json` (#326).
+- **A real HTTP contract test** (`worker/test/mcp/contract.live.test.ts`, `npm run test:live`) drives
+  a spawned local `wrangler dev` over actual HTTP — catches route-wiring bugs the in-process
+  `dispatch.test.ts` structurally cannot (real CORS headers on the wire, the rate-limiter binding
+  actually being reached). Also recorded the first-ever `local`-labelled entry in
+  `tests/e2e/runs.jsonl`, an honest FAIL confirmed to be a pre-existing local-sample-vs-live-D1 data
+  gap, not a regression (#328).
+
+### Plan 026 — design parity completion
+
+- **New sortmy.london logo** (mark + wordmark) replaces the placeholder "qte77 mark" left over from
+  the template this app was ported from, in both `favicon.svg` and the Home header (#321).
+- **Hero rewrite**: a `BoroughSwitcher` button (`{borough}, London` or "Set your area") replaces the
+  old static subtitle line; its "Change" link jumps to Settings' borough selector. `<h1>` copy is now
+  "What do you need sorted?" (#323).
+- **Category-card icon grid**: 2 columns at every width (was 1 column below `sm:`), icon-only card
+  faces — a distinct inline-SVG stroke icon per usecase, the blurb moved to the button's `title`
+  attribute (still reachable via the result sheet) (#325).
+- **Dismissible trust bar** ("Free · No sign-up · No cookies") — unlike the design mock, the
+  dismissal PERSISTS (#324).
+- **"Recently looked up" chips** — a ring buffer of the last 3 usecases actually selected via a
+  category-card or chip tap (free-text search excluded), persisted, most-recent-first (#327).
+- **E2E click-through coverage** for all of the above (the "Change" link, the trust-bar dismiss, a
+  category-card tap, a recent-chip tap) added to `tests/e2e/ui_sweep.py` (#329).
+- **Bundle-size note**: these 6 rows moved the JS bundle from ~141 kB to ~149.4 kB gzip against the
+  150,000 B ceiling — passing, but headroom is now under 1 kB; check `npm run size` before adding
+  more UI.
+
 ## [2.0.0] - 2026-09-10
 
 A major version bump: arc 024 rebuilds the UI's palette, typography and information architecture (a
