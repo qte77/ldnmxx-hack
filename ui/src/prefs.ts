@@ -19,6 +19,7 @@ const FONT_SCALE_KEY = "qte77-font-scale";
 const HIGH_CONTRAST_KEY = "qte77-high-contrast";
 const BOROUGH_KEY = "qte77-borough";
 const TRUST_BAR_DISMISSED_KEY = "qte77-trust-bar-dismissed";
+const RECENT_USECASE_IDS_KEY = "qte77-recent-usecases";
 
 function store(explicit?: Storage): Storage | undefined {
   if (explicit) return explicit;
@@ -133,6 +134,29 @@ export function writeTrustBarDismissed(v: boolean, storage?: Storage): void {
     const s = store(storage);
     if (v) s?.setItem(TRUST_BAR_DISMISSED_KEY, "1");
     else s?.removeItem(TRUST_BAR_DISMISSED_KEY);
+  } catch {
+    /* storage disabled — non-fatal */
+  }
+}
+
+/** 026 row 5: the "Recently looked up" ring buffer (pushRecent in screens/recentUsecases.ts) — a JSON
+ *  array of at most 3 usecase ids, most-recent-first. Unlike readBorough's bare string, this needs
+ *  JSON (de)serialisation; any parse failure, unset value, or malformed shape reads back as `[]`
+ *  ("no history") rather than throwing — matching every other read* function's non-throwing contract
+ *  in this file. */
+export function readRecentUsecaseIds(storage?: Storage): string[] {
+  try {
+    const raw = store(storage)?.getItem(RECENT_USECASE_IDS_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.every((x) => typeof x === "string") ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+export function writeRecentUsecaseIds(ids: string[], storage?: Storage): void {
+  try {
+    store(storage)?.setItem(RECENT_USECASE_IDS_KEY, JSON.stringify(ids));
   } catch {
     /* storage disabled — non-fatal */
   }

@@ -9,9 +9,16 @@ import { usecaseCatalog, type CatalogEntry } from "../../../shared/usecaseCatalo
 import { useRotatingPlaceholder } from "../useRotatingPlaceholder";
 import { useCoverage } from "../useCoverage";
 import { suggestionMode, type SuggestionMode } from "../suggestions";
-import { readBorough, readTrustBarDismissed, writeTrustBarDismissed } from "../prefs";
+import {
+  readBorough,
+  readTrustBarDismissed,
+  writeTrustBarDismissed,
+  readRecentUsecaseIds,
+  writeRecentUsecaseIds,
+} from "../prefs";
 import { withLocationAnchor } from "./locationAnchor";
 import { categoryCards } from "./categoryCards";
+import { pushRecent } from "./recentUsecases";
 import { resultSheetOpen } from "./resultSheetOpen";
 import { ResultSheet } from "../sheet/ResultSheet";
 
@@ -528,6 +535,48 @@ function CategoryCardList({
   );
 }
 
+// 026 P2: "Recently looked up" — a ring buffer of the last 3 distinct usecases the user actually
+// SELECTED (a category-card tap, not free-text search — see submitPrompt's usecaseId-defined branch
+// in Home() below), rendered as outline chips (reusing CHIP_CLASS, the same outline-chip style
+// SuggestionChips already uses) above the category grid. Tapping a chip re-runs that usecase's
+// example query via the same submitPrompt(text, usecaseId) funnel a card tap already uses. Ids are
+// looked up against the SAME module-scope USECASES catalog every other title lookup in this file
+// uses (no second title source) — an id that no longer resolves (e.g. a stale pref from a removed
+// usecase) is silently dropped rather than rendering a broken chip.
+function RecentChips({
+  ids,
+  onPick,
+  disabled,
+}: {
+  ids: readonly string[];
+  onPick: (text: string, usecaseId: string) => void;
+  disabled: boolean;
+}) {
+  const entries = ids
+    .map((id) => USECASES.find((u) => u.id === id))
+    .filter((u): u is CatalogEntry => u !== undefined);
+  if (entries.length === 0) return null;
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Recently looked up">
+      <span className="text-sm text-text-muted">Recently looked up:</span>
+      {entries.map((entry) => (
+        <button
+          key={entry.id}
+          type="button"
+          disabled={disabled}
+          onClick={() => onPick(entry.example, entry.id)}
+          // CHIP_CLASS carries no disabled: utilities (SuggestionChips never disables) — CategoryCard's
+          // own disabled treatment appended here so a run-in-flight chip doesn't look tappable while
+          // submitPrompt is silently no-op'ing it.
+          className={`${CHIP_CLASS} disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {entry.title}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // 026 P1: the pin icon for the borough-switcher button, matching the design's location-icon stroke
 // style (24x24 viewBox, stroke-width 2, round caps/joins) — same glyph as Settings.tsx's LocationIcon
 // but not imported from there (that one is a section-heading icon, a different visual role; AHA).
@@ -710,6 +759,12 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
   // run must keep the sheet open to show the error, even though `hasSearched` itself reverts to false.
   const sheetOpen = resultSheetOpen({ hasSearched, error, dismissed });
 
+  // 026 P2: "Recently looked up" — read the persisted ring buffer once at mount (lazy `useState` init,
+  // the same idiom TrustBar's own `useState(() => readTrustBarDismissed())` above already uses), then
+  // update local state + persist together on every real selection (submitPrompt's usecaseId-defined
+  // branch below).
+  const [recentIds, setRecentIds] = useState<string[]>(() => readRecentUsecaseIds());
+
   // The workflow actually driving the CURRENT/last run, looked up in the SAME catalog the cards render
   // from — so the "Showing …" announcement and the Scam Check sample-data note both key off one source
   // of data, never a second hardcoded usecase id.
@@ -739,6 +794,18 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
       setPrompt(text);
       setActiveUsecaseId(usecaseId ?? bypass ?? undefined);
       setDismissed(false);
+      // 026 P2: only a concrete usecaseId is "the user actually selected a specific usecase" (a
+      // category-card or recent-chip tap) — free-text hero search / "Try:" chips call submitPrompt(text)
+      // with no second argument and are deliberately excluded (an auto-routed ask, not a selection).
+      // Functional setState (not reading `recentIds` from the closure) so this branch needs no extra
+      // useCallback dependency.
+      if (usecaseId) {
+        setRecentIds((prev) => {
+          const next = pushRecent(prev, usecaseId);
+          writeRecentUsecaseIds(next);
+          return next;
+        });
+      }
       const anchored = withLocationAnchor(text, readBorough());
       const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
       void run(anchored, byok, false, usecaseId ?? bypass ?? undefined);
@@ -807,6 +874,10 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
         />
 
         <TrustBar />
+
+        {/* 026 P2: placed right above the category grid (the plan's own "above/below" wording — this
+            is the reasonable default), only rendered once a real selection exists. */}
+        <RecentChips ids={recentIds} onPick={submitPrompt} disabled={isRunning} />
 
         {/* 024 P1: always visible, independent of search state — results now live in the ResultSheet
             overlay below, not inline, so there is no "hide after first search" reason to hide this too. */}

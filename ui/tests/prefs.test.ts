@@ -10,6 +10,8 @@ import {
   writeBorough,
   readTrustBarDismissed,
   writeTrustBarDismissed,
+  readRecentUsecaseIds,
+  writeRecentUsecaseIds,
 } from "../src/prefs";
 
 // Map-backed Storage + element stand-ins (the ui test env is node — no real localStorage/DOM).
@@ -103,6 +105,21 @@ describe("readTrustBarDismissed / writeTrustBarDismissed", () => {
     expect(readTrustBarDismissed(s)).toBe(true);
     writeTrustBarDismissed(false, s);
     expect(readTrustBarDismissed(s)).toBe(false);
+  });
+});
+
+describe("readRecentUsecaseIds / writeRecentUsecaseIds", () => {
+  it("defaults to [] when unset", () => {
+    expect(readRecentUsecaseIds(fakeStorage())).toEqual([]);
+  });
+  it("round-trips an array of ids, most-recent-first", () => {
+    const s = fakeStorage();
+    writeRecentUsecaseIds(["c", "b", "a"], s);
+    expect(readRecentUsecaseIds(s)).toEqual(["c", "b", "a"]);
+  });
+  it("returns [] on corrupt/unparsable stored JSON instead of throwing", () => {
+    expect(readRecentUsecaseIds(fakeStorage({ "qte77-recent-usecases": "not-json" }))).toEqual([]);
+    expect(readRecentUsecaseIds(fakeStorage({ "qte77-recent-usecases": '{"not":"an array"}' }))).toEqual([]);
   });
 });
 
