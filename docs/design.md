@@ -66,6 +66,47 @@ only, no fill, `stroke-width: 1.6`.
   weight text in `Home.tsx` to carry `--font-heading` explicitly via the `.font-heading` utility class
   (index.css) rather than only the global `h1`-`h4` tag rule.
 
+## Home screen — hero, category grid, trust bar, recents
+
+Arc 026 rows 2-5 closed out the remaining design↔live gaps from the same Claude Design canvas
+(`SortMyLondon.dc.html`) the app shell (arc 024) and the logo (row 1, above) were built from.
+
+- **Hero rewrite (row 2)** — `Hero()` in `ui/src/screens/Home.tsx`: a new `BoroughSwitcher` button
+  replaces the old static "London public services · free, no sign-up" line, showing `{borough},
+  London` from `readBorough()` or the neutral placeholder "Set your area" when unset (the design
+  mock always has a borough; this app's is optional). Its "Change" affordance navigates to Settings'
+  borough `<select>` via a new `onGoSettings` prop threaded `AppShell.tsx` → `Home()` → `Hero()`,
+  reusing the same `setScreen`/`ScreenId` state `TabBar` already drives — no second navigation
+  mechanism. The `<h1>` copy is now "What do you need sorted?" (was "Ask in your own words. Get the
+  official source.").
+- **Category-card icon grid (row 3)** — `CategoryCard`/`CategoryCardList`: a 2-column grid at every
+  width (was 1-column below the `sm:` breakpoint), icon-only card faces. Each of the 6 catalog
+  entries gets a distinct inline-SVG stroke icon (24×24, `stroke-width: 1.8`, round caps/joins,
+  keyed by usecase `id` in a `CATEGORY_ICON_PATHS` map — Care: medical cross, Wander: a two-tier
+  conifer, Scam Check: a shield, Food Hygiene: a 5-point star (the FSA's own 0-5 rating unit — chosen
+  over a fork/knife for being literal, not just decorative), Founder's Copilot: a briefcase, Route: a
+  map pin). The blurb text moves off the card face onto the button's `title` attribute; it remains
+  reachable after a tap via the existing `ResultSheet` summary line (`sheetMeta()` already read
+  `entry.blurb` for that; unchanged).
+- **Dismissible trust bar (row 4)** — a new `TrustBar` component ("Free · No sign-up · No cookies" +
+  a `×` dismiss) renders above the category grid. Unlike the design mock (which resets
+  `trustBarDismissed` every mount), this app **persists** the dismissal via a new `prefs.ts`
+  `readTrustBarDismissed`/`writeTrustBarDismissed` pair, matching how every other Settings-driven
+  preference already persists.
+- **Recently looked up (row 5)** — a new `RecentChips` component renders outline chips (reusing the
+  same `CHIP_CLASS` style `SuggestionChips` already uses) above the category grid, showing the last 3
+  DISTINCT usecases the user actually **selected** (a category-card or recent-chip tap —
+  `submitPrompt`'s `usecaseId`-defined branch; free-text hero search is deliberately excluded,
+  mirroring the design mock's own `selectCategory` trigger point). The ring buffer
+  (`ui/src/screens/recentUsecases.ts`'s `pushRecent`) is most-recent-first, max 3, persisted via a new
+  `prefs.ts` `readRecentUsecaseIds`/`writeRecentUsecaseIds` pair (JSON array, corrupt-safe). Tapping a
+  chip re-runs that usecase's example query via the same `submitPrompt(text, usecaseId)` funnel a
+  category-card tap already uses.
+
+**Bundle-size note:** these 5 rows (logo + hero + icons + trust bar + recents) together moved the JS
+bundle from ~141 kB to ~149.4 kB gzip against a 150,000 B ceiling (`ui/scripts/check-bundle-size.mjs`)
+— passing, but headroom is now very thin (under 1 kB). Check `npm run size` before adding more UI.
+
 ## Spacing, radius, and shadow scale
 
 A new fractional scale for the app-shell/Home/Settings/sheet screens, added alongside (not replacing)

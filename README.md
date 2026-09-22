@@ -1,6 +1,6 @@
 # Groundwork
 
-> **Ask in your own words. Get the official source.** A free civic assistant for London on a single
+> **What do you need sorted?** A free civic assistant for London on a single
 > **Cloudflare Worker**: you type what you need, the app's router **picks the workflow** and the model
 > paints a live **A2UI** interface (not just text) — *swap a JSON, swap the app*. No sign-up, no cookies;
 > the AG-UI/A2UI dev console lives behind a **dev mode** (`?dev=1` or `Ctrl+K`).
@@ -108,6 +108,11 @@ make demo    # boot both, then open localhost:5173 (prod: sortmy.london)
 Toggle the two example workflows in the UI; `cd worker && npm run tail` shows one Arize span per stage.
 **Demo:** <https://sortmy.london> — SPA on **Cloudflare Pages**, Worker API same-origin at `/api/*`
 ([deploy](docs/deploy-cloudflare.md)). Full map: [`docs/plans/001-build-plan.md`](docs/plans/001-build-plan.md).
+
+**Agent-native:** `POST /api/mcp` — an MCP (JSON-RPC 2.0) endpoint exposing the 4 real deterministic
+workflows as tools (`sort_my_care`, `sort_my_wander`, `sort_my_food_hygiene`, `sort_my_scam_check`);
+see [`/.well-known/mcp/server-card.json`](https://sortmy.london/.well-known/mcp/server-card.json) and
+[ADR 0007](docs/adr/0007-mcp-server-deterministic-tools.md).
 
 **Data pipeline (keyless, arc 016):** a weekly GitHub Action ([`ingest.yml`](.github/workflows/ingest.yml),
 `GITHUB_TOKEN` only) runs the pure, pytest-covered parsers ([`ingest/`](ingest/README.md)) over five
