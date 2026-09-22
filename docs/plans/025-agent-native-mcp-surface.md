@@ -1,7 +1,7 @@
 ---
 title: "Agent-native surface: a real MCP server + the remaining agent-readiness backlog"
 type: plan
-status: "rows 1-7 shipped (docs & issues sync done); rows 8-9 owner-gated (deploy + rescan), not started (2026-09-22)"
+status: "CLOSED — all 9 rows shipped, incl. deploy (v2.1.0) + rescan (2026-09-22)"
 refs:
   - docs/adr/0003-no-agent-framework.md (this arc EXTENDS its scope to the MCP server, does not reopen it)
   - docs/handoffs/024-app-shell-redesign.md (arc 024 status — design/perf/dependency work, separate concern)
@@ -25,8 +25,19 @@ PASS; the local UI sweep recorded an honest FAIL, confirmed to be a pre-existing
 **not** a regression from this arc or 026), row 7 (docs & issues sync, PR
 [#330](https://github.com/qte77/ldnmxx-hack/pull/330) — CHANGELOG/architecture.md/README updated,
 [issue #305](https://github.com/qte77/ldnmxx-hack/issues/305)'s MCP-server row moved to Shipped).
-**Only rows 8-9 remain, both owner-gated** — deploy, then rescan + comment on
-`agent-readiness-kit#25`. Everything below was scoped
+**Row 8 (deploy)**: v2.1.0 deployed via `bash scripts/provision_cf.sh` and independently verified
+live — `/api/mcp` `tools/list` and `/.well-known/mcp/server-card.json` both confirmed correct with a
+browser-like User-Agent (a bare request 403s — Cloudflare bot protection, not a real failure); a full
+Patchright sweep against `https://sortmy.london` (`tests/e2e/runs.jsonl`, label `v2.1.0-deploy`) hit
+one transient failure on one viewport (deploy-settling, this repo's own documented anti-pattern of
+sweeping in the same breath as a deploy) that a re-run (`v2.1.0-deploy-retry`) cleared fully — 5/5
+configs, 5/5 flows, 0 axe violations. **Row 9 (rescan)**: ran `agent-readiness-kit`'s own scan
+orchestrator directly against the `sortmy-london` property — **score 39/D, up from the 23/F baseline**
+this arc's issue was filed against; both `oraAi.mcp-server-card` and `cloudflareMcp.mcp-server-card`
+now PASS (confirmed FAIL as of the bot's last scheduled scan, 2026-09-21T13:00:56Z); recorded on
+[issue #305](https://github.com/qte77/ldnmxx-hack/issues/305) and commented on
+[agent-readiness-kit#25](https://github.com/qte77/agent-readiness-kit/issues/25). **Plan 025 is
+CLOSED.** Everything below was scoped
 across a single long
 session (2026-09-18/19) that (a) shipped the "safe quick wins" tier already (PRs #315, #316 — llms.txt,
 JSON-LD, api-catalog, agent-skills index, auth.md, markdown twin, AGENTS.md link, RFC 8288 Link headers,
@@ -193,8 +204,8 @@ has the exact rows this arc should strike; `agent-readiness-kit#25` gets a comme
 | 5 | ✅ shipped (PR [#326](https://github.com/qte77/ldnmxx-hack/pull/326)) — **P2 — discovery cross-links**: add the MCP endpoint to `ui/public/llms.txt` and `ui/public/.well-known/agent-skills/index.json` (each real skill entry gains an `mcp_tool` or equivalent cross-reference — check the agent-skills-index convention for how it expects this, don't invent a field name unilaterally if the spec has one). | agent | Both files still validate (JSON syntax for the index, plain-text convention for llms.txt) and reference the real, now-live `/api/mcp` path. |
 | 6 | ✅ shipped (PR [#328](https://github.com/qte77/ldnmxx-hack/pull/328)) — **P2 — e2e verification**: extend `tests/e2e/ui_sweep.py` per the "E2E verification requirement" section above (viewport/device variation, click-through, screenshots+video both orientations, console-error + failed-network-request capture, run against BOTH `npm run preview` locally AND the remote `https://sortmy.london` once deployed) to confirm the existing UI has zero regression from this arc's Worker changes; separately, a plain-HTTP contract test (new script or `worker/test/mcp/*.test.ts` if sufficient) exercises the deployed `/api/mcp` JSON-RPC endpoint for real (not just local `wrangler dev`). | agent | Local sweep PASS; a documented (in the PR body) live-deploy sweep PASS once row 8 ships; MCP contract test PASS against the real deployed URL. |
 | 7 | ✅ shipped (PR [#330](https://github.com/qte77/ldnmxx-hack/pull/330) + [issue #305](https://github.com/qte77/ldnmxx-hack/issues/305) updated live) — **P3 — docs & issues sync**: `CHANGELOG.md` `## [Unreleased]` entry for this arc; `docs/architecture.md` one-paragraph addition (Stack/Platform notes); strike the "MCP server" row in `ldnmxx-hack#305`'s "Deferred" section with this arc's PR numbers; comment (not edit) on `agent-readiness-kit#25` once deployed, matching the 2026-09-19 comment's pattern. | agent | All four artifacts updated in the closing PR(s) of this arc; no orphaned "TODO" left in any of them. |
-| 8 | **P4 — deploy**: `bash scripts/provision_cf.sh` (local deploy — this devcontainer's `.env` `CLOUDFLARE_API_TOKEN` is valid as of 2026-09-19) or the `deploy.yml` GitHub Actions path — either is fine, but confirm with the user first regardless of any prior-session deploy authorization; production pushes are a standing per-instance checkpoint, not blanket-authorized. | **owner** | Live site verified serving the new `/api/mcp` route + server-card.json (independent verification via curl/Patchright, not just trusting the deploy script's exit code — this session's own established discipline after an earlier false "deploy successful" claim). |
-| 9 | **P4 — rescan**: trigger `agent-readiness-kit`'s scan (`npm run scan` there, or wait for its weekly schedule) and/or orank's `POST https://ora.ai/api/scan` for sortmy.london; record the new score in `ldnmxx-hack#305` and comment the delta on `agent-readiness-kit#25`. | **owner** (needs row 8 live first) | New score recorded in both places; if `oraAi.mcp-server-card`/`cloudflareMcp.mcp-server-card` findings don't clear despite row 4 shipping, investigate why before assuming the scanner is wrong. |
+| 8 | ✅ shipped (v2.1.0, deployed 2026-09-22) — **P4 — deploy**: `bash scripts/provision_cf.sh` (local deploy — this devcontainer's `.env` `CLOUDFLARE_API_TOKEN` is valid as of 2026-09-19) or the `deploy.yml` GitHub Actions path — either is fine, but confirm with the user first regardless of any prior-session deploy authorization; production pushes are a standing per-instance checkpoint, not blanket-authorized. | **owner** | Live site verified serving the new `/api/mcp` route + server-card.json (independent verification via curl/Patchright, not just trusting the deploy script's exit code — this session's own established discipline after an earlier false "deploy successful" claim). |
+| 9 | ✅ shipped (2026-09-22, score 39/D) — **P4 — rescan**: trigger `agent-readiness-kit`'s scan (`npm run scan` there, or wait for its weekly schedule) and/or orank's `POST https://ora.ai/api/scan` for sortmy.london; record the new score in `ldnmxx-hack#305` and comment the delta on `agent-readiness-kit#25`. | **owner** (needs row 8 live first) | New score recorded in both places; if `oraAi.mcp-server-card`/`cloudflareMcp.mcp-server-card` findings don't clear despite row 4 shipping, investigate why before assuming the scanner is wrong. |
 
 ## Worktree dispatch (how rows 2–6 actually run)
 
