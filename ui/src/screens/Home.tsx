@@ -458,6 +458,52 @@ function CategoryCardList({
   );
 }
 
+// 026 P1: the pin icon for the borough-switcher button, matching the design's location-icon stroke
+// style (24x24 viewBox, stroke-width 2, round caps/joins) — same glyph as Settings.tsx's LocationIcon
+// but not imported from there (that one is a section-heading icon, a different visual role; AHA).
+// Decorative only — aria-hidden, the button's own text carries the accessible name.
+function LocationPinIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 21s-7-6.5-7-11a7 7 0 1114 0c0 4.5-7 11-7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
+
+// 026 P1: the design's borough-switcher button (SortMyLondon.dc.html's `goSettings` header button) —
+// replaces the old static "London public services · free, no sign-up" line. Unlike the mock (which
+// always has a borough), this app's borough is optional (prefs.ts's readBorough returns
+// `string | null`), so the unset state shows a neutral call-to-action instead of blank uppercase text.
+// Reads readBorough() fresh on render rather than via state: it's write-once in Settings, read-only
+// here, and Home remounts whenever the tab switches away and back (AppShell's `screen === "home" ? …`
+// ternary swaps component identity), so a fresh read on mount is exactly as live as this needs to be.
+function BoroughSwitcher({ onGoSettings }: { onGoSettings: () => void }) {
+  const borough = readBorough();
+  const boroughLine = borough ? `${borough}, London` : "Set your area";
+  return (
+    <button
+      type="button"
+      onClick={onGoSettings}
+      className="min-h-[44px] inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    >
+      <span className="uppercase">{boroughLine}</span>
+      <LocationPinIcon />
+      <span className="underline">Change</span>
+    </button>
+  );
+}
+
 function Hero({
   prompt,
   setPrompt,
@@ -467,6 +513,7 @@ function Hero({
   stop,
   showExamples,
   coverage,
+  onGoSettings,
 }: {
   prompt: string;
   setPrompt: (v: string) => void;
@@ -476,15 +523,16 @@ function Hero({
   stop: () => void;
   showExamples: boolean;
   coverage: string | null;
+  onGoSettings: () => void;
 }) {
   const [inputFocused, setInputFocused] = useState(false);
   const placeholder = useRotatingPlaceholder(ROUTABLE_EXAMPLES, inputFocused || prompt.length > 0);
   return (
     <section className="pt-6 sm:pt-10">
-      <p className="text-sm text-text-muted">London public services · free, no sign-up</p>
-      <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-text">
-        Ask in your own words. Get the official source.
-      </h1>
+      <BoroughSwitcher onGoSettings={onGoSettings} />
+      {/* 026 P1: deliberate content change, confirmed with the user — was "Ask in your own words. Get
+          the official source." */}
+      <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-text">What do you need sorted?</h1>
       {showExamples && <CoverageLine count={coverage} />}
 
       <form onSubmit={onSubmit} className="mt-5 flex flex-col sm:flex-row gap-2">
@@ -528,7 +576,7 @@ function Hero({
   );
 }
 
-export function Home() {
+export function Home({ onGoSettings }: { onGoSettings: () => void }) {
   const { eventLog, isRunning, error, run, stop, status, resolved } = useAgentSSE();
   // ?usecase=<id> is an explicit BYPASS (deep link / founders demo) — null ⇒ the Worker auto-routes
   // the typed ask. Fixed for the session (from the URL); a bypass deep link prefills its example.
@@ -658,6 +706,7 @@ export function Home() {
           stop={stop}
           showExamples={suggestions === "hero"}
           coverage={coverage}
+          onGoSettings={onGoSettings}
         />
 
         {/* 024 P1: always visible, independent of search state — results now live in the ResultSheet

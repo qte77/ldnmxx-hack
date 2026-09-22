@@ -18,7 +18,7 @@ export function AppShell() {
     <div className="min-h-screen flex flex-col max-w-2xl mx-auto w-full">
       <div className="flex-1 px-4">
         {screen === "home" ? (
-          <Home />
+          <Home onGoSettings={() => setScreen("settings")} />
         ) : (
           // Fallback is empty (not a spinner): the Settings chunk is tiny and same-origin, so the gap
           // is imperceptible — a flashed loading state would be more distracting than the wait itself.
