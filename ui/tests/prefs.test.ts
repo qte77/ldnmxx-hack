@@ -8,6 +8,8 @@ import {
   writeHighContrast,
   readBorough,
   writeBorough,
+  readTrustBarDismissed,
+  writeTrustBarDismissed,
 } from "../src/prefs";
 
 // Map-backed Storage + element stand-ins (the ui test env is node — no real localStorage/DOM).
@@ -88,6 +90,19 @@ describe("readHighContrast / writeHighContrast", () => {
     expect(readHighContrast(s)).toBe(true);
     writeHighContrast(false, s);
     expect(readHighContrast(s)).toBe(false);
+  });
+});
+
+describe("readTrustBarDismissed / writeTrustBarDismissed", () => {
+  it("defaults to false when unset", () => {
+    expect(readTrustBarDismissed(fakeStorage())).toBe(false);
+  });
+  it("round-trips true and false", () => {
+    const s = fakeStorage();
+    writeTrustBarDismissed(true, s);
+    expect(readTrustBarDismissed(s)).toBe(true);
+    writeTrustBarDismissed(false, s);
+    expect(readTrustBarDismissed(s)).toBe(false);
   });
 });
 
