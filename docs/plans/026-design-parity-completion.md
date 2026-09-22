@@ -1,7 +1,7 @@
 ---
 title: "Design parity completion: logo, hero, category-card icons, trust bar, recents"
 type: plan
-status: "rows 1-7 shipped; row 8 (owner deploy) not started (2026-09-22)"
+status: "CLOSED — all 8 rows shipped, incl. deploy (v2.1.0, 2026-09-22)"
 refs:
   - docs/plans/024-app-shell-redesign.md (the design-match arc this plan closes out — CLOSED, do not reopen its own table, this is the migrated remainder)
   - docs/adr/0006-civic-navy-red-palette.md (palette/token source this plan reuses verbatim, no new tokens needed)
@@ -19,8 +19,13 @@ PR [#325](https://github.com/qte77/ldnmxx-hack/pull/325)), row 4 (trust bar, PR
 [#327](https://github.com/qte77/ldnmxx-hack/pull/327)), row 6 (e2e click-through, PR
 [#329](https://github.com/qte77/ldnmxx-hack/pull/329)), row 7 (docs sync, PR
 [#330](https://github.com/qte77/ldnmxx-hack/pull/330)). **Bundle headroom is still VERY thin — 598 B /
-150,000 B JS ceiling (~99.6%) — decide whether to raise the ceiling before any future UI row.** Only
-row 8 (owner deploy) remains.
+150,000 B JS ceiling (~99.6%) — decide before any future UI row, since none of this arc's rows raised
+it.** **Row 8 (deploy)**: v2.1.0 deployed via `bash scripts/provision_cf.sh`, independently verified
+live — a full Patchright sweep against `https://sortmy.london` confirmed the new logo/hero/category
+icons/trust bar/recent chips all render correctly in both themes (one transient failure on the first
+post-deploy sweep, this repo's own documented deploy-settling anti-pattern, cleared on an immediate
+re-run: 5/5 configs, 5/5 flows, 0 axe violations — `tests/e2e/runs.jsonl` labels `v2.1.0-deploy` /
+`v2.1.0-deploy-retry`). **Plan 026 is CLOSED.**
 Scoped from a direct design↔live diff
 run in the prior session (2026-09-19): the design canvas was re-pulled fresh via `DesignSync` and
 compared item-by-item against the deployed site. Two categories came out of that diff — **real gaps**
@@ -192,7 +197,7 @@ decision); strike this plan's own rows as they ship (this table is authoritative
 | 5 | ✅ shipped (PR [#327](https://github.com/qte77/ldnmxx-hack/pull/327)) — **P2 — "Recently looked up"**: a ring buffer of the last 3 distinct usecase ids the user actually opened a result for (not just hovered/typed — mirror the mock's `selectCategory` trigger point, which fires on actual selection), rendered as outline chips above/below the category grid, tapping one re-runs that usecase's example query (reuse the existing `submitPrompt(text, usecaseId)` call already wired for category-card taps). | agent | A RED-first pure function (mirror `categoryCards.ts`'s test style) covers the ring-buffer dedup/max-3/most-recent-first logic; Patchright confirms 3 real taps produce 3 chips in the right order, a 4th evicts the oldest. |
 | 6 | ✅ shipped (PR [#329](https://github.com/qte77/ldnmxx-hack/pull/329)) — **P3 — E2E verification**: per the "E2E verification requirement" section above. | agent | Local sweep PASS; live sweep PASS once row 8 ships (documented in the closing PR). |
 | 7 | ✅ shipped (PR [#330](https://github.com/qte77/ldnmxx-hack/pull/330); **deviation from this row's own done-when**, noted honestly rather than silently: this landed as one combined trailing PR with plan 025's own row 7, not bundled into rows 1–5's individual PRs — the session batched code rows first, then docs, across both arcs at once) — **P3 — Docs sync**: CHANGELOG + `docs/design.md` per the "Docs & issues audit" section above. | agent | Both updated in the same PR(s) that ship rows 1–5, not a trailing cleanup PR. |
-| 8 | **P4 — Deploy**: `bash scripts/provision_cf.sh`, confirmed with the user first regardless of any earlier deploy this session. | **owner** | Live site independently verified (Patchright, both themes) to show the new logo/hero/cards/trust-bar/recents — not just a green exit code from the deploy script. |
+| 8 | ✅ shipped (v2.1.0, deployed 2026-09-22) — **P4 — Deploy**: `bash scripts/provision_cf.sh`, confirmed with the user first regardless of any earlier deploy this session. | **owner** | Live site independently verified (Patchright, both themes) to show the new logo/hero/cards/trust-bar/recents — not just a green exit code from the deploy script. |
 
 ## Worktree dispatch
 
