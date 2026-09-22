@@ -1,6 +1,7 @@
-// prefs.ts (024 P0.2) — the app-shell preference contract: Appearance, text size, high contrast, and
-// a default-location borough anchor. Pure, testable functions (storage/root injectable, real browser
-// globals by default) — same shape as devmode.ts's readDevMode/writeDevMode.
+// prefs.ts (024 P0.2) — the app-shell preference contract: Appearance, text size, high contrast, a
+// default-location borough anchor, and (026 row 4) the Home trust bar's dismissal. Pure, testable
+// functions (storage/root injectable, real browser globals by default) — same shape as devmode.ts's
+// readDevMode/writeDevMode.
 //
 // Appearance deliberately reuses theme-init.js's EXISTING mechanism (the `qte77-theme` localStorage
 // key + the `data-theme` attribute on <html>) rather than inventing a parallel one: "system" IS the
@@ -17,6 +18,7 @@ const APPEARANCE_KEY = "qte77-theme";
 const FONT_SCALE_KEY = "qte77-font-scale";
 const HIGH_CONTRAST_KEY = "qte77-high-contrast";
 const BOROUGH_KEY = "qte77-borough";
+const TRUST_BAR_DISMISSED_KEY = "qte77-trust-bar-dismissed";
 
 function store(explicit?: Storage): Storage | undefined {
   if (explicit) return explicit;
@@ -112,6 +114,25 @@ export function writeBorough(v: string | null, storage?: Storage): void {
     const s = store(storage);
     if (v) s?.setItem(BOROUGH_KEY, v);
     else s?.removeItem(BOROUGH_KEY);
+  } catch {
+    /* storage disabled — non-fatal */
+  }
+}
+
+/** 026 row 4: unlike the design mock (which resets this every mount), this app persists the trust
+ *  bar's dismissal — matching how every other Settings-driven preference already persists. */
+export function readTrustBarDismissed(storage?: Storage): boolean {
+  try {
+    return store(storage)?.getItem(TRUST_BAR_DISMISSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+export function writeTrustBarDismissed(v: boolean, storage?: Storage): void {
+  try {
+    const s = store(storage);
+    if (v) s?.setItem(TRUST_BAR_DISMISSED_KEY, "1");
+    else s?.removeItem(TRUST_BAR_DISMISSED_KEY);
   } catch {
     /* storage disabled — non-fatal */
   }

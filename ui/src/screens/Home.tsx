@@ -9,7 +9,7 @@ import { usecaseCatalog, type CatalogEntry } from "../../../shared/usecaseCatalo
 import { useRotatingPlaceholder } from "../useRotatingPlaceholder";
 import { useCoverage } from "../useCoverage";
 import { suggestionMode, type SuggestionMode } from "../suggestions";
-import { readBorough } from "../prefs";
+import { readBorough, readTrustBarDismissed, writeTrustBarDismissed } from "../prefs";
 import { withLocationAnchor } from "./locationAnchor";
 import { categoryCards } from "./categoryCards";
 import { resultSheetOpen } from "./resultSheetOpen";
@@ -576,6 +576,33 @@ function Hero({
   );
 }
 
+// 026 row 4 (design-match): "Free · No sign-up · No cookies" — a dismissible trust bar above the
+// category grid. Unlike the design mock (whose `trustBarDismissed` resets every mount), this app
+// persists the dismissal via prefs.ts's readTrustBarDismissed/writeTrustBarDismissed, matching how
+// every other Settings-driven preference already persists. `useState(() => ...)` reads the stored
+// value once at mount (not on every render) — the same lazy-init idiom this file's own `devMode` state
+// already uses (`useState(() => readDevMode(location.search))`, below in Home()).
+function TrustBar() {
+  const [dismissed, setDismissed] = useState(() => readTrustBarDismissed());
+  if (dismissed) return null;
+  return (
+    <div className="mt-4 flex items-center justify-between gap-2 border border-border rounded-[var(--radius-md)] py-[var(--space-2)] px-[var(--space-3)]">
+      <span className="text-xs text-text-muted">Free · No sign-up · No cookies</span>
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={() => {
+          writeTrustBarDismissed(true);
+          setDismissed(true);
+        }}
+        className="btn-ghost"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 export function Home({ onGoSettings }: { onGoSettings: () => void }) {
   const { eventLog, isRunning, error, run, stop, status, resolved } = useAgentSSE();
   // ?usecase=<id> is an explicit BYPASS (deep link / founders demo) — null ⇒ the Worker auto-routes
@@ -708,6 +735,8 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
           coverage={coverage}
           onGoSettings={onGoSettings}
         />
+
+        <TrustBar />
 
         {/* 024 P1: always visible, independent of search state — results now live in the ResultSheet
             overlay below, not inline, so there is no "hide after first search" reason to hide this too. */}
