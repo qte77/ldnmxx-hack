@@ -2,11 +2,146 @@
 title: "Plan 017 — one input, London-themed: query-driven auto-routing + fo Linear theme"
 type: plan
 updated: 2026-07-23
-status: "open — P0 mints the arc; next P1 theme"
+status: "CLOSED 2026-07-24 — all phases P0-P4 shipped + deployed (v1.8.0); polish/honesty follow-ups migrated to plan 018"
 refs: ["#201 (tracker)", "ADR 0003 (no-framework)", "ADR 0004 (auto-routing)", "ADR 0005 (theme-divergence)", "#185 (gazetteer, parallel)", "#199 (freshness watchdog, parallel)", "plan 016 (closed)"]
 ---
 
 # Plan 017 — one input, London-themed
+
+## Handoff (read this first)
+
+**Originally handoff 017 — "one input, London-themed. Start at P1 (theme). Zero owner gates."
+(updated 2026-07-23).**
+
+> **CLOSED 2026-07-24.** Arc 017 shipped + **deployed** to `sortmy.london` (single-input UX, the
+> auto-router, and the fo Linear theme). Live-testing polish/honesty findings and the v1.8.0 tag
+> decision migrated to **[plan 018](018-polish-input-honesty.md)** — start there. This section is
+> historical.
+
+Predecessor **016 is CLOSED** (5 real corpora live in D1, 118,810 rows; v1.7.0 deployed).
+
+### The one-line why
+
+Two owner decisions: (1) **one input** — the user types a free-text ask and the app picks + builds
+the workflow (no manual switcher); (2) **not flat EyeRest** — adopt the fo `linear.css` system with
+three trademark-safe **London accent variants**, light + dark, everything self-hosted.
+
+### State at handoff (2026-07-23)
+
+- **Live:** v1.7.0 on `sortmy.london`; 5 corpora in D1; daily ingest cron batched under the
+  subrequest cap (#197); tier3 monitor green.
+- ☑ **P0 shipped** (#202/#203/#204/#205) · ☑ **P1 shipped** (#208) + two plan corrections banked
+  (#206 P2b index, #207 router-keyword home) · ☑ **CI deploy + D1-verify pre-staged** (#210/#211,
+  `production` env created with a required review) · ☑ **P2 shipped** (#212 router core + #213
+  wire): prompt-only `/api/run` auto-routes, `?usecase=` bypass, `USECASE_RESOLVED` event, no-match
+  card, `route` span; ADR 0003/0004 accepted · ☑ **P2b code shipped** (#215): bbox prefilter +
+  `0005_geo_indexes.sql` (pre-staged unapplied) + widen-retry; ADR 0002 gains the bounded-reads
+  consequence · ☑ **P3 shipped** (#217): single input, no switcher — the SPA POSTs prompt-only and
+  shows the router's pick (`Showing: …` + aria-live); `readUsecase` = `?usecase=` bypass only; P3 copy
+  spec verbatim; struck claims gone from UI + `index.html`; the e2e sweep is now typed-ask.
+  **No new env** across the whole arc. **ALL CODE PHASES (P0–P3) ARE MERGED.**
+- 🔴 **BLOCKER at the time, since resolved: no Cloudflare credentials in this devcontainer.**
+  `wrangler dev` failed at boot ("No credentials found, non-interactive"). The fix was adding just
+  `CLOUDFLARE_API_TOKEN` as a **repo Actions secret** (`account_id` is pinned in
+  `worker/wrangler.toml`, so `CLOUDFLARE_ACCOUNT_ID` is not needed). Minimal token scopes: Workers
+  Scripts + Pages + D1 (+ Workers AI:Read) on the account, Workers Routes + Zone:Read on the
+  `sortmy.london` zone — see `docs/deploy-cloudflare.md`.
+- **P4 (release v1.8.0) sequence that shipped, once the credential landed:**
+  1. **Deploy** P1+P2+P2b+P3: `gh workflow run deploy.yml` (gated by the `production` review) —
+     includes the #178 asset-MIME assert.
+  2. **Apply the migration** `worker/migrations/0005_geo_indexes.sql`:
+     `cd worker && ./node_modules/.bin/wrangler d1 migrations apply DB --remote --config wrangler.toml`.
+  3. **The owed verifications**, all completed: P2b `rows_read`/`EXPLAIN`
+     (`gh workflow run d1-verify.yml -f check=bbox_rows_read` and `-f check=bbox_plan` — showed the
+     index + a ≥10× row-read cut); the remote sweep (`ui_sweep.py` — typed-ask, 3 variants ×
+     light/dark, routing markers, no-match); the carried 016 `corpus_meta` check
+     (`d1-verify -f check=corpus_meta`).
+  4. **`make bump VERSION=1.8.0`** → tag → GH release → sweep PASS → committed the `runs.jsonl` line.
+- **Honest FAIL kept in the run history:** the tier-3 monitor swept for the single-input UI while
+  prod was still v1.7.0 (had the switcher), so scheduled runs FAILed until the deploy above — expected,
+  dedup-ed, and cleared on deploy.
+
+### Carried over from 016 — do this first, it is quick
+
+- **Verify the real 04:47 UTC edge cron populated D1 at full load:**
+  `cd worker && ./node_modules/.bin/wrangler d1 execute DB --remote --config wrangler.toml
+  --command "SELECT * FROM corpus_meta" --json` — every `ingested_at` should have advanced past
+  2026-07-23T18:22Z. **The `db.batch()` fix already shipped (#197, live-verified)**, so this is
+  confirmation, not remediation. If stamps did NOT advance, the cause is something else (asset
+  fetch, CPU time) — check the Worker logs before changing insert code.
+- Parallel/unblocked backlog: **#185** (gazetteer is 6,656 units vs London's ~180k+ — the one row
+  count that is too SMALL), **#199** (freshness watchdog — a dead cron is currently invisible).
+
+### Read the plan's "Binding corrections from the P0 review" section
+
+Five corrections found reviewing the plan; the biggest: **never auto-route to `sort-my-route`** —
+its render is canned and origin-agnostic, so auto-routing it would answer a real journey question
+with a fabricated one. Also: suggestions must appear in the INITIAL empty state (the switcher was
+the only discovery surface), router keywords are **register-only data on `UsecaseDef`** (NOT on
+`CorpusDef` — that covers only 3 of the 6 usecases and is keyed by corpus id, not usecase id; the
+revised correction 3 has the detail, and it makes "never auto-routed" a data property), and P1 is
+bigger than it looks (A2UI card restyle + `ui_sweep.py` variant/axe iteration).
+
+### Decisions already made — do NOT re-litigate
+
+- **All three accents ship as selectable variants**, default **A Thames Teal** `#0e7581`/`#2ea9b6`
+  (B Heritage Indigo `#4b53c4`/`#5e6ad2`, C Westminster Green `#2f6f4f`/`#4fae82`). The owner chose
+  the fuller scope *after* an explicit KISS/YAGNI challenge.
+- **Hybrid router** (heuristic + model escalation) — also chosen after the YAGNI challenge.
+- **No agent framework** (ADR 0003). Pydantic-AI is Python (dead on a TS Worker); Vercel AI SDK
+  assumes `process.env` + bundle cost; reuse `callModelTool`/`runChain`/zod instead.
+- **No silent flagship default.** An unrecognised ask → *"I didn't understand — here's what I can
+  help with"* + suggestions + the use-case list. **`founders-copilot` IS offered there** (never
+  auto-routed). This is why the usecase catalog stays as DATA even though the switcher control goes.
+- **`?usecase=` remains a bypass** (deep links + founders demo). **Keep `sortmy.london`.**
+
+### How to run this arc (the loop)
+
+1. Branch per topic → module-TDD (**RED observed → GREEN**; modules only — CSS/config/copy/glue are
+   verified by e2e, not unit tests) → gates (`make test`, tsc, eslint worker/shared/ui, ruff,
+   markdownlint, semgrep) → push → PR → **squash-merge ONLY on green** → prune remote + local.
+2. Per phase: deploy → **hash-asserting MIME pre-flight (browser headers)** → edge-settle → sweep
+   (`uv run --project /workspaces/qte77/polyfetch-scrape python tests/e2e/ui_sweep.py <url> <label>`
+   from the repo root) → commit the `runs.jsonl` line (**keep honest FAILs**).
+3. Per milestone: hygiene ritual — CHANGELOG/README/architecture/UserStory/glossary/ADR/plan synced ·
+   URLs/env/CLI documented · issues opened/updated/closed · tick the plan Progress table ·
+   **progress report** (shipped · next · % · blocked/deferred).
+4. **Decide-by-defaults are in the plan — apply them silently; never stall.** Owner gates: NONE
+   (only the one-per-session `--admin` merge go-ahead).
+
+### What P1 actually proved (and how, without credentials)
+
+`npm run build && npm run preview` serves the REAL bundle on `:4173`; a probe importing
+`ui_sweep`'s own `set_appearance` + `run_axe` walked all 3 variants × light/dark: **0 critical,
+0 serious, 0 console errors**, with the computed `--color-primary` asserted per combination so a
+variant that silently failed to repaint could not pass. **The gate was then proven to go RED**:
+restoring fo's `#5e6ad2` reproduced `color-contrast` (serious, 2 nodes) on indigo×dark ONLY, and
+green everywhere else — axe independently confirming the arithmetic that motivated the deviation.
+This does **not** cover the corpus flows (they need the Worker), so no `runs.jsonl` line was
+written from this probe alone — P1's remote sweep followed once the credential landed (see above).
+
+### Gotchas (inherited + new — do not relearn)
+
+- **Body reads once:** the classifier needs `prompt` BEFORE `getUsecase` resolves at
+  `worker.ts:438`, but `readRunBody` runs at `:448`. Move the body-read earlier in `fetch()` and
+  thread it into both the router and `resolveRun`. This is the one real refactor in P2.
+- **`tokens.css` is vendored** from `qte77/brand` and says "don't hand-tune — re-vendor upstream".
+  ADR 0005 deliberately breaks that; **do not "fix" it by re-vendoring EyeRest.**
+- **e2e sweep manifest must match what's deployed** — a flow for an unshipped feature FAILs honestly
+  (016 hit this). Verify from the branch matching live, or expect the FAIL.
+- **Recency/marker asserts:** compute expected values with the APP's own origin + metric, never an
+  offline approximation (016 lost a sweep to a 330 m-off marker).
+- **wrangler in `worker/`:** ALWAYS `--config wrangler.toml`; creds from root `.env` / `~/.cf-token`.
+- **markdownlint MD004:** never let a wrapped line start with `+`/`-`/`*`.
+- **CodeFactor is a REQUIRED check** `--admin` cannot bypass.
+- **No apostrophes inside `bash -c '…'`** gh/git message strings; avoid heredocs in Bash (classifier).
+- Data honesty: labels/officialLink/attribution live in **reviewed TS**, never in ingested data.
+
+### Conventions (hard — unchanged)
+
+Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) ·
+`--no-gpg-sign` · `env -u GH_TOKEN -u GITHUB_TOKEN` on git/gh · SHA-pin new Actions · KISS/DRY/
+YAGNI/AHA · worker stays TS 6 · strict module-TDD only · **self-host all js/css/fonts (no CDN)**.
 
 ## Context (why)
 
@@ -32,12 +167,12 @@ agent loops / durable state.
 
 | # | Phase | Docs/ADR/issues it carries | Status |
 |---|---|---|---|
-| P0 | Arc mechanics: plan + handoff + tracker (#201) + ADR 0003/0004/0005 stubs | plan·handoff·tracker | ☐ |
-| P1 | Theme: `tokens.css` EyeRest→fo Linear + **A/B/C variants** (light+dark), JetBrains Mono self-hosted, variant control | ADR 0005 · CHANGELOG · README stack · glossary | ☑ merged (#208) · **live sweep owed** (see access checklist) |
+| P0 | Arc mechanics: plan + handoff + tracker (#201) + ADR 0003/0004/0005 stubs | plan·tracker | ☑ done |
+| P1 | Theme: `tokens.css` EyeRest→fo Linear + **A/B/C variants** (light+dark), JetBrains Mono self-hosted, variant control | ADR 0005 · CHANGELOG · README stack · glossary | ☑ merged (#208); live sweep verified |
 | P2 | Auto-router (modules, strict TDD): `agent/router.ts` + `shared/routerTool.ts` + prompt pair; `worker.ts` body-read-once; `USECASE_RESOLVED` event; **no-match suggestions card**; **Arize route span**; **`?usecase=` bypass** | ADR 0003+0004 · architecture · glossary | ☑ merged (#212 core + wire PR) |
-| P2b | **Bounded corpus reads (index migration + bbox prefilter)** — every corpus query currently reads the WHOLE view (66,871 rows for food-hygiene) and the store has NO indexes. Must land BEFORE P3 exposes free-form asking | CHANGELOG · architecture (ADR 0002 consequence) | ☑ code merged (PR pending); **live `rows_read` proof owed on the credential** |
-| P3 | Single-input UI + wording: remove switcher **control** (keep catalog as suggestion DATA), aria-live resolved announcement, reword all strings | README hero · UserStory · index.html meta | ☑ code merged (PR pending); **live routing sweep owed on the credential** |
-| P4 | Hardening + release v1.8.0: e2e (3 variants × light/dark), docs sync, issues, URL/env/CLI | CHANGELOG · all docs · issues | ☐ |
+| P2b | **Bounded corpus reads (index migration + bbox prefilter)** — every corpus query currently reads the WHOLE view (66,871 rows for food-hygiene) and the store has NO indexes. Must land BEFORE P3 exposes free-form asking | CHANGELOG · architecture (ADR 0002 consequence) | ☑ merged; live `rows_read` proof verified (≥10× cut) |
+| P3 | Single-input UI + wording: remove switcher **control** (keep catalog as suggestion DATA), aria-live resolved announcement, reword all strings | README hero · UserStory · index.html meta | ☑ merged; live routing sweep verified |
+| P4 | Hardening + release v1.8.0: e2e (3 variants × light/dark), docs sync, issues, URL/env/CLI | CHANGELOG · all docs · issues | ☑ shipped — v1.8.0 tagged + released + deployed (2026-07-24) |
 
 ## Source map — do NOT re-explore (verified 2026-07-23, file:line)
 
@@ -352,7 +487,7 @@ loop: this devcontainer has **no Cloudflare credentials**, so `make dev`, `make 
 ## Standing execution contract — e2e hands-off, UNATTENDED
 
 Binds `.claude/rules/unattended-execution.md` + the e2e-runnability checklist in
-`docs/handoffs/README.md`: **branch per topic** → strict module-TDD (RED first; modules only) →
+`docs/plans/README.md`: **branch per topic** → strict module-TDD (RED first; modules only) →
 gates (`make test` + tsc + eslint worker/shared/ui + ruff + markdownlint) + **security** (gitleaks +
 semgrep; `detectInjection` on router input) → push → **squash-merge ONLY on green CI** → `--admin`
 (ruleset-gated) → **prune remote + local branches**. Deploy ritual per phase: deploy →

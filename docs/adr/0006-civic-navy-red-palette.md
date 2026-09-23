@@ -13,7 +13,7 @@ date: 2026-09-10
 category cards, the result sheet, the full Settings screen) are in flight in parallel worktrees as
 this ADR is written and are not covered by its Status. **Supersedes [ADR 0005](0005-project-owned-theme.md)**
 (the fo Linear neutrals + three trademark-safe accent variants) and the variant decision recorded in
-[handoff 017](../handoffs/017-single-input-london-theme.md).
+[handoff 017](../plans/017-single-input-london-theme.md).
 
 ## Context
 

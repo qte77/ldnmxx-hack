@@ -166,4 +166,4 @@ flag corrections in a PR.
 |---|---|---|---|
 | SSOT | (see Engineering) | This repo is canonical; `qte77/ldnmxx` is archival-only. | DRY |
 | TRMNL | (e-ink display device / optional sponsor) | Optional dashboard-display integration. | — |
-| NNN | (handoff/plan numbering placeholder) | `docs/handoffs/NNN-*.md`. | ADR |
+| NNN | (plan numbering placeholder) | `docs/plans/NNN-*.md`. | ADR |

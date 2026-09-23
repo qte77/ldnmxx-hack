@@ -7,6 +7,80 @@ refs: ["arc 020 (UX overhaul)", "ADR 0002 (fetch-free store)", "ADR 0004 (regist
 
 # Plan 021 — the fold shows the value proposition
 
+## Handoff (read this first)
+
+**Originally handoff 021 — "first-principles pass + value-proposition fold. P1-P5 shipped in one PR;
+only the owner deploy + live sweep (P6) remain." (updated 2026-08-05).**
+
+### Onboarding — the 30-second picture
+
+Arc 020 closed the UX overhaul (routing, place-names, re-shown examples, visual/motion/layout/help).
+Arc 021 answered a different question: *why does the app look thin when it isn't?*
+
+The analysis found the live deploy holds **112,380 real official records** while the landing page claimed
+none of them — the slot under the H1 held the freshness **caveat**, and the covered categories existed only
+inside chip labels that read as input examples. Root cause: the page was organised around *the input*,
+while a visitor's first question is *"what does this know?"*.
+
+The fold is now **coverage → proof → input → examples → a sample answer → one honesty line**, the honesty
+copy is preserved (compact line + full text in `?`), and a place-less ask no longer reads as a form error.
+
+### What shipped (all of P1-P5, one PR)
+
+- `ui/src/coverage.ts` + `ui/tests/coverage.test.ts` (RED-first) — the honest number: infrastructure
+  corpora excluded, rounds **down**, `null` in → `null` out.
+- `ui/src/useCoverage.ts` — same-origin read of the existing `GET /api/freshness`; fails silent.
+- `ui/src/App.tsx` — `CoverageLine`, `SampleCard` ("Here's what you get:", a real committed record labelled
+  Example), caveat moved below the value + into `HelpPanel`, engine story moved to the footer.
+- `worker/src/corpus/render.ts` (RED-first) — the place-less empty card is now
+  **"Almost — which part of London?"**.
+
+### Next (in order) — historical, see Remaining work below for current state
+
+1. **P6 — owner deploy**, then the agent runs the live sweep. This was the ONLY open item at handoff time;
+   see the Remaining work table below (closed since).
+
+### Owner gates
+
+- **Deploy** — an owner DECISION, not an agent incapability. **Correction (2026-08-05, verified):** the
+  arc-020 watch-out "no CF creds in the devcontainer" is **wrong**. The gitignored repo-root `.env`
+  carries a valid `CLOUDFLARE_API_TOKEN` (confirmed via `wrangler whoami`), and `make deploy` →
+  `scripts/provision_cf.sh` explicitly sources it, so **`make deploy` works from the devcontainer**.
+  The confusion: `wrangler dev` does NOT source the repo-root `.env`, so `make dev` fails with "No
+  credentials found" — a dev-server limitation that never implied the deploy path was blocked.
+  `gh workflow run deploy.yml` remains the preferred path (deploys a known merged commit through the
+  production Environment, with its approval + audit trail, rather than a local working tree), and
+  dispatching it is classifier-blocked for the agent. Treat production pushes as owner-gated by policy.
+- **Local UI verification without the Worker:** `make dev` cannot boot the Worker (see above), so verify
+  the SPA with `VITE_WORKER_BASE=https://sortmy.london npm --prefix ui run dev` — `ALLOWED_ORIGINS`
+  already whitelists `localhost:5173`, so the real API answers. **The arc's most reusable finding.**
+
+### The loop (per phase / PR)
+
+branch per topic → RED-first (modules only; CSS/wiring → the browser sweep) → gates (`npm --prefix
+worker|ui run lint|typecheck|test` [ui: `build`+`size`] · semgrep · markdownlint `rtk proxy npx --yes
+markdownlint-cli2 "<file.md>"`) → push → PR → CI green → `gh pr merge <n> --squash --admin
+--delete-branch` → `git switch main && git pull` → per UI phase: deploy (owner) + sweep.
+
+### Watch-outs (carried; do NOT relearn)
+
+- **Honesty is enforced in code, not copy review** — never let the coverage number be a build-time
+  constant, never round up, never fall back to a cached figure. A missing number is correct behaviour.
+- **Do not "fix" corpus-level `asOf`** — it is deliberately the *oldest* row date, so `/api/freshness`
+  reports `1901-01-01` (food-hygiene) and `1949` (listed buildings). Per-record card dates are correct.
+  **Never surface corpus-level `asOf` in the civic UI.**
+- **`ui/` must never import `worker/`** — `coverage.ts` mirrors the freshness payload's two needed fields.
+- **`.qte-card` is scoped under `.a2ui-surface`** — do not borrow it for static UI; build from tokens.
+- UI unit tests are pure/node-only (no jsdom); rendering is verified only by the browser sweep.
+- `exactOptionalPropertyTypes`; complexity ≤12/function. Size budget JS ≤150KB / CSS ≤8KB gzip
+  (now 141.2 / 5.1).
+- `docs/design.md` is **stale**; `ui/src/tokens.css` + ADR 0005 are ground truth.
+
+### Conventions (hard)
+
+Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · `--no-gpg-sign` ·
+`env -u GH_TOKEN -u GITHUB_TOKEN` on git/gh · squash-`--admin` on green (never modify rulesets) · prune.
+
 ## Context (why)
 
 Two owner asks: analyse the app from first principles, and make the GUI show its value at first glance.
@@ -53,23 +127,18 @@ no-match (correct, out of scope). **Routing is healthy post-arc-020**; the weak 
 - **One static sample answer card** in the empty state, from committed demo data.
 - **Civic-first fold**; the engine/builder story moves to the footer.
 
-## Progress (all shipped in one PR)
+## Remaining work
 
-| # | Phase | Kind | Status |
+**None — arc closed 2026-08-05.** P1-P5 shipped in #265; P6 (deploy + live sweep) is verified below.
+Migrate any new work to arc 022.
+
+| # | Item | Kind | Status |
 |---|---|---|---|
 | P1 | `coverage.ts` — `findableRecords` + `coverageCount` | module · RED-first | ☑ 7 tests; gazetteer excluded, rounds down, null-safe |
 | P2 | `useCoverage` fetch + `CoverageLine`; caveat moved below + into HelpPanel | glue · e2e | ☑ live `112,000+`; fails silent to categories-only |
 | P3 | `SampleCard` — a real record, labelled "Example" | component · e2e | ☑ empty state only; yields to results |
 | P4 | Place-less ask → "Almost — which part of London?" | module · RED-first | ☑ `corpus/render.ts`; 2 assertions updated RED-first |
 | P5 | Footer carries the engine story; fold stays civic-only | copy | ☑ |
-
-## Remaining work
-
-**None — arc closed 2026-08-05.** P1-P5 shipped in #265; P6 (deploy + live sweep) is verified below.
-
-| # | Item | Gate | Status |
-|---|---|---|---|
-| — | (no open items) | — | Migrate any new work to arc 022 |
 
 ## Design decisions worth keeping
 
