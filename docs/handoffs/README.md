@@ -2,22 +2,31 @@
 
 Session-to-session resume points (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: [024 — App shell redesign](024-app-shell-redesign.md) — v2.0.0 shipped; start at row 10 (owner deploy)
+## ▶ Resume point: this convention is superseded — read the latest `docs/plans/NNN-*.md` instead
+
+Arcs **025** ([Agent-native MCP surface](../plans/025-agent-native-mcp-surface.md), CLOSED) and **026**
+([Design parity completion](../plans/026-design-parity-completion.md), CLOSED) are the newest closed
+arcs, both shipped + deployed + rescanned as **v2.1.0** (2026-09-22). Per the workspace
+`unattended-execution` rule, arcs from 025 onward save
+**ONE file per arc** (`docs/plans/NNNN-slug.md`) that opens with its own status/handoff section
+directly — there is no separate `docs/handoffs/025-*.md` or `026-*.md` file, and none should be added.
+**Start a new session by reading the newest file in `docs/plans/`, not this directory.** This
+`docs/handoffs/` directory and index remain as historical record for arcs 001–024 only.
 
 Arc 024 rebuilt the sortmy.london UI to match a Claude Design mockup: a tab-based app shell
 (Home/Settings) replacing the single-page layout, a sourced civic navy/red palette (light + dark, both
 directly from the design) replacing the three locked accent variants, and Cormorant Garamond + Lora
 serif type replacing Inter — superseding ADR 0005 and handoff 017's 3-variant decision (see
-[ADR 0006](../adr/0006-civic-navy-red-palette.md)). Rows 1–9 and 11 are merged and **v2.0.0 is tagged +
-released**. Only row 10 (deploy) remains — dispatched and sitting on the `production` Environment's
-required-reviewer approval (a deliberate owner checkpoint), with `CLOUDFLARE_API_TOKEN`/
-`CLOUDFLARE_ACCOUNT_ID` also unprovisioned. Predecessors 018–023 CLOSED.
+[ADR 0006](../adr/0006-civic-navy-red-palette.md)). **CLOSED — all rows including row 10 (deploy)
+shipped; v2.0.0 tagged, released, and deployed.** Predecessors 018–023 CLOSED.
 
 ## Index
 
 | # | Handoff | State |
 |---|---|---|
-| 024 | [App shell redesign](024-app-shell-redesign.md) | v2.0.0 shipped — **OPEN**, row 10 owner deploy only |
+| 026 | [Design parity completion](../plans/026-design-parity-completion.md) | closed — shipped + deployed (v2.1.0); plan doc only, no separate handoff file |
+| 025 | [Agent-native MCP surface](../plans/025-agent-native-mcp-surface.md) | closed — shipped + deployed (v2.1.0); plan doc only, no separate handoff file |
+| 024 | [App shell redesign](024-app-shell-redesign.md) | closed — shipped + deployed (v2.0.0) |
 | 023 | [Placeholder dates](023-placeholder-dates.md) | closed — shipped |
 | 022 | [Nearest-N depth](022-nearest-n-depth.md) | closed — shipped + deployed |
 | 021 | [Value-proposition fold](021-value-prop-fold.md) | closed — shipped + deployed; live sweep PASS |
