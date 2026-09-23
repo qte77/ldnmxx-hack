@@ -1,11 +1,70 @@
 ---
 title: "Plan 020 — UX overhaul: right-workflow routing · place-name input · re-shown examples · visual/motion/layout/cards + a11y"
 type: plan
-status: "open (2026-07-25) — minted after arc 019 (freshness watchdog credential-free, #245/#247/#248/#249). Full comprehensive scope."
+status: "CLOSED — routing · place-names · examples · visual/a11y shipped (per docs/plans/README.md index); P4c skeleton dropped (YAGNI), P4e richer-cards deferred (see Progress table)"
 refs: ["#2 routing (right workflow)", "#1 place-name input", "#3 re-show examples", "#4 UX overhaul (visual/motion/layout/cards/header/colour/a11y)", "ADR 0002 (fetch-free store)", "ADR 0004 (register-only routing)", "ADR 0005 (project-owned theme)"]
 ---
 
 # Plan 020 — UX overhaul
+
+## Handoff (read this first)
+
+**Originally handoff 020 — "UX overhaul. Full comprehensive arc (owner chose thorough after a KISS
+challenge — do NOT re-litigate). P1 routing → P2 place-names(+D1) → P3 examples → P4a-e
+visual/motion/layout/cards. Deploy is owner-gated." (updated 2026-07-25).**
+
+### Onboarding — the 30-second picture
+
+Arc 019 shipped the credential-free freshness watchdog (endpoint `GET /api/freshness` #247 + watchdog #248 + fix #249). Arc 020 is a **UX overhaul** from four owner complaints: (#2) routing feels narrow /
+uses the same no-match card; (#1) place-name input ("wander nearby tower") dead-ends on "Enter a valid
+UK postcode"; (#3) example chips vanish after the first search; (#4) the UI is dull + hard for elderly
+/ less-technical Londoners.
+
+**Owner locked (after a KISS challenge — do NOT re-open):** FULL comprehensive scope (all phases, P4
+in 5 sub-phases, sweep each); place-names = fuller curated `data/places.json` **+ a D1 table/migration**
+(later assessed unnecessary and deferred — see Owner decisions below); keep the 3 theme variants (ADR
+0005), default Thames Teal; richer cards but NO map tiles; keep the P3 pure-gate test.
+
+### Queue (do in order; details + source map below in this plan)
+
+1. **P1 routing** (module, RED-first) — word-boundary + synonyms in `classifyHeuristic`
+   (`worker/src/agent/router.ts:32-48`), expanding `usecases/*.json` keywords; RED-first `worker/test/router.test.ts`.
+2. **P2 place-names** (module + data + D1) — `data/places.json` + pure `shared/places.ts` `resolvePlace`, hook the
+   `!postcode` seam (`worker/src/corpus/query.ts:46-47,105-106`), + a D1 `places` table/migration (mirror `0006`).
+3. **P3 examples** (glue + pure gate) — "Try another" row + `shouldShowSuggestions` gate (`ui/src/App.tsx:287,322`).
+4. **P4a-e UX** (CSS/tokens/components → axe + screenshot sweep is the test, no unit tests) — type/spacing/≥44px
+   targets → colour refresh → motion/skeleton → layout+header → richer cards.
+
+### Owner gates (batch)
+
+- **Deploy** — dispatch `deploy.yml` (production Environment); the agent CANNOT deploy (no CF creds in the
+  devcontainer + dispatch is classifier-blocked). Batch UI/data phases into owner deploy sittings, then the
+  tier-3 sweep verifies live (axe 0/0 + screenshots). The `/api/freshness` endpoint is already live.
+
+### The loop (per phase / PR)
+
+branch per topic → RED-first (modules only; CSS/wiring → e2e) → gates (`npm --prefix worker|ui run
+lint|typecheck|test` [ui: `build`+`size`] · `uvx ruff@0.15.22 check` + `uvx pytest -q ingest` if ingest touched ·
+semgrep · markdownlint `rtk proxy npx --yes markdownlint-cli2 "<file.md>"`) → push → PR → CI green → `gh pr merge
+<n> --squash --admin --delete-branch` → `git switch main && git pull` → per UI/data phase: deploy (owner) + sweep.
+
+### Watch-outs (carried; do NOT relearn)
+
+- **Deploy + `gh pr merge --admin`** are classifier-gated for the agent; owner authorized `--admin` squash (never
+  touch rulesets). Deploy is an owner action.
+- **exactOptionalPropertyTypes** both tsconfigs; **cyclomatic complexity ≤12/function** (extract a helper —
+  e.g. arc-019 `freshnessResponse`). **Size budget JS ≤150KB / CSS ≤8KB gzip** (`ui/scripts/check-bundle-size.mjs`) —
+  a visual overhaul must fit or raise the ceiling deliberately in the same PR.
+- **UI unit tests are pure/node-only** (no jsdom) — test pure fns; visual/interaction → the e2e sweep.
+- **`design.md` is STALE** (old EyeRest amber) — `ui/src/tokens.css` + ADR 0005 are ground truth; never re-vendor EyeRest.
+- Bash filter denies `grep`/`ls`/`head`/`tail`/compound `;`|pipe → `git grep`, redirect to a log + `Read`, single
+  commands. Emoji/unicode in a commit → `-F <file>`. `npx` hook-rewritten → `rtk proxy npx`.
+- Data honesty (ADR 0002): store only committed reference data; place gazetteer is reviewed static name→coords.
+
+### Conventions (hard)
+
+Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · `--no-gpg-sign` ·
+`env -u GH_TOKEN -u GITHUB_TOKEN` on git/gh · squash-`--admin` on green (never modify rulesets) · prune.
 
 ## Context (why)
 
@@ -116,4 +175,4 @@ Branch per phase → RED-first (P1/P2 modules, P3 gate) → gates (worker+ui lin
 if ingest touched, semgrep, markdownlint via `rtk proxy npx … <files>`) → push → PR → CI green → squash-`--admin`
 → `git switch main && git pull` → per UI/data phase: deploy (owner) + tier-3 sweep (axe + screenshots H+V, varied
 viewport). Conventional Commits · noreply · `--no-gpg-sign` · `env -u GH_TOKEN -u GITHUB_TOKEN`. Compact at phase
-boundaries; keep plan + handoff + memory in sync. See `docs/handoffs/020-ux-overhaul.md` for onboarding + watch-outs.
+boundaries; keep plan + memory in sync. See this plan's Handoff section above for onboarding + watch-outs.

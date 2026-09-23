@@ -6,14 +6,105 @@ updated: 2026-07-04
 
 # Plan — Phase 1 first E2E
 
-> **Status: DONE** (branch `feat/phase1-foundation`; see `../handoffs/003-phase1-done.md`).
-> Reconciled deltas from the original ticket: **both** usecases ship (`founders-copilot` + thin
-> `on-it`) via a UI toggle; the Pages demo is backed by the **live deployed Worker** (no baked
-> replay); an **optional dashboard BYOK** field was added (runtime-only; the Worker key stays the
-> keyless default); the console **Arize span per stage** was kept.
+## Handoff (read this first)
 
-**For the next session — this is the kickoff ticket.** Read `plans/001-build-plan.md` for the full
-**code/file/source map** (exact reuse paths, pinned versions, A2UI pitfalls) and `handoffs/001-onboarding-handoff.md`
+**Originally handoff 002 — "start here: build the Phase-1 first E2E" (updated 2026-07-04).**
+
+**Status:** repo scaffolded + docs complete (this repo is the **SSOT**). **No app code yet** at the time
+this handoff was written; job was to build the **first end-to-end** (SPA → `/run` SSE → cards + Arize
+spans). **DONE** (branch `feat/phase1-foundation`; see the Handoff 003 section below for the closing
+report). Reconciled deltas from the original ticket: **both** usecases ship (`founders-copilot` + thin
+`on-it`) via a UI toggle; the Pages demo is backed by the **live deployed Worker** (no baked replay); an
+**optional dashboard BYOK** field was added (runtime-only; the Worker key stays the keyless default); the
+console **Arize span per stage** was kept.
+
+### Read first (in order — don't re-gather context)
+1. **This plan** — YOUR ticket: happy path · TDD task list · Arize spans · definition of done.
+2. `001-build-plan.md` — the full **code/file/source map** (exact reuse paths, pinned versions,
+   A2UI pitfalls). Reference, not a re-read.
+3. `docs/architecture.md` · `docs/usecase-workflows.md` · `docs/design.md` · `docs/archive/demo-script.md` — as needed.
+
+### How to handle plan 002
+- Plan mode is satisfied (002 is approved) → go straight to **strict TDD**, in task order: 🧪`useAgentSSE`
+  test → impl → 🧪`arize`/`run` worker tests → impl emitter + `/run` stub `runStages` (emits SSE **and** a
+  span per stage) + `a2ui/cards.ts` → wire `App` → **verify**.
+- **Reuse agenthud verbatim** (`A2UISurface`, `applyA2UIEvent`, `contract`, `DashboardShell`, `EventStream`).
+  **Built-in A2UI cards only** (no AG Grid). **Console Arize emitter from run #1** (keyless, `wrangler tail`).
+- **Delivery:** branch `feat/phase1-foundation` → commit by topic → CI-gated PR on `qte77/ldnmxx-hack`.
+  Identity: noreply, `--no-gpg-sign`, prefix git/gh `env -u GH_TOKEN -u GITHUB_TOKEN`. Confirm the remote first.
+- **Done when:** SPA → `/run` SSE → opportunity cards render **+ a span per stage in `wrangler tail`**; a bad
+  batch shows a HUD error (never-silent-blank); `npm test` (ui + worker) + CI green.
+
+### Watch out (traps)
+- **A2UI v0_8** is the truth (installed `index.d.ts`) — context7's A2UI docs are the *wrong* version. Batch must
+  be **self-contained** (root id exists, `Card.child` singular, typed literals, acyclic). Avoid `List` → use `Column`.
+- `AgentEvent = {type:string; text?:string; a2uiMessages?:unknown[]}`; enum incl. `RUN_FINISHED`/`RUN_ERROR`.
+- **No new deps** (no ag-grid, no msw). Worker tests = plain-vitest `worker.fetch(req, env)` (not miniflare).
+- This repo is the **SSOT**; sibling `qte77/ldnmxx` is archival reference only.
+
+### After Phase 1
+Phase 2 (**cut**) = Track B trio (`assess_stage` + `search_opportunities` over `data/demo/` + `incorporate`
+verified pack) + the `model:openrouter` span → HUD cost chip. Track A = **pre-recorded** `on-it.json`
+(STT→postcode→path→TTS). See plan 001's phases + `docs/archive/demo-script.md`.
+
+### Handoff 003 — Phase 1 done
+
+**Originally handoff 003 — "start here: Phase 1 done, Phase 2 next" (updated 2026-07-04).** Superseded at
+the time by plan 004 (`004-post-mvp-priorities.md`) — that plan's own Handoff section is the later resume
+point, not this one; kept here as the historical closing report for this arc.
+
+**Status:** Phase 1 first E2E is **built and green** on branch `feat/phase1-foundation` (supersedes
+handoff 002 as the resume point). SPA → `POST /run?usecase=<id>` (SSE) → built-in **A2UI cards** render,
+with **one console Arize span per stage** in `wrangler tail`. Two workflows ship behind a UI toggle.
+
+#### What's built
+
+- **`ui/`** (Vite/React SPA, `groundwork-ui`): live-only shell (`App.tsx`) with a **usecase toggle**
+  (Founder's Copilot / On It), an optional **BYOK** field, prompt + Run. Transport =
+  `src/agent/useAgentSSE.ts` (pure `parseSSE` + `fetch`/`ReadableStream`/`AbortController` hook) driving
+  the reused `applyA2UIEvent` + `contract.ts` render/validate seam. Reused **verbatim** from
+  `qte77/agenthud-agui-a2ui`: `A2UISurface`, `applyA2UIEvent`, `contract`, `EventStream`, `index.css`
+  theme. **Dropped** (KISS/YAGNI): replay engine, mode toggle, BYOK/AI-SDK, DashboardShell chrome.
+- **`worker/`** (`groundwork-worker`, `wrangler.toml`): one `/run` handler + CORS (+OPTIONS) + SSE
+  `ReadableStream`; inline **stub `runStages`** per usecase (`founders-copilot`: plan → search_opportunities
+  → render opp cards; `on-it`: plan → lookup_postcode → get_tfl_journey → render route cards). Emits both
+  the SSE event **and** `emitter.span(...)` per stage. `src/trace/arize.ts` = injectable emitter (console
+  default; real Arize adapter gated on `ARIZE_API_KEY`, stubbed). `src/a2ui/cards.ts` = one `cardsBatch`
+  builder for both workflows, from `data/demo/{opportunities,route}.sample.json` (SSOT).
+- **Tests:** `ui` 7 (SSE parser + enum mapping + malformed-frame + contract fixture + never-silent-blank);
+  `worker` 6 (both usecases' self-contained batch + `RUN_FINISHED`, 4xx/405/204 guards, span-per-stage).
+  Both green. UI: typecheck + strict eslint + build all clean. `wrangler dev` boots + serves.
+- **CI/CD:** `ci.yml` gains `ui` (lint/typecheck/test/build) + `worker` (typecheck/test) jobs;
+  `gh-pages.yml` builds `ui/` (base `/ldnmxx-hack/`) → Pages. `Makefile`: `dev`/`test`/`deploy` wired.
+
+#### Decisions locked (this session)
+
+1. **Both workflows ship** (`founders-copilot` primary + thin `on-it`) via a UI toggle — the modularity
+   proof. Same engine, different usecase JSON.
+2. **Pages demo = live deployed Worker** (not a baked replay): one source of truth, no playback layer.
+3. **BYOK = optional dashboard field**, runtime/in-memory only, forwarded to the Worker; our model key
+   stays a **Worker secret** (keyless default). Nothing sensitive in the SPA bundle — coherent with
+   `AGENTS.md`. Phase-1 stub makes no model call.
+4. **Arize console span per stage kept** (screenshot-legible `⌁ span …` for the README).
+5. **Minimal single-mode shell** written instead of reusing agenthud's dual-mode `DashboardShell`.
+
+#### Run it / preview
+
+- Local: `make dev` (worker :8787 + ui :5173, Vite proxies `/run`). `make test`. Spans:
+  `cd worker && npm run tail`.
+- **Needs you (out-of-band):** (1) Settings ▸ Pages ▸ Source = **GitHub Actions**; (2) `make deploy`
+  (Cloudflare auth) then bake the real `workers.dev` subdomain into `ui/src/config.ts` `WORKER_BASE`.
+
+#### Phase 2 next
+
+Real model call (OpenRouter via AI Gateway, Worker secret or BYOK override) → child **`model:openrouter`
+span `{model, tokens, costUSD}`** → HUD **cost chip**. Replace the stub with the real `runStages` over
+`usecases/*.json` (`stages/` + `adapters/`), `search_opportunities` over seeded KV `data/`, the
+`incorporate` verified pack. Real Arize/OpenInference exporter behind `ARIZE_API_KEY`. Capture the
+Arize/cards **screenshots + GIF** into `docs/assets/` for the README. See plan 001 + `docs/archive/demo-script.md`.
+
+**For the next session — this is the kickoff ticket.** Read `001-build-plan.md` for the full
+**code/file/source map** (exact reuse paths, pinned versions, A2UI pitfalls) and its own Handoff section
 for onboarding — **don't re-gather context**. Execute via **strict TDD** (tests first for modules, not
 glue/scaffold) + **lint + security** gate. This plan is approved; proceed to build.
 

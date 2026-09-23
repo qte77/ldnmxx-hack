@@ -1,31 +1,19 @@
-# Handoffs
+# Plans
 
-Session-to-session resume points (newest first). **Start at the resume point below.**
+Index of build/arc plans (newest first). **Start at the resume point below.**
 
-## ▶ Resume point: this convention is superseded — read the latest `docs/plans/NNN-*.md` instead
+## Resume point
 
-Arcs **025** ([Agent-native MCP surface](../plans/025-agent-native-mcp-surface.md), CLOSED) and **026**
-([Design parity completion](../plans/026-design-parity-completion.md), CLOSED) are the newest closed
-arcs, both shipped + deployed + rescanned as **v2.1.0** (2026-09-22). Per the workspace
-`unattended-execution` rule, arcs from 025 onward save
-**ONE file per arc** (`docs/plans/NNNN-slug.md`) that opens with its own status/handoff section
-directly — there is no separate `docs/handoffs/025-*.md` or `026-*.md` file, and none should be added.
-**Start a new session by reading the newest file in `docs/plans/`, not this directory.** This
-`docs/handoffs/` directory and index remain as historical record for arcs 001–024 only.
-
-Arc 024 rebuilt the sortmy.london UI to match a Claude Design mockup: a tab-based app shell
-(Home/Settings) replacing the single-page layout, a sourced civic navy/red palette (light + dark, both
-directly from the design) replacing the three locked accent variants, and Cormorant Garamond + Lora
-serif type replacing Inter — superseding ADR 0005 and handoff 017's 3-variant decision (see
-[ADR 0006](../adr/0006-civic-navy-red-palette.md)). **CLOSED — all rows including row 10 (deploy)
-shipped; v2.0.0 tagged, released, and deployed.** Predecessors 018–023 CLOSED.
+Start at the newest plan file in `docs/plans/`. Each plan opens with its own status section: what
+shipped, what's next, owner-gates, commands, and watch-outs. There is no separate handoff file — one
+file per arc.
 
 ## Index
 
-| # | Handoff | State |
+| # | Plan | State |
 |---|---|---|
-| 026 | [Design parity completion](../plans/026-design-parity-completion.md) | closed — shipped + deployed (v2.1.0); plan doc only, no separate handoff file |
-| 025 | [Agent-native MCP surface](../plans/025-agent-native-mcp-surface.md) | closed — shipped + deployed (v2.1.0); plan doc only, no separate handoff file |
+| 026 | [Design parity completion](026-design-parity-completion.md) | closed — shipped + deployed (v2.1.0) |
+| 025 | [Agent-native MCP surface](025-agent-native-mcp-surface.md) | closed — shipped + deployed (v2.1.0) |
 | 024 | [App shell redesign](024-app-shell-redesign.md) | closed — shipped + deployed (v2.0.0) |
 | 023 | [Placeholder dates](023-placeholder-dates.md) | closed — shipped |
 | 022 | [Nearest-N depth](022-nearest-n-depth.md) | closed — shipped + deployed |
@@ -39,22 +27,23 @@ shipped; v2.0.0 tagged, released, and deployed.** Predecessors 018–023 CLOSED.
 | 014 | [Civic landing + strictness + perf](014-civic-landing-strictness-perf.md) | superseded |
 | 013 | [UI pivot + security + brand + e2e](013-ui-pivot-security-brand-e2e.md) | superseded |
 | 012 | [CF deploy + Care](012-cf-deploy-and-care.md) | superseded |
+| 011 | [Benefits-copilot: wayfinder MVP scope](011-benefits-copilot-wayfinder.md) | proposed — depends on plan 010 decision #1 |
+| 010 | [Civic tool v1: findings + outlook](010-civic-tool-v1.md) | proposed — strategy + findings, not yet accepted |
 | 008 | [PR-3: HUD status bar](008-hud-status-bar.md) | superseded |
 | 007 | [Phase 2 model-driven pipeline (#18)](007-phase2-model-pipeline.md) | superseded |
-| 006 | [Two-path model access shipped (#37)](006-two-path-shipped.md) | superseded |
-| 005 | [Two-path model access (#37)](005-two-path-model-access.md) | superseded |
+| 005 | [Two-path model access (#37), incl. the shipped follow-up](005-two-path-model-access.md) | superseded |
 | 004 | [Post-MVP priorities](004-post-mvp-priorities.md) | superseded |
-| 003 | [Phase 1 done](003-phase1-done.md) | superseded |
-| 002 | [Phase 1 first E2E](002-phase1-first-e2e-handoff.md) | superseded |
-| 001 | [Onboarding](001-onboarding-handoff.md) | superseded |
+| 002 | [Phase 1 first E2E, incl. Phase 1 done](002-phase1-first-e2e.md) | superseded |
+| 001 | [Onboarding / build plan](001-build-plan.md) | superseded |
 
-_Convention: each new session adds `NNN-slug.md` (+ a paired `docs/plans/NNN-slug.md`) and updates the
-resume-point line above. The root `README.md` links here, not to a specific handoff, so it never churns._
+_Convention: each new arc adds ONE `docs/plans/NNNN-slug.md` file that opens with its own Handoff
+section; there is no separate handoff file. (Plans 003 and 006's former standalone handoffs are folded
+into plans 002 and 005 respectively, as historical sub-sections.)_
 
 ## Making an arc e2e-runnable (unattended-execution checklist)
 
-Distilled from arc 016 — each item is a friction that cost real time when a plan/handoff omitted it.
-A plan+handoff pair that carries all six runs hands-off with only the owner-gated merge go-ahead.
+Distilled from arc 016 — each item is a friction that cost real time when a plan omitted it. A plan
+that carries all six runs hands-off with only the owner-gated merge go-ahead.
 
 1. **Expected magnitudes per source in the source-map** — carry "expected ~N rows" for each data
    source so swap-gate floors are data-derived, not guessed (016 discovered them empirically).
@@ -67,7 +56,7 @@ A plan+handoff pair that carries all six runs hands-off with only the owner-gate
    `--test-scheduled` is absent in `--remote`; fire via local dev + `remote = true` D1 binding).
 4. **"Working tree freezes during a long fire"** — a `wrangler dev` fire holds the tree via its
    file-watch; PRE-STAGE every edit before firing, and run fires detached/backgrounded.
-5. **Merge-gate line in the handoff** — the exact command and that it needs ONE owner go-ahead per
+5. **Merge-gate line in the plan** — the exact command and that it needs ONE owner go-ahead per
    session (`gh pr merge N --squash --admin --delete-branch` here; the classifier gates `--admin`).
 6. **Honest-FAIL budget** — keeping deploy-race / marker / data FAILs in the run history is EXPECTED
    (each fixed in a follow-up), not a defect to be hidden by a later session.

@@ -1,11 +1,79 @@
 ---
 title: "Plan 018 — post-launch polish: input forgiveness, honesty, config-separation, UX"
 type: plan
-status: "open (2026-07-25) — P1/P2/scam/P3/P4/P5b SHIPPED+deployed+live-verified; P5 code done on branch fix/018-p5-visual-ux (@e91f215, gates green) needs PR→merge→deploy→owner screenshot review; then P6 release v1.9.0. Resume via docs/handoffs/018."
+status: "CLOSED 2026-07-25 — all phases P0-P6 shipped + deployed + live-verified as v1.9.0 (CHANGELOG). Resume via this plan's Handoff section above."
 refs: ["#223 (018 tracker)", "#224 (P2 outward postcodes)", "#225 (P3 date honesty)", "#201 (017 tracker, closed-out)", "ADR 0002 (bounded reads / record dates)", "#185 (gazetteer widening)", "#199 (freshness watchdog)", "plan 017 (deployed)"]
 ---
 
 # Plan 018 — post-launch polish
+
+## Handoff (read this first)
+
+**Originally handoff 018 — "resume at: deploy P5 (branch pushed), then P6 release v1.9.0. Everything
+else shipped." (updated 2026-07-25).**
+
+### Onboarding — the 30-second picture
+
+Arc 018 = post-launch polish (input forgiveness · honesty · config-separation · UX). At the time this
+handoff was written, 7 of 8 items were merged, deployed to `sortmy.london`, and live-verified; only
+P5's PR merge+deploy and P6 (release v1.9.0) remained. **Per CHANGELOG `[1.9.0] - 2026-07-25`, both
+have since shipped — the arc is CLOSED.** The repo is the SSOT; work e2e-unattended with the loop
+below.
+
+### NEXT at the time (now closed) — P5 deploy + P6 release
+
+- Branch `fix/018-p5-visual-ux` @ `e91f215`, pushed, all local gates green. The PR opened, merged,
+  deployed, and was tier3-sweep-verified — shipped in `[1.9.0]` (glyphs 🩺 care 🚶 wander 🍽️ food 🔍
+  scam 🚀 founders 🧭 route are decide-by-default picks; 🔍 scam is deliberately NOT a shield/✅, never
+  a "verified" badge). Desktop `01-load` (empty state: chips + rotating placeholder), `run-care`
+  (human distances + de-duped authority tag + glyph + title-as-link), `run-no-match` were the owner's
+  taste-review screenshots.
+- **P6 — release v1.9.0** (owner chose ONE release covering all of 018): `make bump VERSION=1.9.0` →
+  commit → `git tag -a v1.9.0` → push tag → `gh release create v1.9.0` → final deploy + tier3 sweep
+  PASS. The v1.8.0 HOLD was resolved: one v1.9.0 covers all of 018.
+
+### Docs & issues audit (owner asked) — done at P6
+
+- **CHANGELOG**: per-phase P1–P5 entries in `[Unreleased]` rolled into the `[1.9.0]` heading at bump.
+- **README**: only the version badge (via `make bump`). No new URL / env var / CLI switch in 018 —
+  P2's migration `0006` is documented in the migration file + CHANGELOG; `?usecase=` bypass is
+  pre-existing.
+- **architecture.md**: optional short note that `shared/usecaseCatalog.ts` (P4) is the first
+  `shared/*` module the SPA imports (one-way `shared/`→consumers; the UI never pulls worker-only
+  modules).
+- **ADR**: none needed — P3/P4/P5 are implementations, not decisions. ADR 0002 was corrected in P1.
+- **roadmap / userstory**: no change (018 is polish).
+- **Issues**: tick #223 (018 tracker) P1–P5; close #224 (P2) + #225 (P3) (shipped). The scam fix had
+  no issue (found by the P1 sweep, fixed in-arc) — noted in the #223 close. `#161/#168/#185/#150`
+  remain backlog (untouched).
+
+### The loop (per phase / PR)
+
+branch per topic → strict module-TDD (RED first; glue/CSS/copy → e2e+axe) → gates → push → open PR →
+CI green → `gh pr merge <n> --squash --admin --delete-branch` → `git switch main && git pull` →
+`make deploy` → dispatch `tier3-monitor.yml` → download artifact → confirm green + eyeball
+screenshots.
+
+### Commands (creds present: root `.env` token-only; account_id in `wrangler.toml`; prefix git/gh with `env -u GH_TOKEN -u GITHUB_TOKEN`)
+
+- Gates: `npm --prefix worker run lint|typecheck` · `npm --prefix worker test -- --run` · `npm --prefix ui run lint|typecheck|build|size` · `npm --prefix ui test -- --run` · `uvx ruff@0.15.22 check` · `uvx pytest -q ingest`. Markdownlint (CI form): `rtk proxy npx --yes markdownlint-cli2 "<file.md>"` (raw `npx` is hook-rewritten → use `rtk proxy`; pass explicit files, the `**/*.md` glob lints node_modules locally).
+- Deploy: `make deploy`. Live sweep (local patchright OOMs → CI): `gh workflow run tier3-monitor.yml`, `gh run watch <id> --exit-status --compact`, `gh run download <id> --name tier3-results --dir <dir>` (screens named `{config}-{shot}.png`, e.g. `desktop-01-load.png`).
+- D1: source `.env`; `cd worker`; `./node_modules/.bin/wrangler d1 execute DB --remote --config wrangler.toml --json --command "…"`. Migrations: `… d1 migrations apply DB --remote --config wrangler.toml`.
+
+### Watch-outs (env quirks — do not relearn)
+
+- **`gh pr merge --admin` is classifier-gated** — needs a settings.local.json allow-rule or live approval; owner authorized `--admin` squash (never touch GitHub rulesets). If auto-blocked, surface to owner.
+- **Bash filter denies** `grep`/`ls`/`head`/`tail`/`find`-into-node_modules/curl-to-external-URL and many compound `;`|pipe commands → use `git grep`, `python3` to list dirs, redirect to a log + `Read` a slice, single-purpose commands. Emoji/`×`/unicode in a command can trip the filter → commit via `-F <file>`.
+- **markdownlint MD004**: never let a WRAPPED changelog line start with `+`/`-`/`*`.
+- **exactOptionalPropertyTypes** both tsconfigs; **cyclomatic complexity ≤12/function** (P4 + P5 both hit it → extract a helper / subcomponent, e.g. P5's `Hero`).
+- **`shared/*` stays import-root** (SPA never imports worker-only modules); `ui/tsconfig.app.json` `include` has `../shared`.
+- Data honesty: labels/glyph/officialLink/attribution live in reviewed TS, never in ingested data.
+- P5 render: `[title](url)` renders as a clean clickable a2ui link (verified live); "Sources & licence:" one-line join keeps all attribution VERBATIM (no A2UI disclosure primitive exists).
+
+### Conventions (hard)
+
+Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · `--no-gpg-sign` ·
+`env -u GH_TOKEN -u GITHUB_TOKEN` on git/gh · squash-`--admin` on green (never modify rulesets) · prune.
 
 ## Context (why)
 
@@ -23,14 +91,14 @@ the widen at 0.5 km) but the *claim* was wrong; P1 corrects both the code and th
 | # | Phase | TDD boundary | Status |
 |---|---|---|---|
 | P0 | Mint arc (plan + handoff + tracker + issues) | docs | ☑ #226 (tracker #223, bugs #224/#225) |
-| P1 | **Row-read correction** — widen starts at 0.5 km; correct the false ≥10× claim; re-measure LIVE | constant + LIVE measure; docs | ☑ #230 (LIVE 3,248 ≤4k, 11.3×) |
-| P2 | **Input forgiveness — outward postcodes** (SE1, E8): the broken-example bug | **MODULE** `shared/sanitize` → RED-first · gazetteer data | ☑ #233 (0006 applied + durable) |
-| scam | **Scam natural-language match** — "is X a scam" resolves (found by the P1 live sweep) | **MODULE** `matchFirms` → RED-first | ☑ #232 |
-| P3 | **Record-date honesty** — heritage shows a listing date, not "data as of 1974" | render label + per-corpus `CorpusLabels` → RED-first | ☑ #234 |
-| P4 | **Config/code separation** — one shared usecase catalog (kills the UI `routable`/`example` drift) | **MODULE**/data → RED-first | ☑ #235 |
-| P5 | **Visual/UX pass** — distances, glyphs, chips, rotating placeholder, progressive hero, sources expander, de-dupe | CSS/copy/glue → **e2e + axe** | ☑ #237 |
-| P5b | **No-match card — "type this" vs "open this"** — founders/route get a blurb + `?usecase=` link | render + copy → e2e | ☑ #236 |
-| P6 | **Release v1.9.0** (single release for all of 018; v1.8.0 folded here) | docs · issues | ☐ in progress |
+| P1 | **Row-read correction** — widen starts at 0.5 km; correct the false ≥10× claim; re-measure LIVE | constant + LIVE measure; docs | ☑ #230 (LIVE rows_read 3,248 ≤4k, 11.3×; ADR 0002 + CHANGELOG corrected) |
+| P2 | **Input forgiveness — outward postcodes** (SE1, E8): the broken-example bug | **MODULE** `shared/sanitize` → RED-first · gazetteer data | ☑ #233 (migration 0006 applied `--remote`; 6,656→6,931 rows; `ingest.yml` re-dispatched, durable) |
+| scam | **Scam natural-language match** — "is X a scam" resolves (found by the P1 live sweep) | **MODULE** `matchFirms` → RED-first | ☑ #232 (matches the firm-name stem in an NL ask; flag-never-a-verdict preserved) |
+| P3 | **Record-date honesty** — heritage shows a listing date, not "data as of 1974" | render label + per-corpus `CorpusLabels` → RED-first | ☑ #234 (`dates.ts` `formatDateLabel` + required `CorpusLabels.dateLabel`) |
+| P4 | **Config/code separation** — one shared usecase catalog (kills the UI `routable`/`example` drift) | **MODULE**/data → RED-first | ☑ #235 (`shared/usecaseCatalog.ts`; UI + Worker read ONE source) |
+| P5 | **Visual/UX pass** — distances, glyphs, chips, rotating placeholder, progressive hero, sources expander, de-dupe | CSS/copy/glue → **e2e + axe** | ☑ #237 — shipped in `[1.9.0]` (2026-07-25); branch `fix/018-p5-visual-ux` @ `e91f215` merged, deployed, tier3-sweep-verified |
+| P5b | **No-match card — "type this" vs "open this"** — founders/route get a blurb + `?usecase=` link | render + copy → e2e | ☑ #236 (routable→"Try typing"; never-auto-routed→`[Open X →](?usecase=)` link, verified live) |
+| P6 | **Release v1.9.0** (single release for all of 018; v1.8.0 folded here) | docs · issues | ☑ shipped — `[1.9.0]` tagged + released 2026-07-25, final deploy + tier3 sweep PASS |
 
 ## LIVE measurements (2026-07-24, prod food_hygiene = 66,871 rows) — the P1 evidence
 

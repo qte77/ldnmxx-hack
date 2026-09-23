@@ -8,7 +8,138 @@ closes: [21]
 
 # Plan 005 — two-path model access (#37)
 
-**SHIPPED (2026-07-08) — see the Status section below.** Minimize using our own key; maximize reuse of the base `qte77/agenthud-agui-a2ui`;
+## Handoff (read this first)
+
+**Originally handoff 005 — "resume: build the approved two-path model-access plan (#37)" (updated
+2026-07-06).**
+
+**Status:** everything through the incorporate card is **shipped + live**; the next unit was the
+**approved** #37 build. **SHIPPED (2026-07-08) — see the Status section below**, and the "Handoff 006"
+section below carries the shipped/live-verification closing report.
+
+### Read first (in order)
+1. **This plan** — the full approved plan **with a source/file/code map** (signatures, plug points, reuse
+   pointers). Everything you need so you don't re-gather context.
+2. `AGENTS.md` — operating rules. `004-post-mvp-priorities.md` — prior roadmap.
+
+### What #37 is (one line)
+Two-path model access on a shared foundation: **(A) browser-BYOK** (user's key → provider directly,
+never touches the Worker; reuse agenthud `liveAgent.ts`) + **(B) keyless Worker free-chain**
+(Cloudflare Workers AI → OpenRouter `:free` → GitHub Models[last, EOL 2026-07-30] → stub). Plus a shared
+prompt-injection guard, per-IP rate-limiting, and real **Arize** tracing on every path (closes #21).
+
+### How to handle it (workflow)
+- **Enter plan mode was already done → plan approved.** Build it as **4 sequential PRs**, one at a time,
+  **check in between each** (do NOT do a mega-PR):
+  1. `shared/` foundation (prompt/tool/`isSelfContainedBatch`/`detectInjection`) + Worker rate-limit + guard.
+  2. Worker keyless free-chain (`providers.ts`, `[ai]` binding) + per-provider spans.
+  3. Real Arize OTLP export (`trace/arize.ts`) + `POST /trace` forwarder — **closes #21**.
+  4. Browser-BYOK (`ui/src/agent/liveAgent.ts`, add `ai`+`@ai-sdk/openai`) + client throttle + browser spans→`/trace`.
+- **Strict TDD** (tests first for the load-bearing modules: `guard`, `providers`, `trace`, `streamPartToEvent`).
+  **Only module tests** — no tests for glue/config. **Assume strict lint/typing/sec always.**
+- Branch per PR → Conventional Commit → CI-gated PR → **squash-merge on green** → prune remote+local.
+- Verify each with the patchright harness (uv-run, Chromium cached) + `wrangler tail`, per plan §Verification.
+
+### Watch out (spikes + traps)
+- **Spike 1 (PR-2):** does Cloudflare Workers AI (`@cf/zai-org/glm-4.7-flash`) actually return a valid forced
+  `render_ui` batch? If not, lean on `:free` — adjust the default model, don't block. Use a **ChatCompletions-typed**
+  CF model (glm/kimi/gemma/gpt-oss); AVOID the `tool_choice`-less llamas.
+- **Spike 2 (PR-3):** Arize's OTLP endpoint may need **protobuf**, not JSON (#21's open question).
+- **Keep existing tests green:** build `providers[]` only from present bindings/secrets so `run.test.ts`/
+  `model.test.ts` (no `AI`/limiter/token in their env) still hit the **stub** with zero network; keep the keyed
+  provider name `openrouter` so the `demo=1` span assertion holds.
+- **`shared/` must be dependency-free** (the Worker has no zod). Plain TS only.
+- ldnmxx's `contract.ts` has **no `dataModelUpdate`** (stricter than agenthud) → strip it from any ported prompt.
+- Browser-BYOK is **founders-only** (`on-it` stays canned on the Worker). It renders the model's raw grants —
+  no staged events / no incorporate card on that path (documented tradeoff; fast-follow to add).
+- **`docs/submission.md` is PARKED** — do not edit.
+- Identity: GitHub noreply, `--no-gpg-sign`, prefix git/gh with `env -u GH_TOKEN -u GITHUB_TOKEN`. Secrets are
+  Worker-only. Bash denies `grep|ls|head|tail|cat|find|curl` — use Read/Glob + `git`.
+
+### Current live state (as of 2026-07-06)
+- `main` deployed. Shipped this session: #31 theme · #32 doc-truth · #33 (#28 usecase-JSON interpreter,
+  `runUsecase`) · #34 diagram fix · #35 incorporate card · #36 link styling. **Worker deployed**
+  (`wrangler deploy`; authed CF acct `d05213d6`) → live SPA `qte77.github.io/ldnmxx-hack` serves it all.
+- Issues: **#29 CLOSED** (AI Gateway dropped as moot). **#37 OPEN** (this plan). **#21 open** → closed by PR-3.
+  **agenthud #187 open** → update with findings after the build. `ui/.env` (gitignored) has a valid BYOK key
+  for verification.
+
+### Open decisions for the next session
+None blocking — the plan + scope are approved (all 4 pieces). Just build PR-1 → check in → continue.
+
+### Handoff 006 — Two-path model access shipped (#37)
+
+**Originally handoff 006 — "#37 two-path model access shipped + partially live-verified" (updated
+2026-07-08).**
+
+**Status:** Plan 005 / issue **#37** is **fully shipped**; **#21** and **#37** are closed. This was the
+resume point at the time (supersedes handoff 005, the section above).
+
+#### What shipped (all merged to `main`)
+
+- **#42** — dependency-free repo-root `shared/` (prompt/tool/validator) + prompt-injection guard
+  (flagged → deterministic stub) + per-IP rate-limit (`429`) on `/run`.
+- **#43** — keyless free-fallback chain (Workers AI → OpenRouter `:free` → GitHub Models → stub) +
+  `model:<provider>` spans; keyed path = a BYOK header only (`OPENROUTER_KEY` feeds `:free`, no spend).
+- **#44** — real Arize **OTLP** export (`worker/src/trace/arize.ts`) + `POST /trace` forwarder (**closed #21**).
+- **#45** — browser-BYOK founders path (`ui/src/agent/liveAgent.ts`) reusing `shared/` (**closed #37**).
+- **#46** (follow-up) — OpenRouter `:free` walks a fallback **list** of 6 verified free+tools models;
+  each miss logged for `wrangler tail`, the winning model id rides into the render span. Override via
+  `OPENROUTER_FREE_MODELS` (csv).
+- **#47** (follow-up) — incorporate how-to-pack moved to `shared/incorporate.ts`; the browser-BYOK
+  render now appends the SAME verified card as the Worker.
+
+#### Live verification (2026-07-08, against real keys in the gitignored `.env` / `.dev.vars`)
+
+- ✅ **Render mechanism VERIFIED** — `anthropic/claude-haiku-4.5` via OpenRouter, driven by the real
+  shared `FOUNDERS_SYSTEM` + `RENDER_UI_TOOL`, returns a self-contained `render_ui` batch. Proves the
+  model→A2UI→contract pipeline, Path A (browser-BYOK), and the keyed OpenRouter path.
+- ✅ **OpenRouter `:free` default valid** — `llama-3.3-70b:free` is live + free + tool-capable; the
+  earlier failure was a transient `429`, now mitigated by the #46 fallback list.
+- ✅ **Arize OTLP JSON accepted** — Arize added OTLP/HTTP **JSON** support (Mar 2026); the JSON exporter
+  is correct, no protobuf migration needed.
+- ✅ **Workers AI (Spike 1) — VERIFIED.** With the CF token granted **Workers AI Read**, `/ai/run`
+  authenticates; `@cf/openai/gpt-oss-120b` returns a valid self-contained batch → now the default
+  (`@cf/zai-org/glm-4.7-flash` hits capacity `429`; kept as an override).
+- ⚠️ **Arize (Spike 2) — code VERIFIED; live-ingestion blocked account-side.** Our export is proven
+  correct: **Arize's own official SDK** (`@opentelemetry/exporter-trace-otlp-proto`) with a freshly-created
+  space key + the correct `space_id` returns the SAME `500 "unable to validate authorization from span"`.
+  So it's not our code, the JSON/protobuf encoding, the resource attrs, or the `space_id` — it's an
+  **account-side ingestion entitlement** issue. Fix is via Arize support; **zero code change** once
+  resolved. Tracked in its own issue.
+
+#### To finish verification
+
+1. Add **Account · Workers AI · Read** to the CF token (`worker/.env`); add **`ARIZE_SPACE_ID`**
+   (`worker/.dev.vars`, from Arize Space Settings).
+2. Re-verify each spike by calling the provider directly with the real shared `FOUNDERS_SYSTEM` +
+   `RENDER_UI_TOOL` and checking `isSelfContainedBatch` on the returned batch. Pattern: a small node
+   harness that loads the keys from `.env`/`.dev.vars` and **never prints them** (rebuild in scratchpad):
+   - **OpenRouter `:free`** — `POST openrouter.ai/api/v1/chat/completions`.
+   - **Workers AI** — `POST api.cloudflare.com/client/v4/accounts/<id>/ai/run/<model>` (batch under `.result`).
+   - **Arize OTLP** — `POST otlp.arize.com/v1/traces`, JSON body, headers `space_id` + `api_key`.
+3. Or `wrangler dev` + `wrangler tail`: a keyless founders Run shows a `model:workers-ai` span; a BYOK
+   Run shows a `POST /trace` and **no** `/run`. Confirms the `[ai]` + `[[ratelimits]]` bindings resolve.
+
+#### Still open / follow-ups
+
+- **agenthud #187** — update with the two-tier free-chain findings (per plan 005 follow-ups).
+- Once the CF token has Workers AI Read, confirm which CF ChatCompletions model honours forced
+  `tool_choice` (glm may not); `WORKERS_AI_MODEL` overrides — kimi / gemma / gpt-oss are alternates.
+
+#### Next roadmap (unstarted)
+
+Phase 2 model pipeline (**#18**) · Phase 3 voice loop (**#4**) · Phase 4 polish / spend-cap (**#5**) ·
+deferred set (**#6–#13**).
+
+#### Conventions (unchanged)
+
+Plan mode before implementing · strict TDD (module tests only) · lint + security gate. Branch per topic →
+Conventional Commit → CI-gated PR → **squash-on-green** → prune. Identity: GitHub noreply,
+`--no-gpg-sign`, prefix git/gh with `env -u GH_TOKEN -u GITHUB_TOKEN`. Secrets are `.env`/`.dev.vars`
+only (gitignored). `docs/submission.md` is PARKED.
+
+Minimize using our own key; maximize reuse of the base `qte77/agenthud-agui-a2ui`;
 **share** cross-cutting code; both paths carry **rate-limiting** + a **prompt-injection guard**; **Arize
 spans every path** (pulls in + closes **#21**). Phased **4 PRs**, each its own strict-TDD PR with a check-in
 (NOT one mega-PR). `submission.md` PARKED. Standard workflow: branch → Conventional Commit → CI-gated PR →
@@ -25,7 +156,7 @@ Live-verified 2026-07-08 (real keys): ✅ render mechanism (claude-haiku → sel
 OpenRouter `:free` chain live · ✅ Workers AI (`@cf/openai/gpt-oss-120b`, now the default; glm-4.7-flash
 `429`s) · ✅ Arize OTLP export **code** (proven correct against Arize's own SDK). Open: Arize **live
 ingestion** blocked account-side (entitlement — Arize support; zero code change once fixed). **Resume:**
-`docs/handoffs/006-two-path-shipped.md`.
+see the "Handoff 006" section above.
 
 ## Why / intended outcome
 

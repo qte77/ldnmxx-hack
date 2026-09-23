@@ -4,7 +4,7 @@ type: plan
 status: "CLOSED — all 9 rows shipped, incl. deploy (v2.1.0) + rescan (2026-09-22)"
 refs:
   - docs/adr/0003-no-agent-framework.md (this arc EXTENDS its scope to the MCP server, does not reopen it)
-  - docs/handoffs/024-app-shell-redesign.md (arc 024 status — design/perf/dependency work, separate concern)
+  - docs/plans/024-app-shell-redesign.md (arc 024 status — design/perf/dependency work, separate concern)
   - github.com/qte77/ldnmxx-hack/issues/305 (agent-readiness deferred-items tracker — this arc closes several of its rows)
   - github.com/qte77/agent-readiness-kit/issues/25 (external remediation tracker, comment-only, never edit its body — bot-owned)
   - "/workspaces/sfsanity/sfclarity/workers/mcp-server/ (reference implementation — read before writing worker/src/mcp/*)"
