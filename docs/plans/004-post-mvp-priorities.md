@@ -60,7 +60,7 @@ shipped). It carries a **code/file/source map** so the next session does **not**
 ## Current shipped state (what is LIVE)
 
 - **Live demo:** SPA <https://qte77.github.io/ldnmxx-hack/> → deployed Worker
-  <https://ldnmxx-hack-worker.cloudflare-driveway392.workers.dev> (`POST /run?usecase=<id>` → AG-UI SSE →
+  <ldnmxx-hack-worker.<account>.workers.dev, since replaced by the same-origin route sortmy.london/api/*> (`POST /run?usecase=<id>` → AG-UI SSE →
   built-in **A2UI cards**). Verified end-to-end via patchright.
 - **Track B (`founders-copilot`)** render = **real OpenRouter model call** (generates the A2UI grant cards
   grounded in the demo corpus via a forced `render_ui` tool). Falls back to a **deterministic stub** when
