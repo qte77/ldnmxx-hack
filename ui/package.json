@@ -26,6 +26,9 @@
     "react-dom": "^19.2.7",
     "zod": "^3.25.76"
   },
+  "overrides": {
+    "@a2ui/web_core": "^0.10.2"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.1",
