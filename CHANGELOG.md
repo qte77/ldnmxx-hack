@@ -4,6 +4,23 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Changed
+
+- `worker/wrangler.toml`: **`workers_dev`/`preview_urls` explicitly off.** sortmy.london only ever
+  reaches the Worker via the `sortmy.london/api/*` route, under which wrangler already infers
+  `workers_dev = false`; this makes it explicit so the next deploy can't silently re-enable the
+  `*.workers.dev` URL. Two old plan docs had the account subdomain replaced with a note pointing at
+  the route (#344).
+
+### Security
+
+- `ui/package-lock.json`, `ui/package.json`: **cleared the `ui` CI job's `npm audit --omit=dev
+  --audit-level=high` gate** — `@a2ui/web_core` pinned via an npm `overrides` entry to the patched
+  `^0.10.2` line (critical,
+  [GHSA-72qq-p3r5-f7wq](https://github.com/advisories/GHSA-72qq-p3r5-f7wq)), `dompurify` bumped to
+  3.4.16 and `markdown-it` to 14.3.2 (DOM-XSS/ReDoS advisories). `ui` `npm audit`: 5 vulnerabilities
+  (3 critical, 1 moderate, 1 low) → 0 (#345).
+
 ## [2.1.0] - 2026-09-22
 
 A minor version bump: both arcs add real capabilities (an MCP surface, design-parity UI polish) with
