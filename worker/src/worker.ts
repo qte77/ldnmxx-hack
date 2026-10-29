@@ -30,6 +30,7 @@ export interface Env {
   AI_GATEWAY_URL?: string; // optional OpenAI-compatible base (Cloudflare AI Gateway); else OpenRouter
   DEFAULT_MODEL?: string;
   PACE_MS?: string; // per-step reveal delay for the keyless path (default 450; set "0" in tests)
+  ROUTE_BUDGET_MS?: string; // max wait on the model router before answering no-match (default 4000, #337)
   RATE_LIMITER?: RateLimit; // per-IP limiter (wrangler [[ratelimits]]); absent in tests → skipped
   MCP_RATE_LIMITER?: RateLimit; // per-IP limiter for /api/mcp (ADR 0007) — separate shape from RATE_LIMITER
   AI?: Ai; // Cloudflare Workers AI binding (first keyless free provider); absent → skipped
@@ -51,6 +52,9 @@ interface ModelCtx {
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const FALLBACK_MODEL = "anthropic/claude-haiku-4.5";
 const DEFAULT_PACE_MS = 450;
+// The model-router escalation must settle well inside a visitor's patience (and the Tier-3 sweep's 8 s
+// read) — the SSE stream can't start until routing does (#337).
+const DEFAULT_ROUTE_BUDGET_MS = 4000;
 
 const sleep = (ms: number): Promise<void> =>
   ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
@@ -255,7 +259,8 @@ async function resolveTarget(
     const def = getUsecase(usecaseParam);
     return def ? { def, routed: false } : { routed: false, unknownUsecase: usecaseParam };
   }
-  const route = await classifyUsecase(prompt, demo ? [] : freeChain(env), routableUsecases());
+  const budget = AbortSignal.timeout(Number(env.ROUTE_BUDGET_MS ?? DEFAULT_ROUTE_BUDGET_MS));
+  const route = await classifyUsecase(prompt, demo ? [] : freeChain(env), routableUsecases(), budget);
   emitter.span({ name: "route", attrs: { routed_to: route.id ?? "none", source: route.source } });
   const def = route.id ? getUsecase(route.id) : undefined;
   return { def, routed: def !== undefined };
