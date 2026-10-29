@@ -11,6 +11,17 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
   `workers_dev = false`; this makes it explicit so the next deploy can't silently re-enable the
   `*.workers.dev` URL. Two old plan docs had the account subdomain replaced with a note pointing at
   the route (#344).
+- `ui/vite.config.ts`, `ui/scripts/check-bundle-size.mjs`: **UI JS headroom 306 B → ~8 kB.**
+  `linkify-it` is aliased to an empty stub (markdown-it builds it but never calls it with the default
+  preset `@a2ui/react` uses): 149,694 → 146,898 B gzip. The JS ceiling moves 150 → 155 kB; the measured
+  breakdown and reason are in `docs/engineering-practices.md` (#350).
+
+### Fixed
+
+- `worker/src/agent/router.ts`, `worker/src/worker.ts`: **the model-router escalation is now bounded**
+  by `ROUTE_BUDGET_MS` (new optional var, default 4000 ms). Before, an unsure ask waited on the whole
+  free chain, retries and Retry-After included, before the response stream could start. Now it gets
+  the no-match card in time, and the `route` span records `source: "timeout"` (#337).
 
 ### Security
 
