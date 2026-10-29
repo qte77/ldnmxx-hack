@@ -46,7 +46,7 @@ Verify with `wrangler dev` + curl, then a browser (cards render; a bad batch sho
 ### Reuse (don't rebuild) — exact paths in "Source map" below
 
 - `qte77/agenthud-agui-a2ui/` (SPA + worker base) · `qte77/polyfetch-scrape/` (fetcher v0.4.0) ·
-  `sfsanity/_audit-docs/ingest/sfclarity_ingest/` (ingest patterns) · sibling `qte77/ldnmxx/docs/` (deep context).
+  an earlier private project's ingest module (ingest patterns) · an earlier private sibling project's docs (deep context).
 
 ### Watch out (locked decisions + traps)
 
@@ -56,7 +56,7 @@ Verify with `wrangler dev` + curl, then a browser (cards render; a bad batch sho
   *wrong* version — trust the installed `v0_8/index.d.ts`.
 - `incorporate` = Companies House **name-check + pre-filled pack + mocked "file"**, NOT a live filing.
 - Worker tests = plain-vitest `worker.fetch()` (not miniflare). No Docker/devcontainer.
-- **This repo is the SSOT** — treat sibling `qte77/ldnmxx` as archival reference only.
+- **This repo is the SSOT** — treat the earlier private sibling project as archival reference only.
 - `incorporate` = a **verified how-to pack** (real curated gov.uk links), not a mock filing.
 - UX bible = `docs/design.md` (EyeRest, dark-first + BluBlock, motion). Demo north star = `docs/archive/demo-script.md`.
 
@@ -80,7 +80,7 @@ Pitch/deck: `docs/archive/submission.md`.
 - **Reuse**, don't rebuild (source map below). **No Docker, no devcontainer** (serverless).
 - **`incorporate` = a verified how-to pack** (curated real gov.uk / Companies House links, never
   LLM-generated) — honest, not a mock filing. See `usecase-workflows.md`.
-- **This repo is the SSOT**; the sibling `qte77/ldnmxx` is archival deep-reference only (non-canonical).
+- **This repo is the SSOT**; the earlier private sibling project is archival deep-reference only (non-canonical).
   Canonical UX: `design.md` (EyeRest, dark-first, BluBlock). Demo north star: `demo-script.md`.
 - KISS deviations from generic plans: worker tests = **plain-vitest `worker.fetch()`** (not miniflare);
   `msw` deferred to Phase 2; security gate = **gitleaks + Semgrep** (CodeQL needs paid GHAS on a private repo).
@@ -130,7 +130,7 @@ fetch(url, *, method="GET", headers=None, timeout=30.0, retry=None, browser="chr
 #   -> NO .text/.html: decode .body yourself.  render=RenderOptions(screenshot="viewport"|<css>) -> PNG in .screenshot
 # errors: FetchError -> AuthRequired(401/407) / GoneError(404/410) / LegalBlock(451); RetryPolicy defaults sane
 ```
-One-off: `uv run patchright install chromium`. Declare the dep (as sfclarity does):
+One-off: `uv run patchright install chromium`. Declare the dep (as an earlier private project does):
 ```toml
 [project.optional-dependencies]
 fetch = ["polyfetch-scrape"]
@@ -138,20 +138,14 @@ fetch = ["polyfetch-scrape"]
 polyfetch-scrape = { git = "https://github.com/qte77/polyfetch-scrape.git" }
 ```
 
-### C. `/workspaces/sfsanity/_audit-docs/ingest/sfclarity_ingest/` — ingest patterns to borrow
+### C. An earlier private project's data-ingest module — ingest patterns to borrow
 
-(Note: "sfsanity" is Supabase, not Sanity.io.) **Borrow the pattern, not the Supabase stack.** Skim &
+**Borrow the pattern, not the Supabase stack.** Skim &
 re-implement for KV: `fetcher.py` (PoliteFetcher: lazy polyfetch, UA rotation, robots.txt, per-host delay) ·
 `http.py` (`require_https()` **host allowlist** = SSRF guard) · `resolve.py` (SHA-512 `url_hash` → the **KV
 key**) · `jsonld.py` (schema.org JSON-LD + Next.js `__NEXT_DATA__` extractor — many grant sites are Next.js) ·
 `sources/*.py` (pure-parser/impure-fetcher split) · `pending` status + failure sink. **Skip:** their
 `SECURITY DEFINER` RPCs, roles, triggers, 31-col schema → replace with `KV.put(url_hash, json)`.
-
-### D. `/workspaces/qte77/ldnmxx/docs/` (sibling) — deep context
-
-`agui-a2ui-gotchas.md`, `modular-core-architecture.md`, `data-sources-api-map.md`, `track-b-*`, `track-a-*`,
-`decisions/0001-0002`, `plans/001-003`, `usecase-workflows.md`, `resources-alignment.md`. Consider porting
-the relevant ones here.
 
 ## A2UI contract + pitfalls (v0_8 / `@a2ui/react@0.10.1`)
 

@@ -7,8 +7,6 @@ refs:
   - docs/plans/024-app-shell-redesign.md (arc 024 status — design/perf/dependency work, separate concern)
   - github.com/qte77/ldnmxx-hack/issues/305 (agent-readiness deferred-items tracker — this arc closes several of its rows)
   - github.com/qte77/agent-readiness-kit/issues/25 (external remediation tracker, comment-only, never edit its body — bot-owned)
-  - "/workspaces/sfsanity/sfclarity/workers/mcp-server/ (reference implementation — read before writing worker/src/mcp/*)"
-  - "/workspaces/sfsanity/sfclarity/docs/plans/0047-agent-native-surface-and-backlog.md (sfclarity's own plan for the same problem — read its §Explicitly declined section)"
   - docs/adr/0007-mcp-server-deterministic-tools.md (this arc's own ADR, row 1 — extends ADR 0003 to MCP tools, same-Worker default, 4-of-6 usecase filter)
 ---
 
@@ -41,9 +39,9 @@ CLOSED.** Everything below was scoped
 across a single long
 session (2026-09-18/19) that (a) shipped the "safe quick wins" tier already (PRs #315, #316 — llms.txt,
 JSON-LD, api-catalog, agent-skills index, auth.md, markdown twin, AGENTS.md link, RFC 8288 Link headers,
-sitemap lastmod), raising sortmy.london off its 23/F baseline, and (b) explored two sibling repos
-(`agent-readiness-kit`, `sfclarity`) to ground every decision below in either a working reference
-implementation or an independently-reached, matching design decision — nothing here is a guess.
+sitemap lastmod), raising sortmy.london off its 23/F baseline, and (b) explored two sibling projects
+(`agent-readiness-kit`, a private reference project) to ground every decision below in either a working
+reference implementation or an independently-reached, matching design decision — nothing here is a guess.
 
 **What's next, in order:**
 1. **P0 (serial, one worktree)** — ADR 0007 (the architecture decision this whole arc rests on: write it
@@ -93,8 +91,8 @@ file touched.
   `sort-my-wander`, `sort-my-food-hygiene`, `sort-my-scam-check`) — same "never fabricate, never present
   a demo as real" discipline this repo has enforced all session (see auth.md, the Scam Check
   sample-data label). Do not add the other 2 "for completeness."
-- **Same-Worker vs. separate-Worker — read before starting row 2.** sfclarity built its MCP server as a
-  SEPARATE Cloudflare Worker (`workers/mcp-server/`, its own `wrangler.toml`, own `*.workers.dev`
+- **Same-Worker vs. separate-Worker — read before starting row 2.** A sibling private project built its
+  MCP server as a SEPARATE Cloudflare Worker (its own `wrangler.toml`, own `*.workers.dev`
   subdomain) — a legitimate pattern, and a real working reference to copy the JSON-RPC dispatch shape
   from. But ldnmxx-hack's OWN existing architecture already does route-based dispatch inside ONE Worker
   (`worker.ts`'s `resolveTarget` already serves `/api/run`, `GET /api/freshness`, `POST /api/trace`) —
@@ -104,7 +102,7 @@ file touched.
   with a stated default (per the "decide-by-default" convention) — if a future session disagrees, that's
   a discussion, not a silent switch; document why in the PR if you deviate.
 - **A2A, WebMCP, OAuth-discovery docs, Web Bot Auth, NLWeb — all explicitly OUT of this arc's scope**,
-  each already declined with reasoning matching sfclarity's own independent conclusions (see
+  each already declined with reasoning matching that sibling project's own independent conclusions (see
   `github.com/qte77/ldnmxx-hack/issues/305`'s "Declined" and "Deferred" sections — read it before
   re-litigating any of these). Building any of them is a scope violation of this plan, not a bonus.
 - **`ldnmxx-hack#305` is a real, hand-maintained tracking issue (not bot-owned) — update it as rows
@@ -124,14 +122,14 @@ file touched.
 
 ### The reference implementation (read this before writing any MCP code)
 
-`/workspaces/sfsanity/sfclarity/workers/mcp-server/` — a real, deployed Cloudflare Worker:
-hand-rolled JSON-RPC 2.0 (no SDK — `@modelcontextprotocol/sdk` was deliberately not used; read
-sfclarity's own `docs/plans/0047-*.md` for why if curious, don't re-derive it), `initialize` /
+A sibling private project's MCP server — a real, deployed Cloudflare Worker:
+hand-rolled JSON-RPC 2.0 (no SDK — `@modelcontextprotocol/sdk` was deliberately not used; that
+project's own plan reasons through why — don't re-derive it), `initialize` /
 `tools/list` / `tools/call` methods, 2 read-only tools (`search_events`, `get_event`), unauthenticated,
 CORS `*`, rate-limited via the Workers-native `ratelimits` binding (the SAME binding mechanism
 `worker/wrangler.toml` already uses for `RATE_LIMITER` in ldnmxx-hack — copy the pattern, not the code).
-A third sibling repo, `/workspaces/qte77/2026-08-26-AgentNativeHack-FT-CF-SF/src/mcp.ts`, is sfclarity's
-own cited "canonical reference" for this shape — worth a second read if sfclarity's version raises
+A third sibling repo, `/workspaces/qte77/2026-08-26-AgentNativeHack-FT-CF-SF/src/mcp.ts`, is that
+project's own cited "canonical reference" for this shape — worth a second read if its version raises
 questions.
 
 ### ldnmxx-hack files this arc touches
@@ -139,8 +137,9 @@ questions.
 - `worker/src/worker.ts` — `resolveTarget`/route dispatch (currently `/api/run`, `GET /api/freshness`,
   `POST /api/trace`) gets a fourth route, `POST /mcp` (or `/api/mcp` — pick one and stay consistent with
   the existing `/api/*` prefix convention already used for everything else on this Worker; recommend
-  `/api/mcp` for that consistency, though sfclarity's own choice was root-level `/` on its OWN worker
-  since it has no sibling routes to be consistent with — ldnmxx-hack does, so match its own convention).
+  `/api/mcp` for that consistency, though that sibling project's own choice was root-level `/` on its
+  OWN worker since it has no sibling routes to be consistent with — ldnmxx-hack does, so match its own
+  convention).
 - `worker/src/corpus/query.ts`, `worker/src/scam/query.ts` — the EXISTING deterministic query functions
   each MCP tool wraps. Read `docs/architecture.md`'s "One core, three seams" section first for how these
   already compose (`query_corpus`/`query_scam` execs, `CorpusRow`/`CorpusSource` seam, D1-vs-bundled
@@ -198,7 +197,7 @@ has the exact rows this arc should strike; `agent-readiness-kit#25` gets a comme
 | # | Item | Gate | Done-when |
 |---|---|---|---|
 | 1 | ✅ shipped (PR [#319](https://github.com/qte77/ldnmxx-hack/pull/319)) — **P0 — ADR 0007**: write `docs/adr/0007-*.md` extending ADR 0003's "no agent framework" scope explicitly to MCP tools; document the same-Worker-vs-separate-Worker decision (default: same Worker) and the 4-tools-not-6 decision, both with the reasoning already captured in this plan's Handoff section (don't re-derive, cite/summarize). | agent | ADR merged; cross-linked from this plan's `refs` frontmatter (already done) and from row 2's PR description. |
-| 2 | ✅ shipped (PR [#320](https://github.com/qte77/ldnmxx-hack/pull/320)) — **P1 — JSON-RPC dispatch**: add `POST /api/mcp` to `worker/src/worker.ts`'s route dispatch; `initialize` + `tools/list` (returns the 4 real tools' name/description/inputSchema, derived from `shared/usecaseCatalog.ts`'s routable-and-real subset) + `tools/call` (dispatches to the 4 wrapper functions below). Hand-rolled JSON-RPC 2.0, no new dependency (mirrors sfclarity — no `@modelcontextprotocol/sdk`). CORS `*` (public, unauthenticated, matches this app's "no account" ethos). | agent | `worker/test/mcp/dispatch.test.ts` (RED-first) covers `initialize`/`tools/list`/`tools/call` + malformed-request error shapes; `cd worker && npm run lint && npm run typecheck && npm test` green. |
+| 2 | ✅ shipped (PR [#320](https://github.com/qte77/ldnmxx-hack/pull/320)) — **P1 — JSON-RPC dispatch**: add `POST /api/mcp` to `worker/src/worker.ts`'s route dispatch; `initialize` + `tools/list` (returns the 4 real tools' name/description/inputSchema, derived from `shared/usecaseCatalog.ts`'s routable-and-real subset) + `tools/call` (dispatches to the 4 wrapper functions below). Hand-rolled JSON-RPC 2.0, no new dependency (mirrors that sibling project's approach — no `@modelcontextprotocol/sdk`). CORS `*` (public, unauthenticated, matches this app's "no account" ethos). | agent | `worker/test/mcp/dispatch.test.ts` (RED-first) covers `initialize`/`tools/list`/`tools/call` + malformed-request error shapes; `cd worker && npm run lint && npm run typecheck && npm test` green. |
 | 3 | ✅ shipped (PR [#320](https://github.com/qte77/ldnmxx-hack/pull/320)) — **P1 — 4 tool wrappers**: one per real usecase, each a thin adapter calling the EXISTING `corpus/query.ts` (`sort-my-care`, `sort-my-wander`, `sort-my-food-hygiene`) / `scam/query.ts` (`sort-my-scam-check`) functions — no new query logic, no D1/fallback changes. Rate-limited via a NEW `ratelimits` binding added to `worker/wrangler.toml` (separate limit from `RATE_LIMITER`, since MCP callers are a different traffic shape than the SPA — pick a starting limit, e.g. 20/60s matching the existing one, adjust later if real traffic says otherwise). | agent | Same test file as row 2 covers all 4 tools' happy-path + empty-result shapes; a manual `curl -X POST /api/mcp` (or the Patchright-adjacent plain-HTTP check, local `wrangler dev`) round-trips one real query end-to-end. |
 | 4 | ✅ shipped (PR [#322](https://github.com/qte77/ldnmxx-hack/pull/322)) — **P1 — `/.well-known/mcp/server-card.json`**: decide (per the source-map note) whether this is Worker-served or a static Pages file; publish it either way with real `name`/`description`/`version`/`serverUrl`/`tools[]` matching row 2/3's actual implementation, not aspirational copy. | agent | `curl https://sortmy.london/.well-known/mcp/server-card.json` (once deployed) returns valid JSON matching the MCP server-card schema; `tools[]` lists exactly the 4 real tools. |
 | 5 | ✅ shipped (PR [#326](https://github.com/qte77/ldnmxx-hack/pull/326)) — **P2 — discovery cross-links**: add the MCP endpoint to `ui/public/llms.txt` and `ui/public/.well-known/agent-skills/index.json` (each real skill entry gains an `mcp_tool` or equivalent cross-reference — check the agent-skills-index convention for how it expects this, don't invent a field name unilaterally if the spec has one). | agent | Both files still validate (JSON syntax for the index, plain-text convention for llms.txt) and reference the real, now-live `/api/mcp` path. |

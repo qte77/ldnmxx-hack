@@ -65,7 +65,7 @@ All coded, tested, documented on branch `feat/cf-pages-deploy`. Changes: worker 
 - CORS→`sortmy.london` (`worker/wrangler.toml`); SPA `WORKER_BASE=""` (`ui/src/config.ts`), `/api/*`
 (`ui/src/agent/useAgentSSE.ts`), `base:"/"` + dev proxy `/api` (`ui/vite.config.ts`); new `wrangler.jsonc`
 (Pages, `pages_build_output_dir: ui/dist`), `ui/public/_redirects`+`_headers`, `scripts/provision_cf.sh`+
-`finish_cf.sh` (adapted from `/workspaces/sfsanity/sfclarity/scripts/*`), `docs/deploy-cloudflare.md`;
+`finish_cf.sh` (adapted from an earlier private project's deploy scripts), `docs/deploy-cloudflare.md`;
 retired `.github/workflows/gh-pages.yml`. **User to finish:** add `sortmy.london` zone to CF +
 `CLOUDFLARE_API_TOKEN`/`ACCOUNT_ID`, run the 2 scripts, verify, then **merge #75 with the deploy** (merging
 alone retires gh-pages before CF is live). CI stays lint/test only.
@@ -154,7 +154,7 @@ allowedIds)` `:49-65` — reject-invented-ids validator pattern; `renderTool.ts`
 **Family / reuse**: contract SSOT `/workspaces/qte77/protocols` (`workflow-definition/v1`); Python peer
 `/workspaces/qte77/claude-azure-workflows-gui` (`src/doc_workflows/core/runner.py` looks up stages **by name**);
 render base `/workspaces/qte77/agenthud-agui-a2ui` (no workflow contract — render only); deploy scripts base
-`/workspaces/sfsanity/sfclarity/scripts/*`. **No shared TS types package** — vendor the schema, ajv-validate.
+an earlier private project's deploy scripts. **No shared TS types package** — vendor the schema, ajv-validate.
 
 ## Docs/ADR/issues on ship
 ADR `docs/adr/0001-general-workflow-engine.md` (open/closed registry · per-workflow contracts · pre-generated
@@ -162,7 +162,7 @@ corpora→D1, not live fetch · "wayfinder"=pattern · corpus-freshness honesty)
 A/B, add Care story). `docs/architecture.md` (registry + query stage). `docs/usecase-workflows.md` (query-stage
 kind + "how to add a workflow"). `worker/README.md` (corpus). CHANGELOG. `data/usecase-catalog.json`
 (`sort-my-care`→building). Open issue **"engine: general query stage + workflow manifest"** (#72/#73/#74 depend
-on it). **Housekeeping:** drop "Track A/B" (`grep -rin "track[ -][ab]"` excl. node_modules + sibling `ldnmxx/`):
+on it). **Housekeeping:** drop "Track A/B" (`grep -rin "track[ -][ab]"` excl. node_modules):
 comments in `cards.ts`/`ui/src/App.tsx`; docs README/usecase-workflows/architecture/submission/demo-script/
 UserStory/design/plans-001/CHANGELOG.
 

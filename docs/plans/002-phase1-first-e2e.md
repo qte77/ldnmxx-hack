@@ -40,7 +40,7 @@ console **Arize span per stage** was kept.
   be **self-contained** (root id exists, `Card.child` singular, typed literals, acyclic). Avoid `List` → use `Column`.
 - `AgentEvent = {type:string; text?:string; a2uiMessages?:unknown[]}`; enum incl. `RUN_FINISHED`/`RUN_ERROR`.
 - **No new deps** (no ag-grid, no msw). Worker tests = plain-vitest `worker.fetch(req, env)` (not miniflare).
-- This repo is the **SSOT**; sibling `qte77/ldnmxx` is archival reference only.
+- This repo is the **SSOT**; an earlier private sibling project is archival reference only.
 
 ### After Phase 1
 Phase 2 (**cut**) = Track B trio (`assess_stage` + `search_opportunities` over `data/demo/` + `incorporate`
