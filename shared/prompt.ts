@@ -1,7 +1,7 @@
 // Founder's Copilot prompts + A2UI authoring rules. Dependency-free (plain strings) so BOTH the Worker
 // model call and the browser-BYOK path (PR-4) import it from repo-root shared/ — exactly like ui/ and
 // worker/ already import ../../data/demo/*.json. No zod, no Image/asset guidance, and no
-// `dataModelUpdate` (ldnmxx's A2UI contract is only beginRendering|surfaceUpdate — stricter than agenthud).
+// `dataModelUpdate` (ldnmxx-hack's A2UI contract is only beginRendering|surfaceUpdate — stricter than agenthud).
 
 // A2UI catalog-authoring rules (condensed from the agenthud SYSTEM_PROMPT — the proven shape).
 export const A2UI_RULES = `Answer by calling the \`render_ui\` tool to draw the UI on the "main" surface — never prose. Make exactly ONE render_ui call with the COMPLETE interface.
