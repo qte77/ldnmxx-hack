@@ -136,7 +136,7 @@ flag corrections in a PR.
 | DRY | Don't Repeat Yourself | Core principle — single source of truth. | KISS, SSOT |
 | YAGNI | You Aren't Gonna Need It | Core principle. | KISS, AHA |
 | AHA | Avoid Hasty Abstractions | Core principle — duplication over the wrong abstraction. | KISS, DRY |
-| SSOT | Single Source of Truth | This repo (vs archival `qte77/ldnmxx`); `sources.json` for sources. | DRY |
+| SSOT | Single Source of Truth | This repo (vs an archival private sibling project); `sources.json` for sources. | DRY |
 | SHA | Secure Hash Algorithm | GitHub Actions are SHA-pinned (repo policy). | CI, GHAS |
 | GHAS | GitHub Advanced Security | CodeQL/secret-scanning gate. | CI, SHA |
 | LOC | Lines of Code | e.g. the ~60-LOC `runUsecase`. | — |
@@ -164,6 +164,6 @@ flag corrections in a PR.
 
 | Abbrev | Expands to | In this repo | Related |
 |---|---|---|---|
-| SSOT | (see Engineering) | This repo is canonical; `qte77/ldnmxx` is archival-only. | DRY |
+| SSOT | (see Engineering) | This repo is canonical; an earlier private sibling project is archival-only. | DRY |
 | TRMNL | (e-ink display device / optional sponsor) | Optional dashboard-display integration. | — |
 | NNN | (plan numbering placeholder) | `docs/plans/NNN-*.md`. | ADR |
