@@ -45,9 +45,10 @@ below for the full technical narrative.)
 - **P2 #199 freshness watchdog** — ☑ **DONE (#245, `cf4d22e`).** `.github/workflows/freshness-watchdog.yml`
   mirrors `tier3-monitor.yml` + `d1-verify.yml`; alerts if `corpus_meta.ingested_at` > 48h stale; logic
   verified offline. **LIVE run gated on the CF CI secret (owner gate #3 below) — same gate as `d1-verify`.**
-- **P3 #168 deps** — ☑ **ASSESSED (no change).** `sharp` override, TS 7, zod 4 all still held for
-  re-verified upstream reasons (miniflare still pins sharp 0.34.5; typescript-eslint peer `<6.1.0`;
-  @a2ui/react peer `zod ^3`). #168 kept open as the upstream watch.
+- **P3 #168 deps** — ☑ **`sharp` override DROPPED (2026-10-25)** — miniflare now pins sharp 0.35.4
+  itself, so `worker/package.json` `overrides` is gone (lockfile unchanged). TS 7 + zod 4 still held,
+  re-verified 2026-10-25 (typescript-eslint 8.72.0 peer `typescript <6.1.0`; @a2ui/react 0.14.0 peer
+  `zod ^3.25.76`). #168 kept open as the upstream watch for those two.
 - **P4 #161 real Care (ODS/TRUD)** (B, OWNER GATE = a TRUD account) — build the ODS ingest DORMANT behind
   the credential; `care`'s `d1View` already exists. Activates when the secret lands.
 - **P5 #150 jsx-a11y** (BLOCKED upstream) — watch; adopt when eslint-plugin-jsx-a11y supports ESLint 10.
@@ -109,7 +110,7 @@ the D1 gazetteer, so most London postcodes resolve to "no data").
 |---|---|---|---|
 | P1 | **#185 gazetteer widen** — full-London ONSPD postcode units | A (agent) | ☐ owner picked **A**; needs the ONSPD file from owner (no live fetch) |
 | P2 | **#199 freshness watchdog** — alert when the 04:47 ingest cron goes stale | A (agent) | ☑ shipped #245 (`cf4d22e`) · logic verified offline · **live-gated on the CF CI secret** |
-| P3 | **#168 deps** — drop `sharp` override; assess TS 7 + zod 4 | A (agent chore) | ☑ assessed 2026-07-25 — all 3 still held (no change; reasons on the issue) |
+| P3 | **#168 deps** — drop `sharp` override; assess TS 7 + zod 4 | A (agent chore) | ☑ `sharp` override dropped 2026-10-25; TS 7 + zod 4 still held (re-verified 2026-10-25) |
 | P4 | **#161 real Care corpus (NHS ODS/TRUD)** — build DORMANT behind the TRUD credential | B (owner-gated) | ☐ owner gate: TRUD account |
 | P5 | **#150 jsx-a11y** — adopt once eslint-plugin-jsx-a11y supports ESLint 10 | BLOCKED (upstream) | ☐ watch |
 | P6 | **#8 Open311 read-only slice** — DEFERRED: needs a live fetch to council/FixMyStreet endpoints ("no live to others for now") | deferred | ☐ |
