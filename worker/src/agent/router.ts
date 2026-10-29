@@ -23,7 +23,20 @@ export interface Routable {
   keywords: string[];
 }
 
-export type RouteSource = "heuristic" | "model" | "none";
+export type RouteSource = "heuristic" | "model" | "none" | "timeout";
+
+const TIMED_OUT = Symbol("route-timeout");
+
+// Settles when `signal` fires — the race partner that bounds the model escalation (#337).
+function whenAborted(signal: AbortSignal): Promise<typeof TIMED_OUT> {
+  return new Promise((resolve) => {
+    if (signal.aborted) {
+      resolve(TIMED_OUT);
+      return;
+    }
+    signal.addEventListener("abort", () => { resolve(TIMED_OUT); }, { once: true });
+  });
+}
 
 // Keyless, pure, deterministic. Score each workflow by how many of its keywords appear (case-insensitive
 // whole-word, see matchesWholeWord) in the ask; the unique top scorer wins. Zero hits, or a tie, returns null
@@ -52,6 +65,9 @@ export function classifyHeuristic(prompt: string, routables: Routable[]): string
 // provider chain to call AND the text is not a flagged injection — the router gates user text through
 // detectInjection before any model call (mirrors resolveRun), so a jailbreak ask never reaches a model.
 // The model must return an allowed id or "none" (routerTool validator), so it can never invent a route.
+// `signal` is a hard budget (#337): nothing streams to the visitor until routing settles, and the free
+// chain can stall far longer (per-provider retries, Retry-After, a binding that ignores the abort) — so
+// when it fires we stop waiting and answer no-match (`source: "timeout"`), whatever is still in flight.
 export async function classifyUsecase(
   prompt: string,
   providers: Provider[],
@@ -71,9 +87,11 @@ export async function classifyUsecase(
     validate: (v) => isValidRouteResult(v, allowedIds),
   };
   const hasPostcode = normalisePostcode(prompt) !== null;
-  const r = await runChain(providers, (p) =>
+  const chain = runChain(providers, (p) =>
     p.tryCall(spec, { system: CLASSIFY_SYSTEM, user: classifyUser(prompt, routables, hasPostcode), signal }),
   );
+  const r = signal ? await Promise.race([chain, whenAborted(signal)]) : await chain;
+  if (r === TIMED_OUT) return { id: null, source: "timeout" };
   if (!r || r.result.value.usecase === ROUTE_NONE) return { id: null, source: "none" };
   return { id: r.result.value.usecase, source: "model" };
 }

@@ -448,6 +448,16 @@ describe("worker /run — auto-routing (P2)", () => {
     expect(frames.find((f) => f.type === "USECASE_RESOLVED")?.usecase).toBe("sort-my-care");
   });
 
+  it("streams the no-match card within ROUTE_BUDGET_MS when the model router stalls (#337)", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const aiEnv = { ...env, ROUTE_BUDGET_MS: "20", AI: { run: vi.fn(() => new Promise(() => undefined)) } };
+    const frames = parseFrames(await worker.fetch(postRun("qwerty zxcvbn asdfghjkl"), aiEnv as never, ctx).then((r) => r.text()));
+    expect(JSON.stringify(frames.find((f) => f.a2uiMessages)?.a2uiMessages)).toContain("I didn't understand");
+    expect(frames.at(-1)?.type).toBe("RUN_FINISHED");
+    const routeSpan = spy.mock.calls.find((c) => c[0] === "⌁ span" && c[1] === "route");
+    expect(routeSpan?.[2]).toContain("timeout"); // source
+  });
+
   it("gates the model behind detectInjection: a flagged prompt yields no-match, no model call", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const aiEnv = { ...env, AI: { run: vi.fn().mockResolvedValue(toolOutput(goodBatch)) } };
