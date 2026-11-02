@@ -31,6 +31,15 @@ Overriding principle: **measure and verify on the live target — not vibes, not
   transfer win you can't measure.
 - **Guard the win in CI.** A gzip bundle-size ceiling (`ui/scripts/check-bundle-size.mjs`,
   node `zlib`, no new dependency) fails the build if JS/CSS regress past a threshold.
+  It sums **every** emitted chunk, so lazy-loading moves bytes but never creates headroom.
+- **JS ceiling 150 → 155 kB gzip (#350, measured 2026-10-29).** At 149,694 B (306 B headroom) the
+  breakdown was: react-dom (fixed cost) · zod (pinned by `@a2ui/web_core`'s v0_8 schema, so not
+  ours to drop) · the markdown-it stack that `@a2ui/react`'s Text renders through (≈46 kB gzip
+  incl. its `entities` decode table) · app code ≈15 kB. The only behaviour-neutral trim was
+  aliasing `linkify-it` to an empty stub (markdown-it builds it but never calls it with linkify
+  off): −2.8 kB → 146,891 B. Replacing the markdown engine itself would reclaim ~46 kB but changes
+  what text renders (and its XSS surface), so it's a deliberate owner call, not a trim — the
+  ceiling moved instead, leaving ~8 kB of headroom.
 - **Measure mobile, before/after, on the deploy.** Throttled (Fast-3G + 4× CPU)
   LCP/FCP/CLS via a real headless browser against the live URL. Report honest deltas —
   a page already in the "good" band barely moves; the value is fewer bytes + caching.

@@ -12,7 +12,8 @@ const ASSETS = fileURLToPath(new URL("../dist/assets/", import.meta.url));
 
 // Gzip byte ceilings for the entry bundles: current size + headroom. Raise
 // deliberately (in the same PR) when an intentional feature grows the bundle.
-const LIMITS = { ".js": 150_000, ".css": 8_000 };
+// JS 150k → 155k (#350): measured breakdown + reason in docs/engineering-practices.md § Performance.
+const LIMITS = { ".js": 155_000, ".css": 8_000 };
 
 if (!existsSync(ASSETS)) {
   console.error(`no build output at ${ASSETS} — run \`npm run build\` first`);

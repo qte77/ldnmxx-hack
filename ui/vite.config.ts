@@ -9,6 +9,9 @@ export default defineConfig({
   // CF Pages serves at the domain root (sortmy.london). Override with VITE_BASE if ever needed.
   base: nodeEnv.VITE_BASE ?? "/",
   plugins: [react(), tailwindcss()],
+  // #350: markdown-it (pulled in by @a2ui/react) imports linkify-it unconditionally, but the default
+  // preset @a2ui/react uses never calls it — swap in an empty stub (see src/stubs/linkify-it.ts).
+  resolve: { alias: { "linkify-it": "/src/stubs/linkify-it.ts" } },
   server: {
     // Same-origin dev: the SPA fetches /api/*, Vite proxies it to the local `wrangler dev` worker.
     proxy: { "/api": { target: "http://localhost:8787", changeOrigin: true } },
