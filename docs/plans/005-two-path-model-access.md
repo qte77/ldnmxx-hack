@@ -49,7 +49,7 @@ prompt-injection guard, per-IP rate-limiting, and real **Arize** tracing on ever
   `model.test.ts` (no `AI`/limiter/token in their env) still hit the **stub** with zero network; keep the keyed
   provider name `openrouter` so the `demo=1` span assertion holds.
 - **`shared/` must be dependency-free** (the Worker has no zod). Plain TS only.
-- ldnmxx's `contract.ts` has **no `dataModelUpdate`** (stricter than agenthud) → strip it from any ported prompt.
+- ldnmxx-hack's `contract.ts` has **no `dataModelUpdate`** (stricter than agenthud) → strip it from any ported prompt.
 - Browser-BYOK is **founders-only** (`on-it` stays canned on the Worker). It renders the model's raw grants —
   no staged events / no incorporate card on that path (documented tradeoff; fast-follow to add).
 - **`docs/submission.md` is PARKED** — do not edit.
@@ -207,7 +207,7 @@ next tier / stub. **Never worse than today.**
 
 ### PR-4 (ui) — browser-BYOK (founders only) reusing `shared/` + `/trace` spans
 - Add deps `ai ^6.0.208` + `@ai-sdk/openai ^3.0.74`. New `ui/src/agent/liveAgent.ts` (port agenthud's
-  `runLiveAgent`+`streamPartToEvent` near-verbatim; forced `render_ui` inputSchema = ldnmxx
+  `runLiveAgent`+`streamPartToEvent` near-verbatim; forced `render_ui` inputSchema = ldnmxx-hack's
   `A2UIMessageBatchSchema`; prompt+tool+guard from `shared/`; drop agenthud's `toConnectionError` — already
   in `useAgentSSE`).
 - `useAgentSSE.run` branch: `if (byok?.apiKey && !demo && usecase==="founders-copilot")` → `detectInjection`
@@ -239,7 +239,7 @@ next tier / stub. **Never worse than today.**
 - `src/config.ts`: only `WORKER_BASE` (dev proxy / prod `ldnmxx-hack-worker.<account>.workers.dev, since replaced by the same-origin route sortmy.london/api/*`). vite proxies `/run` → `:8787` (`vite.config.ts`). `ui/.env` (gitignored) provides a valid BYOK `VITE_BYOK_API_KEY`+`VITE_BYOK_MODEL` (+ an unused `VITE_BYOK_BASE_URL`) — use it to verify Path A / real gateway traffic.
 
 ### Reuse source — agenthud (`/workspaces/qte77/agenthud-agui-a2ui/`)
-- `ui/src/agent/liveAgent.ts`: `runLiveAgent(settings:{baseURL,apiKey,model}, messages, onEvent, opts?)` — `createOpenAI({baseURL,apiKey})` → `streamText({model:openai.chat(model), system, messages, tools:{render_ui: tool({inputSchema: z.object({messages: A2UIMessageBatchSchema}), execute:()=>"rendered"})}, toolChoice:{type:"tool",toolName:"render_ui"}, stopWhen:stepCountIs(1), abortSignal})`; `for await (part of result.fullStream) onEvent(streamPartToEvent(part))`. `streamPartToEvent`: start→RUN_STARTED · text-delta→TEXT_MESSAGE_CONTENT · tool-input-start→TOOL_CALL_START · **tool-call(render_ui)→`{type:"TOOL_CALL_END",text:"render_ui",a2uiMessages:part.input.messages}`** · finish→RUN_FINISHED · error→RUN_ERROR. Ports near-verbatim; ldnmxx's `dispatch` is a drop-in `onEvent`.
+- `ui/src/agent/liveAgent.ts`: `runLiveAgent(settings:{baseURL,apiKey,model}, messages, onEvent, opts?)` — `createOpenAI({baseURL,apiKey})` → `streamText({model:openai.chat(model), system, messages, tools:{render_ui: tool({inputSchema: z.object({messages: A2UIMessageBatchSchema}), execute:()=>"rendered"})}, toolChoice:{type:"tool",toolName:"render_ui"}, stopWhen:stepCountIs(1), abortSignal})`; `for await (part of result.fullStream) onEvent(streamPartToEvent(part))`. `streamPartToEvent`: start→RUN_STARTED · text-delta→TEXT_MESSAGE_CONTENT · tool-input-start→TOOL_CALL_START · **tool-call(render_ui)→`{type:"TOOL_CALL_END",text:"render_ui",a2uiMessages:part.input.messages}`** · finish→RUN_FINISHED · error→RUN_ERROR. Ports near-verbatim; ldnmxx-hack's `dispatch` is a drop-in `onEvent`.
 - `worker/wrangler.toml`: the `[[ratelimits]] name="RATE_LIMITER" namespace_id=1001 [ratelimits.simple] limit=100 period=60` pattern to copy; worker uses `env.RATE_LIMITER.limit({key})` → `{success}`.
 - `ui/src/config.ts` `ENDPOINTS[]`: optional dropdown to port later (out of scope). Note: **GitHub Models retires 2026-07-30** (flagged in agenthud config) → keep last in our chain, drop after.
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # finish_cf.sh — connect a custom domain (+ www) to the Cloudflare Pages project.
 # Force-replaces the apex/www DNS with a PROXIED CNAME -> <project>.pages.dev, then attaches the
-# Pages custom domain. Adapted from qte77/sfclarity + fo-scraper-miwi. Verbose: prints every API result.
+# Pages custom domain. Adapted from two earlier private projects' deploy scripts. Verbose: prints
+# every API result.
 #
 # Prereq: sortmy.london must already be a zone on your Cloudflare account (nameservers on CF).
 #

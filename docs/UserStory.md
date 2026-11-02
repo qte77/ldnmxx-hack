@@ -1,6 +1,6 @@
 # User stories
 
-The users the one engine serves (distilled from the sibling `ldnmxx` briefs). **One input (017 P3):**
+The users the one engine serves (distilled from an earlier private sibling project's briefs). **One input (017 P3):**
 every journey starts the same way — the Londoner **asks in their own words** in a single box, and the
 Worker's router (ADR 0004) picks the workflow and builds it; there is no manual switcher and no default
 flagship. An unrecognised ask returns an honest **no-match** card listing what the app can do (never a

@@ -15,14 +15,14 @@ Extends [ADR 0003](0003-no-agent-framework.md) — does not reopen it.
 
 `agent-readiness-kit`'s scan of sortmy.london (23/F baseline, [issue #305](https://github.com/qte77/ldnmxx-hack/issues/305))
 flagged a missing MCP server as the largest deferred item after the safe quick wins (PRs #315/#316)
-shipped. Sibling repo `sfclarity` has a working reference implementation
-(`workers/mcp-server/` — a separate Cloudflare Worker, hand-rolled JSON-RPC 2.0, no SDK) and its own
-plan (`docs/plans/0047-*.md`) reasoning through the same problem independently. Three questions need
+shipped. A sibling private project has a working reference MCP server
+(a separate Cloudflare Worker, hand-rolled JSON-RPC 2.0, no SDK) with its own plan reasoning
+through the same problem independently. Three questions need
 settling before any code is written:
 
 1. Does adding an MCP server reopen ADR 0003's "no agent framework" decision?
 2. Same Worker (new route) or a separate Worker (own `wrangler.toml`, own subdomain), matching
-   sfclarity's choice?
+   that sibling project's choice?
 3. How many of the 6 `shared/usecaseCatalog.ts` entries get an MCP tool?
 
 ## Decision
@@ -33,13 +33,14 @@ handler, ever. `tools/call` is a thin adapter, not a second agent loop. If a fut
 tool to route through a model call, that needs its own ADR revisiting 0003/0007, not a quiet addition
 inside a handler.
 
-**2. Same Worker, new route (`POST /api/mcp`) — default.** sfclarity's separate-Worker pattern is a
-legitimate reference for the JSON-RPC dispatch *shape*, but ldnmxx-hack's own `worker.ts` already
-does route-based dispatch inside one Worker (`/api/run`, `GET /api/freshness`, `POST /api/trace`).
-Adding `/api/mcp` as a fourth route avoids a second `wrangler.toml`, a second deploy step, and a
-second DNS/zone route the owner would need to provision before anything is agent-executable.
-sfclarity's separate-Worker choice makes sense for its own repo (no sibling `/api/*` routes to be
-consistent with); ldnmxx-hack has that convention already, so it wins here. This is a stated default,
+**2. Same Worker, new route (`POST /api/mcp`) — default.** That sibling project's separate-Worker
+pattern is a legitimate reference for the JSON-RPC dispatch *shape*, but ldnmxx-hack's own `worker.ts`
+already does route-based dispatch inside one Worker (`/api/run`, `GET /api/freshness`, `POST
+/api/trace`). Adding `/api/mcp` as a fourth route avoids a second `wrangler.toml`, a second deploy
+step, and a second DNS/zone route the owner would need to provision before anything is
+agent-executable. That sibling project's separate-Worker choice makes sense for its own repo (no
+sibling `/api/*` routes to be consistent with); ldnmxx-hack has that convention already, so it wins
+here. This is a stated default,
 not a permanent constraint — a future session may choose a separate Worker if a concrete reason
 emerges (e.g. independent scaling/rate-limit isolation), but that is a discussion to have explicitly,
 not a silent switch.
@@ -58,7 +59,7 @@ exactly the "real, not-demo" set too.
 
 ## Consequences
 
-**Plus.** No new dependency (hand-rolled JSON-RPC 2.0, mirroring sfclarity — no
+**Plus.** No new dependency (hand-rolled JSON-RPC 2.0, mirroring that sibling project's approach — no
 `@modelcontextprotocol/sdk`), no second Worker/deploy/DNS surface, no bundle growth from an agent
 framework. MCP tool handlers reuse the exact same query path the SPA already exercises, so there is
 no second data-correctness surface to keep in sync. The 4-of-6 filter means the endpoint can never

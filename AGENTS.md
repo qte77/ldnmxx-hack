@@ -8,8 +8,8 @@ Modular **AG-UI/A2UI** hackathon app on a **Cloudflare Worker** (Londonmaxxing 0
 - Build plan + source map: `docs/plans/001-build-plan.md`
 - Resume point: latest `docs/plans/NNN-*.md` · Design: `docs/design.md` · Obsolete-but-historical
   docs: `docs/archive/`
-- **This repo (`ldnmxx-hack`) is the SSOT** — the sibling `qte77/ldnmxx` is read-only **archival
-  deep-reference** only (do not edit it or treat it as canonical).
+- **This repo (`ldnmxx-hack`) is the SSOT** — an earlier private sibling project is read-only
+  **archival deep-reference** only (do not edit it or treat it as canonical).
 - Architecture: `docs/architecture.md` · Use cases: `docs/usecase-workflows.md` · Glossary
   (abbreviations): `docs/glossary.md` · Architecture decisions: `docs/adr/README.md` (index —
   read this before adding or superseding an ADR)

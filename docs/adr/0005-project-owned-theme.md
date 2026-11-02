@@ -8,7 +8,7 @@ date: 2026-07-23
 
 ## Status
 
-**Superseded (2026-09-10) by [ADR 0006](0006-civic-navy-red-palette.md).** The fo Linear neutrals and
+**Superseded (2026-09-10) by [ADR 0006](0006-civic-navy-red-palette.md).** The Linear neutrals and
 the three accent variants (`[data-variant]`) described below are gone from `ui/src/tokens.css` — plan
 024 replaced them with one sourced civic navy/red palette. The **project-owns-its-theme** principle
 this ADR established (do not re-vendor `qte77/brand`; measure contrast independently) still holds and
@@ -24,11 +24,12 @@ and its header instructs: *"DO NOT hand-tune values — edit `brand/DESIGN.md` u
 re-vendor."* That default is the flagship **EyeRest** palette: warm parchment surfaces
 (`#ece8d8` / `#1c1a14`), a single amber primary (`#7a6010` / `#c8a858`), zero blue by design.
 
-The owner has explicitly rejected flat EyeRest for this product and pointed at **fo-scraper-miwi**
-(`brand/DESIGN.md` — the origin of the `linear.css` system; sfclarity adopted the same pattern):
-near-black/near-white neutrals, one accent, one glow, one motion language, fluid `clamp()` headings.
-Notably fo **deleted `eyerest.css`** and its accent is deliberately blue/indigo — something the
-EyeRest brand forbids. So the target look is not reachable by re-vendoring or by an upstream variant.
+The owner has explicitly rejected flat EyeRest for this product and pointed at **an earlier private
+project** (`brand/DESIGN.md` — the origin of the `linear.css` system; a sibling private project
+adopted the same pattern): near-black/near-white neutrals, one accent, one glow, one motion language,
+fluid `clamp()` headings. Notably that project **deleted `eyerest.css`** and its accent is deliberately
+blue/indigo — something the EyeRest brand forbids. So the target look is not reachable by re-vendoring
+or by an upstream variant.
 
 Additionally the product is a **London** civic assistant and wants a trademark-safe London accent
 (avoiding TfL roundel red / corporate blue).
@@ -38,7 +39,7 @@ Additionally the product is a **London** civic assistant and wants a trademark-s
 **`sortmy.london` owns its theme locally.** `tokens.css` is no longer a vendored artifact of
 `qte77/brand`; it becomes a project-maintained file carrying:
 
-- the **fo Linear neutrals** — light `bg #fcfcfd`, `surface #f4f5f7`, `surface-lift #ffffff`,
+- the **Linear neutrals** — light `bg #fcfcfd`, `surface #f4f5f7`, `surface-lift #ffffff`,
   `border #cfd3da`, `text #0d0e0f`, `text-muted #4b515b`; dark `#08090a` / `#0f1011` / `#141516` /
   `#23252a` / `#f7f8f8` / `#8a8f98`;
 - **three trademark-safe London accent variants** selected by `[data-variant]`, each light + dark —
@@ -51,14 +52,15 @@ Additionally the product is a **London** civic assistant and wants a trademark-s
 Every pair above was computed against WCAG 2.x, not eyeballed. Three upstream values did not survive
 contact with the measurement, and each is annotated `MEASURED` in `tokens.css`:
 
-1. **B Heritage Indigo dark is `#7b86e3`, not fo's `#5e6ad2`.** fo's value is **3.89:1** on the dark
-   card surface (`--surface-lift #141516`) and 4.24:1 on the page — below AA for text, and it is the
-   colour links and the CTA label are painted in. `#7b86e3` clears every pairing (5.54–6.30:1). This
-   was caught before shipping precisely because the sweep now scans all six combinations.
-2. **Light mode carries deepened semantic colours.** fo's `#e5484d` / `#0ca30c` / `#e5a50a` are tuned
-   for a dark UI and measure **3.59 / 3.08 / 1.98** on the light neutrals. Light uses `#c62828` /
-   `#157347` / `#8a5a00` (5.15 / 5.38 / 5.43); dark keeps fo-family values.
-3. **A second border token exists.** fo's hairline `--border` is ~1.4:1 against its surfaces, which
+1. **B Heritage Indigo dark is `#7b86e3`, not that earlier project's `#5e6ad2`.** That value is
+   **3.89:1** on the dark card surface (`--surface-lift #141516`) and 4.24:1 on the page — below AA
+   for text, and it is the colour links and the CTA label are painted in. `#7b86e3` clears every
+   pairing (5.54–6.30:1). This was caught before shipping precisely because the sweep now scans all
+   six combinations.
+2. **Light mode carries deepened semantic colours.** That earlier project's `#e5484d` / `#0ca30c` /
+   `#e5a50a` are tuned for a dark UI and measure **3.59 / 3.08 / 1.98** on the light neutrals. Light
+   uses `#c62828` / `#157347` / `#8a5a00` (5.15 / 5.38 / 5.43); dark keeps those upstream values.
+3. **A second border token exists.** That earlier project's hairline `--border` is ~1.4:1 against its surfaces, which
    is right for a decorative card edge but fails WCAG 1.4.11 where a border IS the affordance — a
    text input, a toggle. `--color-border-strong` (`#767c88` / `#62666e`, 3.2–4.2:1) is used by
    controls only; the hairline keeps its decorative job.

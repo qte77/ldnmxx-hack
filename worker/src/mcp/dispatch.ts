@@ -1,6 +1,6 @@
 // MCP over plain JSON-RPC 2.0 (ADR 0007) — `initialize` / `notifications/initialized` / `tools/list` /
-// `tools/call`. Hand-rolled, no `@modelcontextprotocol/sdk` (mirrors sfclarity's own reference
-// implementation). Every tool is a thin adapter over an EXISTING deterministic query function
+// `tools/call`. Hand-rolled, no `@modelcontextprotocol/sdk` (mirrors a sibling private project's own
+// reference implementation). Every tool is a thin adapter over an EXISTING deterministic query function
 // (`corpus/query.ts`, `scam/query.ts`) — no LLM call inside a tool handler, ever.
 import { queryCorpus } from "../corpus/query";
 import { queryScam } from "../scam/query";

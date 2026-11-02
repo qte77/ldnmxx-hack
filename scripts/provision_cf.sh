@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # provision_cf.sh — build the Vite SPA (ui/) → Cloudflare Pages, then deploy the Worker.
 # Full-CF topology: SPA on Pages (sortmy.london); the Worker serves sortmy.london/api/* via a Worker
-# route (worker/wrangler.toml). Mirrors qte77/sfclarity + fo-scraper-miwi. See docs/deploy-cloudflare.md.
+# route (worker/wrangler.toml). Mirrors patterns from two earlier private projects' deploy scripts.
+# See docs/deploy-cloudflare.md.
 #
 # Env override (optional): PROJECT — Pages project name (default sortmy-london).
 #
