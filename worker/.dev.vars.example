@@ -11,6 +11,7 @@
 OPENROUTER_KEY=           # OpenRouter API key — feeds the keyless :free provider (never a paid call)
 DEFAULT_MODEL=anthropic/claude-haiku-4.5  # model for the BYOK keyed path when the request omits one
 PACE_MS=450              # per-step reveal delay (ms) for the pure-stub path; a real model paces by latency
+ROUTE_BUDGET_MS=4000     # max wait (ms) on the model router for an unsure ask before answering no-match (#337)
 AI_GATEWAY_URL=          # optional OpenAI-compatible base for the keyed path (else OpenRouter); AI Gateway dormant (#29)
 CF_ACCOUNT_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)
 CF_GATEWAY_ID=           # NOT yet read by code — reserved for future AI Gateway wiring (#29)

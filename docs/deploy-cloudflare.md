@@ -83,7 +83,7 @@ free-text SQL, mirroring how ADR 0002 keeps `VIEW_SQL` a closed whitelist.
 Secrets (via `wrangler secret put`, never in code/config): `OPENROUTER_KEY` · `ARIZE_API_KEY` ·
 `ARIZE_SPACE_ID`. Vars/bindings (in `worker/wrangler.toml`): `ALLOWED_ORIGINS` · `AI` (Workers AI)
 · `DB` (D1) · `RATE_LIMITER`. Optional overrides (`Env` in `worker/src/worker.ts`):
-`ARIZE_PROJECT` · `AI_GATEWAY_URL` · `DEFAULT_MODEL` · `PACE_MS` · `WORKERS_AI_MODEL` ·
+`ARIZE_PROJECT` · `AI_GATEWAY_URL` · `DEFAULT_MODEL` · `PACE_MS` · `ROUTE_BUDGET_MS` · `WORKERS_AI_MODEL` ·
 `OPENROUTER_FREE_MODEL` · `OPENROUTER_FREE_MODELS` — all documented at their `Env` declaration;
 treat every name above as RESERVED.
 

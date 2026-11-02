@@ -36,6 +36,13 @@ const forbiddenProvider: Provider = {
   tryRender: () => Promise.resolve(null),
 };
 
+// A provider whose call never settles and ignores the abort signal — the stalled free-chain case (#337).
+const hangingProvider: Provider = {
+  name: "hanging",
+  tryCall: <T>() => new Promise<ModelToolResult<T> | null>(() => undefined),
+  tryRender: () => Promise.resolve(null),
+};
+
 describe("classifyHeuristic (keyless, pure)", () => {
   it("routes a food-hygiene ask by keyword", () => {
     expect(classifyHeuristic("food hygiene near SE1", ROUTABLES)).toBe("sort-my-food-hygiene");
@@ -137,5 +144,10 @@ describe("classifyUsecase (hybrid heuristic → model escalation)", () => {
       ROUTABLES,
     );
     expect(r).toEqual({ id: null, source: "none" });
+  });
+
+  it("stops waiting when the signal fires, even if a provider ignores it → no-match, source timeout (#337)", async () => {
+    const r = await classifyUsecase("qwerty zxcvbn asdfghjkl", [hangingProvider], ROUTABLES, AbortSignal.timeout(20));
+    expect(r).toEqual({ id: null, source: "timeout" });
   });
 });
