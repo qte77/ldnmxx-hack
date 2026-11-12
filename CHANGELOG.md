@@ -25,6 +25,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Security
 
+- `ui/scripts/check-bundle-size.mjs`: JS gzip ceiling 155 → 160 kB for the `zod` 4 upgrade below (158,280 B measured); reason in `docs/engineering-practices.md`
+- `ui` moves to `zod` ^4.6.6 (GHSA-mrhx-c7xc-m3w5, no 3.x fix) and an override forces the same version under `@a2ui/react` and `@a2ui/web_core`, which declare `zod` ^3.25.76; needs a click-through of A2UI surfaces before merge
+- `ui/package.json` overrides: `dompurify` ^3.4.17 (critical GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr) and `markdown-it` ^14.3.3 (GHSA-vfgh-jcmw-g37q, GHSA-gfr2-rv44-r23c), both pulled in through `@a2ui/react`
 - `ui/package-lock.json`, `ui/package.json`: **cleared the `ui` CI job's `npm audit --omit=dev
   --audit-level=high` gate** — `@a2ui/web_core` pinned via an npm `overrides` entry to the patched
   `^0.10.2` line (critical,
