@@ -6,6 +6,8 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- `.env.example`: add the `CLOUDFLARE_ACCOUNT_ID=` placeholder; `scripts/finish_cf.sh` needs it now that
+  the account id is no longer pinned in the repo.
 - `worker/wrangler.toml`, `scripts/finish_cf.sh`, `scripts/provision_cf.sh`, `.env.example`,
   `docs/deploy-cloudflare.md`: the Cloudflare account id is no longer pinned in this public repo.
   wrangler and `finish_cf.sh` read `CLOUDFLARE_ACCOUNT_ID` (`.env` locally, a repository secret in CI);
