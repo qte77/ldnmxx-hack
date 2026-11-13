@@ -25,6 +25,10 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Security
 
+- worker: `wrangler` 4.131.1 -> 4.158.0 (dev), which pulls `undici` 7.30.1 via `miniflare` and
+  `sharp` 0.35.5; closes the 11 open `undici` alerts and the `sharp` alert in
+  `worker/package-lock.json`. 4.158.0 is the newest release outside the repo's 7-day
+  `min-release-age`.
 - `ui/scripts/check-bundle-size.mjs`: JS gzip ceiling 155 → 160 kB for the `zod` 4 upgrade below (158,280 B measured); reason in `docs/engineering-practices.md`
 - `ui` moves to `zod` ^4.6.6 (GHSA-mrhx-c7xc-m3w5, no 3.x fix) and an override forces the same version under `@a2ui/react` and `@a2ui/web_core`, which declare `zod` ^3.25.76; needs a click-through of A2UI surfaces before merge
 - `ui/package.json` overrides: `dompurify` ^3.4.17 (critical GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr) and `markdown-it` ^14.3.3 (GHSA-vfgh-jcmw-g37q, GHSA-gfr2-rv44-r23c), both pulled in through `@a2ui/react`
