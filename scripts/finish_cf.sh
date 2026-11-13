@@ -12,7 +12,7 @@
 #   TARGET         CNAME target             (default <PROJECT>.pages.dev)
 # Token needs: Pages·Edit + Zone·Read + Zone·DNS·Edit (Zone Resources = the domain).
 # Credentials are REPO-SELF-CONTAINED: CLOUDFLARE_API_TOKEN from the gitignored repo-root .env; the
-# account id comes from worker/wrangler.toml (or CLOUDFLARE_ACCOUNT_ID if pre-exported). No ~/.cf-* files.
+# account id from CLOUDFLARE_ACCOUNT_ID (.env or pre-exported); it is not pinned in this public repo. No ~/.cf-* files.
 #
 # Run WITH BASH:  DOMAIN=sortmy.london bash scripts/finish_cf.sh
 set -euo pipefail
@@ -25,10 +25,10 @@ PROJECT="${PROJECT:-sortmy-london}"
 DOMAIN="${DOMAIN:-sortmy.london}"
 TARGET="${TARGET:-$PROJECT.pages.dev}"
 TOKEN="${CLOUDFLARE_API_TOKEN:-}"
-# account id: prefer a pre-exported env, else read the pinned account_id from worker/wrangler.toml.
-ACCT="${CLOUDFLARE_ACCOUNT_ID:-$(sed -n 's/^account_id = "\([0-9a-f]\{1,\}\)".*/\1/p' "$ROOT/worker/wrangler.toml")}"
+# account id: from CLOUDFLARE_ACCOUNT_ID (.env or pre-exported).
+ACCT="${CLOUDFLARE_ACCOUNT_ID:-}"
 [ -n "$TOKEN" ] || { echo "!! no CLOUDFLARE_API_TOKEN — add it to the repo-root .env (see .env.example)"; exit 1; }
-[ -n "$ACCT" ]  || { echo "!! no account id — set account_id in worker/wrangler.toml (or export CLOUDFLARE_ACCOUNT_ID)"; exit 1; }
+[ -n "$ACCT" ]  || { echo "!! no account id — set CLOUDFLARE_ACCOUNT_ID in .env (or export it)"; exit 1; }
 API="https://api.cloudflare.com/client/v4"
 AUTH="Authorization: Bearer $TOKEN"
 
