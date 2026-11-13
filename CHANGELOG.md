@@ -6,6 +6,10 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- `worker/wrangler.toml`, `scripts/finish_cf.sh`, `scripts/provision_cf.sh`, `.env.example`,
+  `docs/deploy-cloudflare.md`: the Cloudflare account id is no longer pinned in this public repo.
+  wrangler and `finish_cf.sh` read `CLOUDFLARE_ACCOUNT_ID` (`.env` locally, a repository secret in CI);
+  a single-account token still auto-detects it for wrangler. The old value remains in git history.
 - `AGENTS.md`, `docs/engineering-practices.md`, `docs/plans/README.md`: drop the written-out token
   wrapper, no-sign commit flag and admin merge command; plans now name the merge gate, not the
   command. Per-machine workarounds stay in private memory.
