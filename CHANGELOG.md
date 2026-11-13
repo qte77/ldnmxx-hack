@@ -6,6 +6,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- `AGENTS.md`, `docs/engineering-practices.md`, `docs/plans/README.md`: drop the written-out token
+  wrapper, no-sign commit flag and admin merge command; plans now name the merge gate, not the
+  command. Per-machine workarounds stay in private memory.
 - `worker/wrangler.toml`: **`workers_dev`/`preview_urls` explicitly off.** sortmy.london only ever
   reaches the Worker via the `sortmy.london/api/*` route, under which wrangler already infers
   `workers_dev = false`; this makes it explicit so the next deploy can't silently re-enable the
