@@ -30,8 +30,8 @@ Modular **AG-UI/A2UI** hackathon app on a **Cloudflare Worker** (Londonmaxxing 0
 - **Plan mode before implementing** · **strict TDD** (tests first for load-bearing *modules*, not glue or
   one-shot scripts) · **lint + security** gate (gitleaks + Semgrep).
 - Branch per topic → Conventional Commits (`.gitmessage`) → CI-gated PR → prune.
-- Identity: GitHub **noreply only** (`qte77` / `93844790+qte77@users.noreply.github.com`); `--no-gpg-sign`;
-  prefix git/gh with `env -u GH_TOKEN -u GITHUB_TOKEN`.
+- Identity: GitHub **noreply only** (`qte77` / `93844790+qte77@users.noreply.github.com`); signing and
+  credential workarounds for this machine live in private memory, not in repo files.
 - **Secrets** (OpenRouter / Arize / ElevenLabs / Companies House) are **Worker secrets only** — never in
   code or the SPA bundle.
 - **Scraped data is ToU-gated** → `data/real/` gitignored; only synthetic `data/demo/` is committed.
