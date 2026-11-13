@@ -32,6 +32,16 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Security
 
+- `worker/package.json` overrides: `vite` 8.3.0 -> 8.3.3 and `source-map-js` 1.2.1 -> 1.2.2
+  (both transitive, pulled in via `vitest`/`postcss`/`@eslint/css-tree`; no direct dependency to
+  bump). Closes GHSA-587h-7wmj-h5pm (high), GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw,
+  GHSA-rq7h-c2jc-7f22, GHSA-9jrq-w75r-8gcw (vite) and GHSA-68fv-2mgg-jv7q (high, source-map-js).
+  8.3.3 is the oldest vite release clearing all five advisories and the only one already past the
+  repo's 7-day `min-release-age` at the time of this change (newer 8.3.x releases are patched too
+  but younger than 7 days). `worker` `npm audit --omit=dev --audit-level=high`: 1 high -> 0.
+  Dependabot PR #356 (closed, now conflicting with `main`) also touched `vite`/`source-map-js` as
+  a side effect of a grouped `wrangler`-pulled bump; this change fixes just those two, without the
+  wrangler/undici/esbuild bump.
 - worker: `wrangler` 4.131.1 -> 4.158.0 (dev), which pulls `undici` 7.30.1 via `miniflare` and
   `sharp` 0.35.5; closes the 11 open `undici` alerts and the `sharp` alert in
   `worker/package-lock.json`. 4.158.0 is the newest release outside the repo's 7-day
