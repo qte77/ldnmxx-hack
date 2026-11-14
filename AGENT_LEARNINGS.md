@@ -103,7 +103,7 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
   Bullets stay `-`. This is the handoff's "never `+` at line start" warning.
 - **Refs:** PR #103; handoff 013/014.
 
-## git rebase must disable signing here; stacked-on-squash needs `--onto`
+## git rebase and the repo's signing policy; stacked-on-squash needs `--onto`
 
 - **Pattern:** `git rebase` failed with "gpg failed to sign" (repo signs commits, no key),
   and a branch stacked on a squash-merged PR showed the parent's diff again.
