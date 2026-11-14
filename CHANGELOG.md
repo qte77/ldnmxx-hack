@@ -6,6 +6,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- `.github/dependabot.yml`: hold `react`/`react-dom` on 19.2.x by ignoring the whole 19.3 line
+  (was 19.3.0 only). 19.3.1 puts the ui bundle at 168,295 B gzip against the 160,000 B budget and a
+  vendor trim found no safe saving (#365); the other updates in the ui group can merge without it.
 - `.env.example`: add the `CLOUDFLARE_ACCOUNT_ID=` placeholder; `scripts/finish_cf.sh` needs it now that
   the account id is no longer pinned in the repo.
 - `worker/wrangler.toml`, `scripts/finish_cf.sh`, `scripts/provision_cf.sh`, `.env.example`,
