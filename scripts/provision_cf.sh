@@ -7,9 +7,9 @@
 # Env override (optional): PROJECT — Pages project name (default sortmy-london).
 #
 # Credentials are REPO-SELF-CONTAINED: put CLOUDFLARE_API_TOKEN in the gitignored repo-root .env (copy
-# .env.example). No ~/.cf-token / ~/.cf-acct, no secrets in this script. account_id is pinned in
-# worker/wrangler.toml (so the Worker deploy is explicit) and the single-account token auto-detects the
-# account for the Pages deploy. Runtime Worker secrets (OPENROUTER_KEY, ARIZE_*) do NOT go here —
+# .env.example). No ~/.cf-token / ~/.cf-acct, no secrets in this script. The account id is not
+# pinned in this public repo: set CLOUDFLARE_ACCOUNT_ID in .env, or rely on a single-account token, which
+# auto-detects it. Runtime Worker secrets (OPENROUTER_KEY, ARIZE_*) do NOT go here —
 # use `wrangler secret put`.
 # Token scopes: Pages·Edit + Workers Scripts·Edit + D1·Edit + Workers AI·Read (account) · Workers
 # Routes·Edit + Zone·Read (zone sortmy.london).

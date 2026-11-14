@@ -6,6 +6,8 @@ status: "CLOSED — P0–P5 shipped; all 5 corpora live in D1 (110k+ rows), v1.7
 refs: ["#181? (016 tracker — see this plan's Handoff section)", "#10 (cron)", "#161 (TRUD/ODS — 016 backlog, additive)", "#168 (upstream watch)", "ADR 0002", "plan 015 (closed)"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 016 — keyless real data
 
 ## Handoff (read this first)

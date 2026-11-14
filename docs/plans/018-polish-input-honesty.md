@@ -5,6 +5,8 @@ status: "CLOSED 2026-07-25 — all phases P0-P6 shipped + deployed + live-verifi
 refs: ["#223 (018 tracker)", "#224 (P2 outward postcodes)", "#225 (P3 date honesty)", "#201 (017 tracker, closed-out)", "ADR 0002 (bounded reads / record dates)", "#185 (gazetteer widening)", "#199 (freshness watchdog)", "plan 017 (deployed)"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 018 — post-launch polish
 
 ## Handoff (read this first)

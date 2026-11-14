@@ -40,6 +40,11 @@ Overriding principle: **measure and verify on the live target — not vibes, not
   off): −2.8 kB → 146,891 B. Replacing the markdown engine itself would reclaim ~46 kB but changes
   what text renders (and its XSS surface), so it's a deliberate owner call, not a trim — the
   ceiling moved instead, leaving ~8 kB of headroom.
+- **JS ceiling 155 → 160 kB gzip (#363, measured 2026-11-09).** `zod` 3 → 4 for GHSA-mrhx-c7xc-m3w5
+  (no 3.x fix), forced under `@a2ui/react` and `@a2ui/web_core` by an npm override, took the bundle
+  from 146,898 to 158,280 B. zod stays: `@a2ui/web_core` needs it, and `ui/src/agent/contract.ts`
+  validates agent → UI A2UI payloads with it before they reach the renderer. The new ceiling
+  leaves ~1.7 kB headroom.
 - **Measure mobile, before/after, on the deploy.** Throttled (Fast-3G + 4× CPU)
   LCP/FCP/CLS via a real headless browser against the live URL. Report honest deltas —
   a page already in the "good" band barely moves; the value is fewer bytes + caching.
@@ -134,8 +139,8 @@ Overriding principle: **measure and verify on the live target — not vibes, not
   stays out of the main context; return structured findings only.
 - **Compound learning.** Fix inline (1st occurrence) → `AGENT_LEARNINGS.md` (2nd) → an
   always-on rule (3rd) → a skill (recurring workflow). Promote by root cause, not symptom.
-- **Identity hygiene.** noreply author, `--no-gpg-sign`, and prefix git/gh with
-  `env -u GH_TOKEN -u GITHUB_TOKEN`.
+- **Identity hygiene.** noreply author; any signing or credential workaround for one
+  machine stays in private memory, never in repo files.
 - **Deepest-strictness lint/type gates, one knob per PR.** `verbatimModuleSyntax` +
   `noPropertyAccessFromIndexSignature` (both tsconfigs), `eslint-plugin-security`
   (worker+shared, `detect-object-injection` off + reviewed `detect-unsafe-regex`

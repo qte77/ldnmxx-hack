@@ -6,6 +6,8 @@ status: "COMPLETE + live on sortmy.london — S5 (deepest strictness) + follow-u
 refs: ["#88 (013b landing/rebrand)", "#71 (dependabot grouping)", "013 plan/handoff (predecessor)", "proposed 015 = #73/#74/#80/#13/#10"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 014 — sortmy.london: civic landing (progressive disclosure) · strictness · performance
 
 ## Handoff (read this first)

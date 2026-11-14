@@ -6,6 +6,8 @@ status: "CLOSED 2026-07-23 — ≈90% shipped (through v1.4.0); remainder (NHS-O
 refs: ["#113 (015 tracker)", "#80 query-stage/manifest", "#74 Scam", "#73 Wander", "#13 real Care corpus", "#10 ingest cron", "014 plan/handoff (predecessor, shipped+live)"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 015 — civic usecase expansion + real data
 
 ## Handoff (read this first)
