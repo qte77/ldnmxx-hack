@@ -15,6 +15,12 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 - `AGENTS.md`, `docs/engineering-practices.md`, `docs/plans/README.md`: drop the written-out token
   wrapper, no-sign commit flag and admin merge command; plans now name the merge gate, not the
   command. Per-machine workarounds stay in private memory.
+- `docs/plans/021`, `022`, `023`, `025`, `026`, `AGENT_LEARNINGS.md`: same cleanup for the plans that
+  still named the admin merge route, the signing-bypass flag, or the token-auth prefix — reworded to
+  name the gate/policy, not the command; dropped the sentences describing the API route around the
+  admin-merge block instead of giving an alternative. Older closed plans in `docs/plans/001`–`020`
+  that carried the same wording got a "closed plan, kept as a record" banner instead, since their
+  commands are historical, not live procedure.
 - `worker/wrangler.toml`: **`workers_dev`/`preview_urls` explicitly off.** sortmy.london only ever
   reaches the Worker via the `sortmy.london/api/*` route, under which wrangler already infers
   `workers_dev = false`; this makes it explicit so the next deploy can't silently re-enable the

@@ -6,6 +6,8 @@ status: "Effort 1 in PR #75 (green, user-gated); Effort 2 not started"
 refs: ["#75 (deploy PR)", "#72 Care", "#73 Wander", "#74 Scam", "#69 roadmap", "qte77/protocols workflow-definition/v1"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 012 — full-CF deploy + Sort My Care
 
 ## Handoff (read this first)

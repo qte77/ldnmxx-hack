@@ -6,6 +6,8 @@ issue: 18
 status: "PR-1/2/3 shipped; PR-4 (Arize live) next — blocked account-side #50; PR-5 superseded by the civic pivot (plans 010–012)"
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 007 — Phase 2: model-driven pipeline (#18) + usecase expansion
 
 ## Handoff (read this first)

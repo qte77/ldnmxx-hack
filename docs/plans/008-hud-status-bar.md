@@ -7,6 +7,8 @@ part_of: docs/plans/007-phase2-model-pipeline.md  (this is plan 007's PR-3, resh
 status: shipped — PR-3 built + merged
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 008 — PR-3: HUD status bar (Demo⇄Live + mode/model + cost)
 
 ## Handoff (read this first)
