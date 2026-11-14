@@ -139,8 +139,8 @@ Overriding principle: **measure and verify on the live target — not vibes, not
   stays out of the main context; return structured findings only.
 - **Compound learning.** Fix inline (1st occurrence) → `AGENT_LEARNINGS.md` (2nd) → an
   always-on rule (3rd) → a skill (recurring workflow). Promote by root cause, not symptom.
-- **Identity hygiene.** noreply author, `--no-gpg-sign`, and prefix git/gh with
-  `env -u GH_TOKEN -u GITHUB_TOKEN`.
+- **Identity hygiene.** noreply author; any signing or credential workaround for one
+  machine stays in private memory, never in repo files.
 - **Deepest-strictness lint/type gates, one knob per PR.** `verbatimModuleSyntax` +
   `noPropertyAccessFromIndexSignature` (both tsconfigs), `eslint-plugin-security`
   (worker+shared, `detect-object-injection` off + reviewed `detect-unsafe-regex`

@@ -6,6 +6,8 @@ status: "complete — 8/8 shipped, live on sortmy.london (security review signed
 refs: ["#75 deploy (merge first)", "#72 Care (shipped #81)", "qte77/brand @qte77/ui-theme", "polyfetch-scrape"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 013 — showcase → civic product
 
 ## Handoff (read this first)

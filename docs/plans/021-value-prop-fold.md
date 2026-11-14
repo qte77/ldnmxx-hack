@@ -43,10 +43,9 @@ copy is preserved (compact line + full text in `?`), and a place-less ask no lon
 ### Owner gates
 
 - **Deploy** — an owner DECISION, not an agent incapability. **Correction (2026-08-05, verified):** the
-  arc-020 watch-out "no CF creds in the devcontainer" is **wrong**. The gitignored repo-root `.env`
-  carries a valid `CLOUDFLARE_API_TOKEN` (confirmed via `wrangler whoami`), and `make deploy` →
-  `scripts/provision_cf.sh` explicitly sources it, so **`make deploy` works from the devcontainer**.
-  The confusion: `wrangler dev` does NOT source the repo-root `.env`, so `make dev` fails with "No
+  arc-020 watch-out "no CF creds in the devcontainer" doesn't generalize — deploy credentials are set up
+  per the deploy docs, and `make deploy` → `scripts/provision_cf.sh` sources them once configured.
+  The confusion: `wrangler dev` does NOT source the same credentials, so `make dev` fails with "No
   credentials found" — a dev-server limitation that never implied the deploy path was blocked.
   `gh workflow run deploy.yml` remains the preferred path (deploys a known merged commit through the
   production Environment, with its approval + audit trail, rather than a local working tree), and
@@ -59,8 +58,8 @@ copy is preserved (compact line + full text in `?`), and a place-less ask no lon
 
 branch per topic → RED-first (modules only; CSS/wiring → the browser sweep) → gates (`npm --prefix
 worker|ui run lint|typecheck|test` [ui: `build`+`size`] · semgrep · markdownlint `rtk proxy npx --yes
-markdownlint-cli2 "<file.md>"`) → push → PR → CI green → `gh pr merge <n> --squash --admin
---delete-branch` → `git switch main && git pull` → per UI phase: deploy (owner) + sweep.
+markdownlint-cli2 "<file.md>"`) → push → PR → CI green → squash-merge once CI passes; merging is an
+owner gate → `git switch main && git pull` → per UI phase: deploy (owner) + sweep.
 
 ### Watch-outs (carried; do NOT relearn)
 
@@ -78,8 +77,9 @@ markdownlint-cli2 "<file.md>"`) → push → PR → CI green → `gh pr merge <n
 
 ### Conventions (hard)
 
-Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · `--no-gpg-sign` ·
-`env -u GH_TOKEN -u GITHUB_TOKEN` on git/gh · squash-`--admin` on green (never modify rulesets) · prune.
+Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · commit per the
+repo's signing policy · authenticate git/gh as this machine requires · squash-merge once CI passes;
+merging is an owner gate (never modify rulesets) · prune.
 
 ## Context (why)
 
@@ -190,13 +190,10 @@ Migrate any new work to arc 022.
   `SampleCard` as separate components.
 - UI unit tests are **pure/node-only** (no jsdom) — rendering is verified by the browser sweep only.
 - `docs/design.md` is **stale**; `ui/src/tokens.css` + ADR 0005 are ground truth.
-- `gh pr merge --admin` is classifier-blocked; the equivalent `gh api --method PUT
-  /repos/qte77/ldnmxx-hack/pulls/<n>/merge -f merge_method=squash` performs the same squash merge
-  without touching rulesets (used for #265).
-- **`make deploy` DOES work from the devcontainer** (repo-root `.env` carries a valid
-  `CLOUDFLARE_API_TOKEN`, sourced by `scripts/provision_cf.sh`) — the arc-020 "no CF creds" watch-out was
-  wrong; only `wrangler dev` lacks them, since it does not source that `.env`. Production pushes stay
-  owner-gated by policy, preferring `deploy.yml` (known commit + production Environment).
+- **`make deploy` runs from the devcontainer** (credentials sourced by `scripts/provision_cf.sh` per the
+  deploy docs) — the arc-020 "no CF creds" watch-out doesn't generalize; only `wrangler dev` lacks them,
+  since it does not source the same credentials. Production pushes stay owner-gated by policy, preferring
+  `deploy.yml` (known commit + production Environment).
 - **Do not "fix" corpus-level `asOf`:** it is deliberately the *oldest* row date, so `/api/freshness`
   reports `1901-01-01` for food-hygiene and `1949` for listed buildings. Per-record card dates are
   correct. Never surface corpus-level `asOf` in the civic UI.

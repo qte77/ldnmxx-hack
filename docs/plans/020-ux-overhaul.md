@@ -5,6 +5,8 @@ status: "CLOSED — routing · place-names · examples · visual/a11y shipped (p
 refs: ["#2 routing (right workflow)", "#1 place-name input", "#3 re-show examples", "#4 UX overhaul (visual/motion/layout/cards/header/colour/a11y)", "ADR 0002 (fetch-free store)", "ADR 0004 (register-only routing)", "ADR 0005 (project-owned theme)"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 020 — UX overhaul
 
 ## Handoff (read this first)

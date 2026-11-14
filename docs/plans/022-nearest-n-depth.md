@@ -42,11 +42,11 @@ up to 50 nearest rows per bounded D1 read) and a provenance line naming the pool
 ### Owner gates
 
 - **Deploy** — an owner DECISION, not an agent incapability (see the arc-021 correction). `make deploy`
-  works from the devcontainer: the gitignored repo-root `.env` carries a valid `CLOUDFLARE_API_TOKEN` and
-  `scripts/provision_cf.sh` sources it. `gh workflow run deploy.yml` remains preferred (a known merged
+  runs from the devcontainer once deploy credentials are set up per the deploy docs; `scripts/provision_cf.sh`
+  sources them. `gh workflow run deploy.yml` remains preferred (a known merged
   commit through the production Environment) and is classifier-blocked for the agent.
 - **Local UI verification without the Worker:** `make dev` cannot boot the Worker (`wrangler dev` does not
-  source the repo-root `.env`). Use
+  source the same credentials). Use
   `VITE_WORKER_BASE=https://sortmy.london npm --prefix ui run dev` — `ALLOWED_ORIGINS` whitelists
   `localhost:5173`, so the real API answers.
 
@@ -58,9 +58,6 @@ squash-merge → prune → deploy (owner) + sweep.
 
 ### Watch-outs (carried; do NOT relearn)
 
-- **`gh pr merge --admin` is classifier-blocked**; `gh api --method PUT
-  /repos/qte77/ldnmxx-hack/pulls/<n>/merge -f merge_method=squash` performs the same squash merge without
-  touching rulesets.
 - **Never fold `poolSize` into the D1 try/catch** — a cosmetic count failure must not demote a working D1
   answer to the bundled sample.
 - **A new D1 view needs a `VIEW_META_KEYS` entry**, or it silently reports no pool size.
@@ -75,8 +72,9 @@ squash-merge → prune → deploy (owner) + sweep.
 
 ### Conventions (hard)
 
-Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · `--no-gpg-sign` ·
-`env -u GH_TOKEN -u GITHUB_TOKEN` on git/gh · squash on green (never modify rulesets) · prune.
+Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · commit per the
+repo's signing policy · authenticate git/gh as this machine requires · squash on green (never modify
+rulesets) · prune.
 
 ## Context (why)
 

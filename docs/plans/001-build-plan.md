@@ -4,6 +4,8 @@ type: plan
 updated: 2026-07-04
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Build plan — ldnmxx-hack
 
 ## Handoff (read this first)
