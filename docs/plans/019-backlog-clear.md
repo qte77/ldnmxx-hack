@@ -5,6 +5,8 @@ status: "CLOSED — #199 freshness watchdog shipped (CHANGELOG) + #168 deps asse
 refs: ["#185 (gazetteer ONSPD widen)", "#199 (freshness watchdog)", "#168 (deps)", "#150 (jsx-a11y/ESLint10)", "#161 (real Care via ODS/TRUD)", "#8 (Track A Open311)", "ADR 0002 (read-through store / redistribute_ok)"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 019 — backlog clear
 
 ## Handoff (read this first)
