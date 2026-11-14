@@ -11,8 +11,8 @@ Groundwork runs fully on Cloudflare: the **SPA on Cloudflare Pages** at `sortmy.
    attach via `finish_cf.sh` additionally needs Zone·DNS·Edit.) Put **only the token** in a gitignored
    repo-root **`.env`** (copy `.env.example`) — creds are **repo-self-contained** (no `~/.cf-token`);
    `provision_cf.sh` / `finish_cf.sh` auto-source `.env`, and CI can pass `CLOUDFLARE_API_TOKEN` via the
-   environment. The **account id** is pinned in `worker/wrangler.toml` (not secret), so
-   `CLOUDFLARE_ACCOUNT_ID` is not needed. *(Editing a token's permissions keeps its value; **rolling** it
+   environment. The **account id** is not written into this public repo: set `CLOUDFLARE_ACCOUNT_ID` in `.env` too,
+   unless the token sees only one account (wrangler then auto-detects it). *(Editing a token's permissions keeps its value; **rolling** it
    changes the secret — update `.env` if you roll.)*
 3. **Worker secrets** (unchanged): `cd worker && npx wrangler secret put OPENROUTER_KEY` (+ `ARIZE_*` if used).
 
@@ -37,9 +37,8 @@ work into Actions:
 
 **Setup (once):** add **`CLOUDFLARE_API_TOKEN`** as a **repository** secret
 (`gh secret set CLOUDFLARE_API_TOKEN --repo qte77/ldnmxx-hack` prompts for hidden input — never paste
-a token into a shell history or a chat). That is now the **only** secret needed: `account_id` is pinned
-in `worker/wrangler.toml` (it is not secret — account ids appear in dashboard URLs), so
-`CLOUDFLARE_ACCOUNT_ID` is optional (the workflows still pass it, but the toml value wins). Keep the
+a token into a shell history or a chat). Add **`CLOUDFLARE_ACCOUNT_ID`** as a repository secret too (the workflows pass it to wrangler); the
+account id is no longer pinned in `worker/wrangler.toml`, to keep it out of this public repo. Keep the
 token a **repository** secret, not an Environment secret, so the ungated `d1-verify` can read it. The
 `production` Environment already requires a review from `qte77` and only allows protected branches, so
 a deploy is an approval rather than a button (note GitHub's default `can_admins_bypass: true`). Both

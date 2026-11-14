@@ -56,7 +56,7 @@ that carries all six runs hands-off with only the owner-gated merge go-ahead.
    `--test-scheduled` is absent in `--remote`; fire via local dev + `remote = true` D1 binding).
 4. **"Working tree freezes during a long fire"** — a `wrangler dev` fire holds the tree via its
    file-watch; PRE-STAGE every edit before firing, and run fires detached/backgrounded.
-5. **Merge-gate line in the plan** — the exact command and that it needs ONE owner go-ahead per
-   session (`gh pr merge N --squash --admin --delete-branch` here; the classifier gates `--admin`).
+5. **Merge-gate line in the plan** — that merging needs ONE owner go-ahead per session. Name the
+   gate, not the command: a bypass flag written into the plan reads as the procedure for everyone.
 6. **Honest-FAIL budget** — keeping deploy-race / marker / data FAILs in the run history is EXPECTED
    (each fixed in a follow-up), not a defect to be hidden by a later session.

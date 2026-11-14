@@ -6,6 +6,8 @@ issues: [37]
 closes: [21]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 005 — two-path model access (#37)
 
 ## Handoff (read this first)

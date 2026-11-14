@@ -6,6 +6,21 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- `.env.example`: add the `CLOUDFLARE_ACCOUNT_ID=` placeholder; `scripts/finish_cf.sh` needs it now that
+  the account id is no longer pinned in the repo.
+- `worker/wrangler.toml`, `scripts/finish_cf.sh`, `scripts/provision_cf.sh`, `.env.example`,
+  `docs/deploy-cloudflare.md`: the Cloudflare account id is no longer pinned in this public repo.
+  wrangler and `finish_cf.sh` read `CLOUDFLARE_ACCOUNT_ID` (`.env` locally, a repository secret in CI);
+  a single-account token still auto-detects it for wrangler. The old value remains in git history.
+- `AGENTS.md`, `docs/engineering-practices.md`, `docs/plans/README.md`: drop the written-out token
+  wrapper, no-sign commit flag and admin merge command; plans now name the merge gate, not the
+  command. Per-machine workarounds stay in private memory.
+- `docs/plans/021`, `022`, `023`, `025`, `026`, `AGENT_LEARNINGS.md`: same cleanup for the plans that
+  still named the admin merge route, the signing-bypass flag, or the token-auth prefix — reworded to
+  name the gate/policy, not the command; dropped the sentences describing the API route around the
+  admin-merge block instead of giving an alternative. Older closed plans in `docs/plans/001`–`020`
+  that carried the same wording got a "closed plan, kept as a record" banner instead, since their
+  commands are historical, not live procedure.
 - `worker/wrangler.toml`: **`workers_dev`/`preview_urls` explicitly off.** sortmy.london only ever
   reaches the Worker via the `sortmy.london/api/*` route, under which wrangler already infers
   `workers_dev = false`; this makes it explicit so the next deploy can't silently re-enable the
@@ -25,6 +40,21 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Security
 
+- `worker/package.json` overrides: `vite` 8.3.0 -> 8.3.3 and `source-map-js` 1.2.1 -> 1.2.2
+  (both transitive, pulled in via `vitest`/`postcss`/`@eslint/css-tree`; no direct dependency to
+  bump). Closes GHSA-587h-7wmj-h5pm (high), GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw,
+  GHSA-rq7h-c2jc-7f22, GHSA-9jrq-w75r-8gcw, GHSA-vfpm-58rq-9qcg (vite) and GHSA-68fv-2mgg-jv7q
+  (high, source-map-js).
+  8.3.3 is the oldest vite release clearing all six advisories and is past the
+  repo's 7-day `min-release-age` at the time of this change (newer 8.3.x releases are patched too
+  but younger than 7 days). `worker` `npm audit --omit=dev --audit-level=high`: 1 high -> 0.
+  Dependabot PR #356 (closed, now conflicting with `main`) also touched `vite`/`source-map-js` as
+  a side effect of a grouped `wrangler`-pulled bump; this change fixes just those two, without the
+  wrangler/undici/esbuild bump.
+- worker: `wrangler` 4.131.1 -> 4.158.0 (dev), which pulls `undici` 7.30.1 via `miniflare` and
+  `sharp` 0.35.5; closes the 11 open `undici` alerts and the `sharp` alert in
+  `worker/package-lock.json`. 4.158.0 is the newest release outside the repo's 7-day
+  `min-release-age`.
 - `ui/scripts/check-bundle-size.mjs`: JS gzip ceiling 155 → 160 kB for the `zod` 4 upgrade below (158,280 B measured); reason in `docs/engineering-practices.md`
 - `ui` moves to `zod` ^4.6.6 (GHSA-mrhx-c7xc-m3w5, no 3.x fix) and an override forces the same version under `@a2ui/react` and `@a2ui/web_core`, which declare `zod` ^3.25.76; needs a click-through of A2UI surfaces before merge
 - `ui/package.json` overrides: `dompurify` ^3.4.17 (critical GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr) and `markdown-it` ^14.3.3 (GHSA-vfgh-jcmw-g37q, GHSA-gfr2-rv44-r23c), both pulled in through `@a2ui/react`

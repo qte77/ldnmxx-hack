@@ -6,6 +6,8 @@ status: "CLOSED 2026-07-24 — all phases P0-P4 shipped + deployed (v1.8.0); pol
 refs: ["#201 (tracker)", "ADR 0003 (no-framework)", "ADR 0004 (auto-routing)", "ADR 0005 (theme-divergence)", "#185 (gazetteer, parallel)", "#199 (freshness watchdog, parallel)", "plan 016 (closed)"]
 ---
 
+> **Closed plan, kept as a record.** Commands in it are one machine's history, not procedure; for current steps see the repo's CONTRIBUTING and the newest plan.
+
 # Plan 017 — one input, London-themed
 
 ## Handoff (read this first)

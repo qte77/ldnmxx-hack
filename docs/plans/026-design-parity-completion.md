@@ -45,8 +45,7 @@ them — see "Explicitly out of scope").
 4. **P3** — e2e verification + docs/issues sync (rows 6–7), same standing bar as plan 025.
 
 **The loop:** for each row — read its done-when, do the work on its own branch/worktree, run its verify
-commands, open a CI-gated PR, squash-merge on green (`gh api --method PUT .../merge -f
-merge_method=squash`, NOT `gh pr merge --admin` — reliably blocked here), strike the row in the SAME PR.
+commands, open a CI-gated PR, squash-merge on green, strike the row in the SAME PR.
 
 **Owner gates:** none of rows 1–5 need the owner — every decision below already has an explicit answer
 (the user confirmed the logo directly; the other three were confirmed as "real gaps, scope them" in the
@@ -80,7 +79,7 @@ row.
   Settings' "Your area" selector) — row 2 is a UI relocation (move the display + a "Change" link that
   jumps to the Settings tab into the Home header), not a new data layer.
 - Bash denies `ls`/`find`/`grep`/`cat`/`head`/`tail`/`awk` by command name — use Read/Glob/Grep tools or
-  `python3 -c "..."`. `env -u GH_TOKEN -u GITHUB_TOKEN git/gh ...` is the working pattern in the MAIN
+  `python3 -c "..."`. Authenticating git/gh as this machine requires is the working pattern in the MAIN
   session; a worktree-isolated subagent that hits `rtk-rewrite.sh`'s "cannot verify worktree-safety"
   block on that same pattern must STOP AND REPORT IT, not find a syntactic workaround (this happened
   once this session — see the feedback filed on it; do not repeat the workaround even if it still
