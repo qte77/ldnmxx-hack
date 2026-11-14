@@ -41,12 +41,12 @@ FSA also uses **1901-01-01**. Fixed as a **plausibility floor** (pre-2000 = plac
 
 ### Owner gates
 
-- **Deploy** — `make deploy` works from the devcontainer (repo-root `.env` holds a valid
-  `CLOUDFLARE_API_TOKEN`; `scripts/provision_cf.sh` sources it). `gh workflow run deploy.yml` is
+- **Deploy** — `make deploy` runs from the devcontainer once deploy credentials are set up per the
+  deploy docs; `scripts/provision_cf.sh` sources them. `gh workflow run deploy.yml` is
   preferred (known merged commit, production Environment) and is classifier-blocked for the agent.
 - **Read-only D1 probes** are available to the agent:
   `npx wrangler d1 execute sortmy_london_corpus --config wrangler.toml --remote --command "<SELECT>"`
-  run from `worker/` with the repo-root `.env` sourced. **The `--config` flag is required** — wrangler
+  run from `worker/` with deploy credentials sourced. **The `--config` flag is required** — wrangler
   otherwise walks up and picks the root Pages config.
 
 ### Watch-outs (carried; do NOT relearn)
@@ -60,14 +60,13 @@ FSA also uses **1901-01-01**. Fixed as a **plausibility floor** (pre-2000 = plac
 - **A new D1 view needs a `VIEW_META_KEYS` entry**, or it silently reports no pool size.
 - **Unknown size ⇒ no claim**; the bundled sample must never imply a full corpus.
 - **Do not "fix" corpus-level `asOf`** — deliberately the *oldest* row date; never surface it in the UI.
-- `gh pr merge --admin` is classifier-blocked; `gh api --method PUT /repos/.../pulls/<n>/merge -f
-  merge_method=squash` performs the same squash without touching rulesets.
 - A handoff watch-out is a claim, not a fact — re-verify inherited "the agent cannot X" limits.
 
 ### Conventions (hard)
 
-Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · `--no-gpg-sign` ·
-`env -u GH_TOKEN -u GITHUB_TOKEN` on git/gh · squash on green (never modify rulesets) · prune.
+Conventional Commits · noreply (`qte77` / `93844790+qte77@users.noreply.github.com`) · commit per the
+repo's signing policy · authenticate git/gh as this machine requires · squash on green (never modify
+rulesets) · prune.
 
 ## Context (why)
 
