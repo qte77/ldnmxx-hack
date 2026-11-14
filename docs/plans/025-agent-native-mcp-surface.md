@@ -59,16 +59,13 @@ reference implementation or an independently-reached, matching design decision �
 5. **P4 (owner)** — deploy + rescan. Rows 8–9.
 
 **The loop:** for each row in "Remaining work" — read its done-when, do the work on its own
-branch/worktree, run its verify commands, open a CI-gated PR, squash-merge on green (standing
-authorization, `workflow-preferences` memory — use `gh api --method PUT .../merge -f merge_method=squash`,
-NOT `gh pr merge --admin`, which is reliably blocked by this environment's auto-mode classifier), strike
+branch/worktree, run its verify commands, open a CI-gated PR, squash-merge on green, strike
 the row in the SAME PR.
 
-**Owner gates:** only rows 8–9 (deploy + rescan) — this devcontainer's `CLOUDFLARE_API_TOKEN` (repo-root
-`.env`) is valid as of 2026-09-19 (confirmed via `wrangler whoami`) and CAN deploy locally via
-`bash scripts/provision_cf.sh`, but a production push is still a deliberate checkpoint each time per this
-session's established pattern — confirm with the user before running it, don't treat prior deploy
-authorization as standing.
+**Owner gates:** only rows 8–9 (deploy + rescan) — deploy credentials are set up per the deploy docs
+and CAN deploy locally via `bash scripts/provision_cf.sh`, but a production push is still a deliberate
+checkpoint each time per this session's established pattern — confirm with the user before running it,
+don't treat prior deploy authorization as standing.
 
 **Commands:** `cd worker && npm run lint && npm run typecheck && npm test`; new MCP-specific tests live
 under `worker/test/mcp/*.test.ts` (mirror the existing `worker/test/` layout, don't invent a new one).
@@ -110,7 +107,7 @@ file touched.
   — never edit its body, only comment on it (see the 2026-09-19 comment already there for the exact
   pattern to follow for future updates).
 - Bash denies `ls`/`find`/`grep`/`cat`/`head`/`tail`/`awk` by command name regardless of flags — use
-  Read/Glob/Grep tools or `python3 -c "..."`. `env -u GH_TOKEN -u GITHUB_TOKEN git/gh ...` is the
+  Read/Glob/Grep tools or `python3 -c "..."`. Authenticating git/gh as this machine requires is the
   allowlisted, working pattern from the MAIN session — but a prior worktree-isolated subagent this
   session found that same pattern blocked inside a worktree by the `rtk-rewrite.sh` hook
   ("cannot verify worktree-safety") and worked around it with inline `GH_TOKEN= GITHUB_TOKEN= git ...`
@@ -203,7 +200,7 @@ has the exact rows this arc should strike; `agent-readiness-kit#25` gets a comme
 | 5 | ✅ shipped (PR [#326](https://github.com/qte77/ldnmxx-hack/pull/326)) — **P2 — discovery cross-links**: add the MCP endpoint to `ui/public/llms.txt` and `ui/public/.well-known/agent-skills/index.json` (each real skill entry gains an `mcp_tool` or equivalent cross-reference — check the agent-skills-index convention for how it expects this, don't invent a field name unilaterally if the spec has one). | agent | Both files still validate (JSON syntax for the index, plain-text convention for llms.txt) and reference the real, now-live `/api/mcp` path. |
 | 6 | ✅ shipped (PR [#328](https://github.com/qte77/ldnmxx-hack/pull/328)) — **P2 — e2e verification**: extend `tests/e2e/ui_sweep.py` per the "E2E verification requirement" section above (viewport/device variation, click-through, screenshots+video both orientations, console-error + failed-network-request capture, run against BOTH `npm run preview` locally AND the remote `https://sortmy.london` once deployed) to confirm the existing UI has zero regression from this arc's Worker changes; separately, a plain-HTTP contract test (new script or `worker/test/mcp/*.test.ts` if sufficient) exercises the deployed `/api/mcp` JSON-RPC endpoint for real (not just local `wrangler dev`). | agent | Local sweep PASS; a documented (in the PR body) live-deploy sweep PASS once row 8 ships; MCP contract test PASS against the real deployed URL. |
 | 7 | ✅ shipped (PR [#330](https://github.com/qte77/ldnmxx-hack/pull/330) + [issue #305](https://github.com/qte77/ldnmxx-hack/issues/305) updated live) — **P3 — docs & issues sync**: `CHANGELOG.md` `## [Unreleased]` entry for this arc; `docs/architecture.md` one-paragraph addition (Stack/Platform notes); strike the "MCP server" row in `ldnmxx-hack#305`'s "Deferred" section with this arc's PR numbers; comment (not edit) on `agent-readiness-kit#25` once deployed, matching the 2026-09-19 comment's pattern. | agent | All four artifacts updated in the closing PR(s) of this arc; no orphaned "TODO" left in any of them. |
-| 8 | ✅ shipped (v2.1.0, deployed 2026-09-22) — **P4 — deploy**: `bash scripts/provision_cf.sh` (local deploy — this devcontainer's `.env` `CLOUDFLARE_API_TOKEN` is valid as of 2026-09-19) or the `deploy.yml` GitHub Actions path — either is fine, but confirm with the user first regardless of any prior-session deploy authorization; production pushes are a standing per-instance checkpoint, not blanket-authorized. | **owner** | Live site verified serving the new `/api/mcp` route + server-card.json (independent verification via curl/Patchright, not just trusting the deploy script's exit code — this session's own established discipline after an earlier false "deploy successful" claim). |
+| 8 | ✅ shipped (v2.1.0, deployed 2026-09-22) — **P4 — deploy**: `bash scripts/provision_cf.sh` (local deploy, using deploy credentials set up per the deploy docs) or the `deploy.yml` GitHub Actions path — either is fine, but confirm with the user first regardless of any prior-session deploy authorization; production pushes are a standing per-instance checkpoint, not blanket-authorized. | **owner** | Live site verified serving the new `/api/mcp` route + server-card.json (independent verification via curl/Patchright, not just trusting the deploy script's exit code — this session's own established discipline after an earlier false "deploy successful" claim). |
 | 9 | ✅ shipped (2026-09-22, score 39/D) — **P4 — rescan**: trigger `agent-readiness-kit`'s scan (`npm run scan` there, or wait for its weekly schedule) and/or orank's `POST https://ora.ai/api/scan` for sortmy.london; record the new score in `ldnmxx-hack#305` and comment the delta on `agent-readiness-kit#25`. | **owner** (needs row 8 live first) | New score recorded in both places; if `oraAi.mcp-server-card`/`cloudflareMcp.mcp-server-card` findings don't clear despite row 4 shipping, investigate why before assuming the scanner is wrong. |
 
 ## Worktree dispatch (how rows 2–6 actually run)

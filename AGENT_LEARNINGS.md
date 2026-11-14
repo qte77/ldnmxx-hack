@@ -107,9 +107,8 @@ workflow. Human-facing patterns live in [`docs/engineering-practices.md`](docs/e
 
 - **Pattern:** `git rebase` failed with "gpg failed to sign" (repo signs commits, no key),
   and a branch stacked on a squash-merged PR showed the parent's diff again.
-- **Fix:** rebase with `-c commit.gpgsign=false --no-gpg-sign` (commits already use
-  `--no-gpg-sign`). After a stacked PR's base is squash-merged, replay only the top commit:
-  `git rebase --onto origin/main <old-parent> <branch>`.
+- **Fix:** rebase per the repo's commit-signing policy. After a stacked PR's base is squash-merged,
+  replay only the top commit: `git rebase --onto origin/main <old-parent> <branch>`.
 - **Refs:** PR #101 (P5 rebased onto main after #98 squash-merged).
 
 ## Pages SPA fallback + immutable `/assets/*` can cache-poison a deploy for a year
