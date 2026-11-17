@@ -6,6 +6,8 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- `docs/plans/027-maintenance-backlog.md`, `docs/plans/README.md`: new open plan for the maintenance backlog
+  (live-sweep flake #337, area-aware card taps #353, minimatch Dependabot alerts, jsx-a11y #150).
 - `.github/dependabot.yml`: hold `react`/`react-dom` on 19.2.x by ignoring the whole 19.3 line
   (was 19.3.0 only). 19.3.1 puts the ui bundle at 168,295 B gzip against the 160,000 B budget and a
   vendor trim found no safe saving (#365); the other updates in the ui group can merge without it.
