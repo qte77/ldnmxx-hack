@@ -30,7 +30,8 @@
     "@a2ui/web_core": "^0.10.2",
     "dompurify": "^3.4.17",
     "markdown-it": "^14.3.3",
-    "zod": "$zod"
+    "zod": "$zod",
+    "minimatch": "^11.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
