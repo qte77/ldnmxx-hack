@@ -1,7 +1,7 @@
 ---
 title: "Maintenance backlog: flaky live sweep, area-aware card taps, Dependabot alerts"
 type: plan
-status: "OPEN — no rows shipped yet (opened 2026-11-17)"
+status: "OPEN — row 3 shipped (#386); row 1 fix merged pending 8 green scheduled runs (opened 2026-11-17)"
 refs:
   - docs/plans/026-design-parity-completion.md (last closed arc)
   - "qte77 estate maintenance sweep, 2026-11-17: tiers open issues, alerts and TODOs by value and effort; this repo's rows above the cut are listed here"
@@ -11,7 +11,8 @@ refs:
 
 ## Handoff (read this first)
 
-**Status:** opened 2026-11-17 from the estate maintenance sweep. Nothing has shipped under this plan yet.
+**Status:** opened 2026-11-17 from the estate maintenance sweep. Row 3 shipped in #386 (2026-11-21). Row 1's
+cause is found and its fix is in review; the row closes after 8 green scheduled runs.
 It covers the open items in this repo that the sweep ranked high value and low to medium effort, each checked live on
 2026-11-17. Lower-value open issues (#8, #161, #168, #185, #241, #305, #351, #352, #365) are not part of this arc and
 stay in GitHub Issues.
@@ -60,7 +61,7 @@ and the owner has given the go-ahead for the session.
 
 | # | Item | Value / effort | Gate | Done when |
 |---|---|---|---|---|
-| 1 | Find and fix the intermittent live-sweep failure (a corpus flow did not render on desktop) — [#337](https://github.com/qte77/ldnmxx-hack/issues/337) | broken monitoring / M | agent | Cause stated in #337 with evidence; fix or bounded retry merged; next 8 scheduled runs green |
+| 1 | Find and fix the intermittent live-sweep failure (a corpus flow did not render on desktop) — [#337](https://github.com/qte77/ldnmxx-hack/issues/337). Cause (2026-11-21): the no-match flow's result was still running when `run_typed_flow`'s fixed 8 s sleep ended (screenshots show "Stop"); fix: wait for the markers up to 30 s and log time to render | broken monitoring / M | data (8 scheduled runs) | Cause stated in #337 with evidence; fix or bounded retry merged; next 8 scheduled runs green |
 | 2 | Card and chip taps answer for the saved area — [#353](https://github.com/qte77/ldnmxx-hack/issues/353) | correctness / M | agent | With an area set, a card tap returns results for that area (verified live); e2e asserts the 2-taps-1-field path; bundle check green |
-| 3 | Clear the minimatch Dependabot alerts (96, 97) in `ui/` and `worker/` | security / S | agent | Lockfiles updated, CI green, both alerts closed |
+| ~~3~~ | ~~Clear the minimatch Dependabot alerts (96, 97) in `ui/` and `worker/`~~ shipped in #386 (2026-11-21); both alerts fixed | security / S | done | Lockfiles updated, CI green, both alerts closed |
 | 4 | Adopt `eslint-plugin-jsx-a11y` once it supports ESLint 10 — [#150](https://github.com/qte77/ldnmxx-hack/issues/150) | hygiene / S | data (upstream release) | A jsx-a11y release declares ESLint 10 support; plugin enabled with the UI lint green |
