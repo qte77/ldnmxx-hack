@@ -6,6 +6,12 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- `tests/e2e/ui_sweep.py`: a typed flow now waits for its markers (up to 30 s) instead of a fixed 8 s
+  sleep, and prints its time to render. The intermittent live-sweep failure (#337) was the no-match
+  flow's result still running when the sleep ended; screenshots showed "Stop" still visible.
+- `docs/plans/027-maintenance-backlog.md`: row 3 (minimatch alerts 96 and 97) struck, shipped in #386;
+  row 1 records the #337 cause and this fix, pending 8 green scheduled runs.
+
 - `docs/plans/027-maintenance-backlog.md`, `docs/plans/README.md`: new open plan for the maintenance backlog
   (live-sweep flake #337, area-aware card taps #353, minimatch Dependabot alerts, jsx-a11y #150).
 - `.github/dependabot.yml`: hold `react`/`react-dom` on 19.2.x by ignoring the whole 19.3 line

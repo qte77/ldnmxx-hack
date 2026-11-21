@@ -18,9 +18,11 @@ Examples:
 Artifacts land in tests/e2e/results/<label>/ (gitignored). Video uses raw Patchright's
 record_video_dir (polyfetch's render_session has a teardown bug that drops the file).
 """
+import contextlib
 import json
 import os
 import sys
+import time
 from datetime import UTC, datetime
 
 from patchright.sync_api import sync_playwright
@@ -88,6 +90,26 @@ def load_flows():
 
 FLOWS = load_flows()
 
+# How long a typed flow may take to render its markers. A fixed 8 s sleep failed the no-match flow
+# intermittently (#337): its screenshots showed the result still running ("Stop" visible) while the
+# same ask timed live at 1.3-4.0 s (12 calls, 2026-11-21), so an occasional slow model-router answer
+# outlasted the sleep. Waiting for the markers returns as soon as they render and still fails on a
+# real break.
+RENDER_BUDGET_MS = 30000
+
+
+def wait_for_markers(page, wanted, budget_ms=RENDER_BUDGET_MS):
+    """Wait until every string in `wanted` is in the page text, up to `budget_ms`; return seconds."""
+    started = time.monotonic()
+    # A timeout is not an error here: the caller reads the body and reports what is missing.
+    with contextlib.suppress(Exception):
+        page.wait_for_function(
+            "ms => ms.every(m => document.body.innerText.includes(m))",
+            arg=list(wanted),
+            timeout=budget_ms,
+        )
+    return time.monotonic() - started
+
 
 def run_typed_flow(page, out, tag, flow, shot_n):
     """Type a REAL free-text ask into the single input, submit, and assert the Worker BOTH routed it
@@ -99,6 +121,7 @@ def run_typed_flow(page, out, tag, flow, shot_n):
     page with no router, so the corpus flows will correctly fail there.
     """
     name, query, markers = flow["name"], flow["query"], tuple(flow["markers"])
+    routed = flow.get("routedTo")
     try:
         page.fill("#civic-query", query)
     except Exception as e:
@@ -107,7 +130,7 @@ def run_typed_flow(page, out, tag, flow, shot_n):
     if not click(page, "Find it", t=3000):
         print(f"    !! {name}: CTA 'Find it' not found")
         return False
-    page.wait_for_timeout(8000)
+    waited = wait_for_markers(page, markers + ((f"Showing: {routed}",) if routed else ()))
     try:
         page.screenshot(path=f"{out}/{tag}-{shot_n}.png")
         body = page.inner_text("body")
@@ -115,13 +138,12 @@ def run_typed_flow(page, out, tag, flow, shot_n):
         print(f"    !! {name} read: {e}")
         return False
     missing = [m for m in markers if m not in body]
-    routed = flow.get("routedTo")
     if routed and f"Showing: {routed}" not in body:
         missing.append(f"routed→{routed}")
     if missing:
-        print(f"    !! {name} did not route/render; missing={missing}")
+        print(f"    !! {name} did not route/render in {waited:.1f}s; missing={missing}")
         return False
-    print(f"    {name}: routed + rendered for {query!r}")
+    print(f"    {name}: routed + rendered for {query!r} in {waited:.1f}s")
     return True
 
 
