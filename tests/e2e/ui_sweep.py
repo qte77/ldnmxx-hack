@@ -148,26 +148,83 @@ def run_typed_flow(page, out, tag, flow, shot_n):
 
 
 # #353: the budget for a first personal answer on a fresh device, no sign-in: 2 taps + 1 field. The
-# path is Home's area select (one tap to open it, choosing the borough is the field), then a card tap.
-# Count every step against these; the run fails if the path grows.
+# path is Home's area select (one tap opens it, the borough chosen is the field), then a card tap.
+# Every interaction on the path goes through FirstAnswerSteps, which counts as it acts, so a step added
+# to the path raises the count and the run fails once it is over budget.
 FIRST_ANSWER_MAX_TAPS = 2
 FIRST_ANSWER_MAX_FIELDS = 1
 AREA, OTHER_AREA = "Camden", "Hackney"
+# Rendered only by the Worker's corpus answer (worker/src/corpus/render.ts: the care summary line and
+# the "<glyph> N services near <place>" title), so neither can come from the client-side chips or label.
+FIRST_ANSWER_MARKERS = ("Showing: Sort My Care", "Nearest public-service signposts", f"services near {AREA}")
 
 
-def select_value(page, selector):
+class FirstAnswerSteps:
+    """Acts AND counts: a native select is one tap to open plus one field; a button is one tap."""
+
+    def __init__(self, page):
+        self.page, self.taps, self.fields = page, 0, 0
+
+    def choose(self, selector, value):
+        self.taps += 1
+        self.fields += 1
+        self.page.select_option(selector, value)
+
+    def tap(self, name):
+        self.taps += 1
+        return click(self.page, name, exact=True, t=3000)
+
+    def over_budget(self):
+        return self.taps > FIRST_ANSWER_MAX_TAPS or self.fields > FIRST_ANSWER_MAX_FIELDS
+
+
+def select_value(page, selector, timeout=5000):
+    """The select's value once it is on the page (Settings is a lazy chunk), or None."""
     try:
+        page.wait_for_selector(selector, timeout=timeout)
         return page.eval_on_selector(selector, "el => el.value")
     except Exception:
         return None
 
 
+def body_text(page):
+    try:
+        return page.inner_text("body")
+    except Exception as e:
+        print(f"    !! read body: {e}")
+        return ""
+
+
+def screenshot(page, path):
+    with contextlib.suppress(Exception):
+        page.screenshot(path=path)
+
+
+def clear_area(page):
+    """Unset the area on Home (or in storage if Home's select is not reachable); True when Home reads ''.
+    Keeps the typed flows below unanchored: the no-match and scam asks name no place."""
+    with contextlib.suppress(Exception):
+        page.select_option("#area-select", "", timeout=3000)
+    with contextlib.suppress(Exception):
+        page.evaluate("() => localStorage.removeItem('qte77-borough')")
+    return select_value(page, "#area-select", timeout=3000) == ""
+
+
+def choosing_area_changed_nothing(page):
+    """WCAG 3.2.2: choosing an area only stores it; it neither navigates nor submits."""
+    return (
+        select_value(page, "#civic-query", timeout=1000) == ""
+        and page.get_by_role("button", name="Close results").count() == 0
+        and "Showing:" not in body_text(page)
+    )
+
+
 def area_syncs(page, out, tag):
     """Home's area select and Settings' select are one stored value (ui/src/AreaSelect.tsx + prefs.ts):
-    the area set on Home shows in Settings, and a change there shows on Home. Clears the area at the
-    end, so the typed flows below (the no-match ask names no place) are not anchored to it."""
+    the area set on Home shows in Settings, and a change there shows on Home. Ends with the area cleared."""
     ok = True
-    if not (click(page, "Change", exact=False) and select_value(page, "#borough-select") == AREA):
+    click(page, "Change", exact=False)
+    if select_value(page, "#borough-select") != AREA:
         print(f"    !! area sync: Settings does not show the Home area {AREA!r}")
         ok = False
     with contextlib.suppress(Exception):
@@ -176,43 +233,53 @@ def area_syncs(page, out, tag):
     if select_value(page, "#area-select") != OTHER_AREA:
         print(f"    !! area sync: Home does not show the Settings area {OTHER_AREA!r}")
         ok = False
-    with contextlib.suppress(Exception):
-        page.select_option("#area-select", "")
-    page.screenshot(path=f"{out}/{tag}-03-area-sync.png")
+    if not clear_area(page):
+        print("    !! area sync: the area did not clear")
+        ok = False
+    screenshot(page, f"{out}/{tag}-03-area-sync.png")
     return ok
 
 
-def first_personal_answer(page, out, tag):
-    """#353: from a fresh device, pick an area on Home, then tap a card; the answer must be for that
-    area. Counts taps and fields against the budget above."""
-    taps = fields = 0
+def first_answer_path(page, out, tag):
+    steps = FirstAnswerSteps(page)
     try:
-        page.select_option("#area-select", AREA)
+        steps.choose("#area-select", AREA)
     except Exception as e:
         print(f"    !! first answer: Home area select: {e}")
         return False
-    taps += 1  # open the select
-    fields += 1  # choose the borough
-    if not click(page, "Sort My Care", exact=True, t=3000):
+    if not choosing_area_changed_nothing(page):
+        print("    !! first answer: choosing an area navigated or submitted (WCAG 3.2.2)")
+        return False
+    if not steps.tap("Sort My Care"):
         print("    !! first answer: 'Sort My Care' card not found")
         return False
-    taps += 1
-    wanted = ("Showing: Sort My Care", f"near {AREA}")
-    waited = wait_for_markers(page, wanted)
-    asked = select_value(page, "#civic-query")
-    body = page.inner_text("body")
-    page.screenshot(path=f"{out}/{tag}-03-first-answer.png")
+    waited = wait_for_markers(page, FIRST_ANSWER_MARKERS)
+    asked = select_value(page, "#civic-query", timeout=1000)
+    body = body_text(page)
+    screenshot(page, f"{out}/{tag}-03-first-answer.png")
     close_sheet(page)
-    missing = [m for m in wanted if m not in body]
+    missing = [m for m in FIRST_ANSWER_MARKERS if m not in body]
     if asked != f"GP near {AREA}" or missing:
         print(f"    !! first answer: asked {asked!r}, missing={missing} after {waited:.1f}s")
         return False
-    if taps > FIRST_ANSWER_MAX_TAPS or fields > FIRST_ANSWER_MAX_FIELDS:
-        print(f"    !! first answer took {taps} taps + {fields} fields (budget {FIRST_ANSWER_MAX_TAPS} + "
-              f"{FIRST_ANSWER_MAX_FIELDS})")
+    if steps.over_budget():
+        print(
+            f"    !! first answer took {steps.taps} taps + {steps.fields} fields "
+            f"(budget {FIRST_ANSWER_MAX_TAPS} + {FIRST_ANSWER_MAX_FIELDS})"
+        )
         return False
-    print(f"    first personal answer: {taps} taps + {fields} field, for {AREA} in {waited:.1f}s")
-    return area_syncs(page, out, tag)
+    print(f"    first personal answer: {steps.taps} taps + {steps.fields} field, {AREA}, {waited:.1f}s")
+    return True
+
+
+def first_personal_answer(page, out, tag):
+    """#353: from a fresh device, pick an area on Home, then tap a card; the Worker's answer must be for
+    that area, within the tap/field budget. Then check Home and Settings agree. The area is always
+    cleared afterwards, even when a step fails early."""
+    try:
+        return first_answer_path(page, out, tag) and area_syncs(page, out, tag)
+    finally:
+        clear_area(page)
 
 
 def interactive_smoke(page, out, tag):
@@ -283,12 +350,12 @@ def interactive_smoke(page, out, tag):
         close_sheet(page)
         return True
 
+    # first_personal_answer already tapped the "Sort My Care" card, so it is in "Recently looked up",
+    # which renders BEFORE CategoryCardList in the DOM (Home.tsx): click()'s .first resolves these
+    # "Sort My Care" taps to the recent CHIP ("tap a chip re-runs its usecase"); the card tap itself is
+    # covered by first_personal_answer. "Sort My Wander" has no chip yet, so that tap is a card tap.
     ok = tap_card_or_chip("Sort My Care") and ok
     ok = tap_card_or_chip("Sort My Wander") and ok
-    # "Sort My Care" is now the 2nd (not most-recent) RecentChips entry, not evicted (only 2 of max 3
-    # slots used) — RecentChips renders BEFORE CategoryCardList in the DOM (Home.tsx), so click()'s
-    # .first resolves to the CHIP here, exercising the "tap a chip re-runs its usecase" behaviour, not
-    # the still-present category card of the same name.
     ok = tap_card_or_chip("Sort My Care") and ok
 
     return ok

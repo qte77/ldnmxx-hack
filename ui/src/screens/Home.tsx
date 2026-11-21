@@ -252,8 +252,8 @@ function DevConsole(props: { show: boolean; status: RunStatus | null; events: Ev
 // cyclomatic complexity stays in budget; owns the input-focus + rotating-placeholder state.
 // 020 P3: one chip row, reused for the empty-state "Try:" prompts and the post-results "Try another:"
 // pivot — so the example workflows are always one tap away, never hidden forever after the first search.
-// #353: each chip shows and submits the ask for the saved area (areaAsk.ts), so the visible text is
-// always exactly what is sent.
+// #353: each chip shows and submits the ask for the saved area (areaAsk.ts). An ask that names no
+// place (the scam check) still gets the area appended by submitPrompt's withLocationAnchor, as before.
 function SuggestionChips({
   label,
   ariaLabel,
@@ -602,20 +602,24 @@ function RecentChips({
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Recently looked up">
       <span className="text-sm text-text-muted">Recently looked up:</span>
-      {entries.map((entry) => (
-        <button
-          key={entry.id}
-          type="button"
-          disabled={disabled}
-          onClick={() => onPick(areaAsk(entry, area).text, entry.id)}
-          // CHIP_CLASS carries no disabled: utilities (SuggestionChips never disables) — CategoryCard's
-          // own disabled treatment appended here so a run-in-flight chip doesn't look tappable while
-          // submitPrompt is silently no-op'ing it.
-          className={`${CHIP_CLASS} disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          {entry.title}
-        </button>
-      ))}
+      {entries.map((entry) => {
+        const ask = areaAsk(entry, area);
+        return (
+          <button
+            key={entry.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPick(ask.text, entry.id)}
+            aria-describedby={exampleNoteRef(ask, area)}
+            // CHIP_CLASS carries no disabled: utilities (SuggestionChips never disables) — CategoryCard's
+            // own disabled treatment appended here so a run-in-flight chip doesn't look tappable while
+            // submitPrompt is silently no-op'ing it.
+            className={`${CHIP_CLASS} disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {entry.title}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -845,8 +849,8 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
   // then to the Worker's auto-router, exactly as before.
   // 024 P1: applied here (not at each call site) so EVERY Home submission — hero search, "Try:"/"Try
   // another:" chips, and category-card taps alike — gets the same default-location ANCHOR, one place,
-  // DRY. `readBorough()` is read fresh per submit (no state needed: it is write-once in Settings,
-  // read-only here, and Home remounts on every tab switch anyway).
+  // DRY. #353: the anchor is Home's `area` state, the same value the area select and the cards use
+  // (read from prefs.ts at mount, written by both Home and Settings).
   // 024 P2 fix: mirror useAgentSSE's own `if (isRunning) return` — `run()` already silently no-ops a
   // tap while a request is in flight, but this callback used to update activeUsecaseId/dismissed FIRST,
   // so a card tap during a still-streaming run would relabel the sheet ("Showing: Sort My Care", no
@@ -871,11 +875,11 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
           return next;
         });
       }
-      const anchored = withLocationAnchor(text, readBorough());
+      const anchored = withLocationAnchor(text, area);
       const byok: Byok | undefined = apiKey ? { apiKey, model } : undefined;
       void run(anchored, byok, false, usecaseId ?? bypass ?? undefined);
     },
-    [run, apiKey, model, bypass, isRunning],
+    [run, apiKey, model, bypass, isRunning, area],
   );
 
   const onSubmit = useCallback(

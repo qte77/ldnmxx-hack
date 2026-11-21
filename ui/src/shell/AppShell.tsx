@@ -3,7 +3,8 @@ import { TabBar, type ScreenId } from "./TabBar";
 import { Home } from "../screens/Home";
 
 // Perf: Settings isn't needed on first paint (Home is always the entry screen) — deferring its own
-// code (segmented controls, the borough select, the about block) shrinks the initial JS chunk. Named
+// code (segmented controls, the about block) shrinks the initial JS chunk; the area select
+// (AreaSelect.tsx) ships in the main chunk because Home uses it too (#353). Named
 // export -> lazy() needs a `default`, hence the .then() wrapper.
 const Settings = lazy(() =>
   import("../screens/Settings").then((m) => ({ default: m.Settings }))

@@ -12,7 +12,7 @@ file per arc.
 
 | # | Plan | State |
 |---|---|---|
-| 027 | [Maintenance backlog](027-maintenance-backlog.md) | open — 4 rows (live-sweep flake, area-aware card taps, minimatch alerts, jsx-a11y upstream); rows 2 and 3 shipped |
+| 027 | [Maintenance backlog](027-maintenance-backlog.md) | open — 4 rows (live-sweep flake, area-aware card taps, minimatch alerts, jsx-a11y upstream); row 3 shipped, row 2 code in #390 (live check after deploy) |
 | 026 | [Design parity completion](026-design-parity-completion.md) | closed — shipped + deployed (v2.1.0) |
 | 025 | [Agent-native MCP surface](025-agent-native-mcp-surface.md) | closed — shipped + deployed (v2.1.0) |
 | 024 | [App shell redesign](024-app-shell-redesign.md) | closed — shipped + deployed (v2.0.0) |

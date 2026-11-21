@@ -12,7 +12,7 @@ refs:
 ## Handoff (read this first)
 
 **Status:** opened 2026-11-17 from the estate maintenance sweep. Row 3 shipped in #386 (2026-11-21). Row 2's code
-ships in the #353 PR; its live check waits on the next deploy. Row 1's
+ships in #390; its live check waits on the next deploy. Row 1's
 cause is found and its fix is in review; the row closes after 8 green scheduled runs.
 It covers the open items in this repo that the sweep ranked high value and low to medium effort, each checked live on
 2026-11-17. Lower-value open issues (#8, #161, #168, #185, #241, #305, #351, #352, #365) are not part of this arc and
@@ -64,6 +64,6 @@ and the owner has given the go-ahead for the session.
 | # | Item | Value / effort | Gate | Done when |
 |---|---|---|---|---|
 | 1 | Find and fix the intermittent live-sweep failure (a corpus flow did not render on desktop) — [#337](https://github.com/qte77/ldnmxx-hack/issues/337). Cause (2026-11-21): the no-match flow's result was still running when `run_typed_flow`'s fixed 8 s sleep ended (screenshots show "Stop"); fix: wait for the markers up to 30 s and log time to render | broken monitoring / M | data (8 scheduled runs) | Cause stated in #337 with evidence; fix or bounded retry merged; next 8 scheduled runs green |
-| 2 | ~~Card and chip taps answer for the saved area — [#353](https://github.com/qte77/ldnmxx-hack/issues/353)~~ code shipped in the #353 PR: `ui/src/screens/areaAsk.ts` turns a card or chip example's "near <postcode>" into "near <area>"; Home has the shared area select (`ui/src/AreaSelect.tsx`, same stored value as Settings); `tests/e2e/ui_sweep.py` `first_personal_answer` asserts 2 taps + 1 field. #351's area chip replaces the select later. Open: verify live after the deploy | correctness / M | owner (deploy) | ~~e2e asserts the 2-taps-1-field path~~; ~~bundle check green~~; with an area set, a card tap returns results for that area (verified live, after the deploy), then close #353 |
+| 2 | ~~Card and chip taps answer for the saved area — [#353](https://github.com/qte77/ldnmxx-hack/issues/353)~~ code shipped in #390: `ui/src/screens/areaAsk.ts` turns a card or chip example's "near <postcode>" into "near <area>"; Home has the shared area select (`ui/src/AreaSelect.tsx`, same stored value as Settings); `tests/e2e/ui_sweep.py` `first_personal_answer` asserts 2 taps + 1 field. #351's area chip replaces the select later. Deferred: #353 also asked for a postcode-level area; this ships boroughs only (the Settings list), and a postcode area waits for #351's chip. Open: verify live after the deploy | correctness / M | owner (deploy) | ~~e2e asserts the 2-taps-1-field path~~; ~~bundle check green~~; with an area set, a card tap returns results for that area (verified live, after the deploy), then close #353 |
 | ~~3~~ | ~~Clear the minimatch Dependabot alerts (96, 97) in `ui/` and `worker/`~~ shipped in #386 (2026-11-21); both alerts fixed | security / S | done | Lockfiles updated, CI green, both alerts closed |
 | 4 | Adopt `eslint-plugin-jsx-a11y` once it supports ESLint 10 — [#150](https://github.com/qte77/ldnmxx-hack/issues/150) | hygiene / S | data (upstream release) | A jsx-a11y release declares ESLint 10 support; plugin enabled with the UI lint green |
