@@ -147,6 +147,74 @@ def run_typed_flow(page, out, tag, flow, shot_n):
     return True
 
 
+# #353: the budget for a first personal answer on a fresh device, no sign-in: 2 taps + 1 field. The
+# path is Home's area select (one tap to open it, choosing the borough is the field), then a card tap.
+# Count every step against these; the run fails if the path grows.
+FIRST_ANSWER_MAX_TAPS = 2
+FIRST_ANSWER_MAX_FIELDS = 1
+AREA, OTHER_AREA = "Camden", "Hackney"
+
+
+def select_value(page, selector):
+    try:
+        return page.eval_on_selector(selector, "el => el.value")
+    except Exception:
+        return None
+
+
+def area_syncs(page, out, tag):
+    """Home's area select and Settings' select are one stored value (ui/src/AreaSelect.tsx + prefs.ts):
+    the area set on Home shows in Settings, and a change there shows on Home. Clears the area at the
+    end, so the typed flows below (the no-match ask names no place) are not anchored to it."""
+    ok = True
+    if not (click(page, "Change", exact=False) and select_value(page, "#borough-select") == AREA):
+        print(f"    !! area sync: Settings does not show the Home area {AREA!r}")
+        ok = False
+    with contextlib.suppress(Exception):
+        page.select_option("#borough-select", OTHER_AREA)
+    click(page, "Home", exact=True)
+    if select_value(page, "#area-select") != OTHER_AREA:
+        print(f"    !! area sync: Home does not show the Settings area {OTHER_AREA!r}")
+        ok = False
+    with contextlib.suppress(Exception):
+        page.select_option("#area-select", "")
+    page.screenshot(path=f"{out}/{tag}-03-area-sync.png")
+    return ok
+
+
+def first_personal_answer(page, out, tag):
+    """#353: from a fresh device, pick an area on Home, then tap a card; the answer must be for that
+    area. Counts taps and fields against the budget above."""
+    taps = fields = 0
+    try:
+        page.select_option("#area-select", AREA)
+    except Exception as e:
+        print(f"    !! first answer: Home area select: {e}")
+        return False
+    taps += 1  # open the select
+    fields += 1  # choose the borough
+    if not click(page, "Sort My Care", exact=True, t=3000):
+        print("    !! first answer: 'Sort My Care' card not found")
+        return False
+    taps += 1
+    wanted = ("Showing: Sort My Care", f"near {AREA}")
+    waited = wait_for_markers(page, wanted)
+    asked = select_value(page, "#civic-query")
+    body = page.inner_text("body")
+    page.screenshot(path=f"{out}/{tag}-03-first-answer.png")
+    close_sheet(page)
+    missing = [m for m in wanted if m not in body]
+    if asked != f"GP near {AREA}" or missing:
+        print(f"    !! first answer: asked {asked!r}, missing={missing} after {waited:.1f}s")
+        return False
+    if taps > FIRST_ANSWER_MAX_TAPS or fields > FIRST_ANSWER_MAX_FIELDS:
+        print(f"    !! first answer took {taps} taps + {fields} fields (budget {FIRST_ANSWER_MAX_TAPS} + "
+              f"{FIRST_ANSWER_MAX_FIELDS})")
+        return False
+    print(f"    first personal answer: {taps} taps + {fields} field, for {AREA} in {waited:.1f}s")
+    return area_syncs(page, out, tag)
+
+
 def interactive_smoke(page, out, tag):
     """026: click-through the NEW interactive elements this arc shipped — the header borough "Change"
     link, the trust-bar dismiss X, a category-card tap (bypass routing via submitPrompt(text, id), NOT
@@ -154,7 +222,8 @@ def interactive_smoke(page, out, tag):
     re-running its usecase. Desktop + mobile-portrait only, mirroring axe_matrix/run_axe's existing
     asymmetric richness (full check on the two reference viewports; the typed-flow loop alone still
     runs on every config)."""
-    ok = True
+    # #353 first, while the context is fresh (no area, no recent chips): the budget is for a new visitor.
+    ok = first_personal_answer(page, out, tag)
 
     # "Change" (BoroughSwitcher, ui/src/screens/Home.tsx) navigates Home -> Settings' borough select,
     # and back. Its accessible name is "{boroughLine} Change" (both spans concatenate) — a fresh

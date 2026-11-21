@@ -11,12 +11,15 @@ import { useCoverage } from "../useCoverage";
 import { suggestionMode, type SuggestionMode } from "../suggestions";
 import {
   readBorough,
+  writeBorough,
   readTrustBarDismissed,
   writeTrustBarDismissed,
   readRecentUsecaseIds,
   writeRecentUsecaseIds,
 } from "../prefs";
 import { withLocationAnchor } from "./locationAnchor";
+import { areaAsk, type AreaAsk } from "./areaAsk";
+import { AreaSelect } from "../AreaSelect";
 import { categoryCards } from "./categoryCards";
 import { pushRecent } from "./recentUsecases";
 import { resultSheetOpen } from "./resultSheetOpen";
@@ -39,6 +42,14 @@ const ROUTABLE_EXAMPLES = ROUTABLE.map((u) => u.example);
 // 024 P1: the "Common questions" card order — real, routable usecases first, the 2 never-auto-routed
 // demo flows last (categoryCards.ts, unit-tested there).
 const CATEGORY_CARDS = categoryCards(USECASES);
+
+// #353: with no area set, a card or chip still submits its canned example. This note under Home's area
+// select labels it as an example, and each such button points at it via aria-describedby (outside the
+// button's accessible name, which stays the card title).
+const EXAMPLE_NOTE_ID = "area-example-note";
+function exampleNoteRef(ask: AreaAsk, area: string | null): string | undefined {
+  return ask.isExample && !area ? EXAMPLE_NOTE_ID : undefined;
+}
 
 // Shared chrome-control styling: border-border-strong (not the decorative hairline) because a
 // control's border IS its affordance — WCAG 1.4.11 wants 3:1, which only the strong token meets.
@@ -241,31 +252,52 @@ function DevConsole(props: { show: boolean; status: RunStatus | null; events: Ev
 // cyclomatic complexity stays in budget; owns the input-focus + rotating-placeholder state.
 // 020 P3: one chip row, reused for the empty-state "Try:" prompts and the post-results "Try another:"
 // pivot — so the example workflows are always one tap away, never hidden forever after the first search.
+// #353: each chip shows and submits the ask for the saved area (areaAsk.ts), so the visible text is
+// always exactly what is sent.
 function SuggestionChips({
   label,
   ariaLabel,
   onPick,
+  area,
 }: {
   label: string;
   ariaLabel: string;
   onPick: (text: string) => void;
+  area: string | null;
 }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label={ariaLabel}>
       <span className="text-sm text-text-muted">{label}</span>
-      {ROUTABLE.map((u) => (
-        <button key={u.id} type="button" onClick={() => onPick(u.example)} className={CHIP_CLASS}>
-          {u.example}
-        </button>
-      ))}
+      {ROUTABLE.map((u) => {
+        const ask = areaAsk(u, area);
+        return (
+          <button
+            key={u.id}
+            type="button"
+            onClick={() => onPick(ask.text)}
+            aria-describedby={exampleNoteRef(ask, area)}
+            className={CHIP_CLASS}
+          >
+            {ask.text}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
 // The post-results pivot row — its own component so the mode branch lives here, not in Home.
-function TryAnotherRow({ mode, onPick }: { mode: SuggestionMode; onPick: (text: string) => void }) {
+function TryAnotherRow({
+  mode,
+  onPick,
+  area,
+}: {
+  mode: SuggestionMode;
+  onPick: (text: string) => void;
+  area: string | null;
+}) {
   if (mode !== "tryAnother") return null;
-  return <SuggestionChips label="Try another:" ariaLabel="Try another search" onPick={onPick} />;
+  return <SuggestionChips label="Try another:" ariaLabel="Try another search" onPick={onPick} area={area} />;
 }
 
 // 024 P2: the block that used to sit directly in <main> after a search — MOVED (not duplicated) into
@@ -279,6 +311,7 @@ function ResultBody({
   isRunning,
   suggestions,
   onPick,
+  area,
   devMode,
   status,
   events,
@@ -290,6 +323,7 @@ function ResultBody({
   isRunning: boolean;
   suggestions: SuggestionMode;
   onPick: (text: string) => void;
+  area: string | null;
   devMode: boolean;
   status: RunStatus | null;
   events: EventLogEntry[];
@@ -325,7 +359,7 @@ function ResultBody({
         <A2UISurface />
       </div>
 
-      <TryAnotherRow mode={suggestions} onPick={onPick} />
+      <TryAnotherRow mode={suggestions} onPick={onPick} area={area} />
 
       <DevConsole show={devMode} status={status} events={events} />
     </>
@@ -465,17 +499,22 @@ function CategoryCard({
   entry,
   onPick,
   disabled,
+  area,
 }: {
   entry: CatalogEntry;
   onPick: (text: string, usecaseId: string) => void;
   disabled: boolean;
+  area: string | null;
 }) {
   const isDemo = entry.keywords.length === 0;
+  // #353: a tap asks for the saved area, not the canned example's postcode (areaAsk.ts).
+  const ask = areaAsk(entry, area);
   return (
     <button
       type="button"
       disabled={disabled}
-      onClick={() => onPick(entry.example, entry.id)}
+      onClick={() => onPick(ask.text, entry.id)}
+      aria-describedby={exampleNoteRef(ask, area)}
       title={entry.blurb}
       // 024 P2 fix: submitPrompt no-ops while a run is in flight (never relabels the sheet mid-stream) —
       // disable the visible affordance too, so that no-op has a reason instead of reading as broken.
@@ -516,9 +555,11 @@ function sheetMeta(entry: CatalogEntry | undefined) {
 function CategoryCardList({
   onPick,
   disabled,
+  area,
 }: {
   onPick: (text: string, usecaseId: string) => void;
   disabled: boolean;
+  area: string | null;
 }) {
   return (
     <section className="mt-8">
@@ -528,7 +569,7 @@ function CategoryCardList({
           enough to keep 2-up on a phone. */}
       <div className="mt-3 grid gap-3 grid-cols-2">
         {CATEGORY_CARDS.map((entry) => (
-          <CategoryCard key={entry.id} entry={entry} onPick={onPick} disabled={disabled} />
+          <CategoryCard key={entry.id} entry={entry} onPick={onPick} disabled={disabled} area={area} />
         ))}
       </div>
     </section>
@@ -547,10 +588,12 @@ function RecentChips({
   ids,
   onPick,
   disabled,
+  area,
 }: {
   ids: readonly string[];
   onPick: (text: string, usecaseId: string) => void;
   disabled: boolean;
+  area: string | null;
 }) {
   const entries = ids
     .map((id) => USECASES.find((u) => u.id === id))
@@ -564,7 +607,7 @@ function RecentChips({
           key={entry.id}
           type="button"
           disabled={disabled}
-          onClick={() => onPick(entry.example, entry.id)}
+          onClick={() => onPick(areaAsk(entry, area).text, entry.id)}
           // CHIP_CLASS carries no disabled: utilities (SuggestionChips never disables) — CategoryCard's
           // own disabled treatment appended here so a run-in-flight chip doesn't look tappable while
           // submitPrompt is silently no-op'ing it.
@@ -604,11 +647,9 @@ function LocationPinIcon() {
 // replaces the old static "London public services · free, no sign-up" line. Unlike the mock (which
 // always has a borough), this app's borough is optional (prefs.ts's readBorough returns
 // `string | null`), so the unset state shows a neutral call-to-action instead of blank uppercase text.
-// Reads readBorough() fresh on render rather than via state: it's write-once in Settings, read-only
-// here, and Home remounts whenever the tab switches away and back (AppShell's `screen === "home" ? …`
-// ternary swaps component identity), so a fresh read on mount is exactly as live as this needs to be.
-function BoroughSwitcher({ onGoSettings }: { onGoSettings: () => void }) {
-  const borough = readBorough();
+// #353: takes Home's `area` state, so a change in Home's own area select shows here at once.
+function BoroughSwitcher({ onGoSettings, area }: { onGoSettings: () => void; area: string | null }) {
+  const borough = area;
   const boroughLine = borough ? `${borough}, London` : "Set your area";
   return (
     <button
@@ -633,6 +674,8 @@ function Hero({
   showExamples,
   coverage,
   onGoSettings,
+  area,
+  onAreaChange,
 }: {
   prompt: string;
   setPrompt: (v: string) => void;
@@ -643,12 +686,14 @@ function Hero({
   showExamples: boolean;
   coverage: string | null;
   onGoSettings: () => void;
+  area: string | null;
+  onAreaChange: (v: string | null) => void;
 }) {
   const [inputFocused, setInputFocused] = useState(false);
   const placeholder = useRotatingPlaceholder(ROUTABLE_EXAMPLES, inputFocused || prompt.length > 0);
   return (
     <section className="pt-6 sm:pt-10">
-      <BoroughSwitcher onGoSettings={onGoSettings} />
+      <BoroughSwitcher onGoSettings={onGoSettings} area={area} />
       {/* 026 P1: deliberate content change, confirmed with the user — was "Ask in your own words. Get
           the official source." */}
       <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-text">What do you need sorted?</h1>
@@ -679,9 +724,21 @@ function Hero({
         )}
       </form>
 
+      {/* #353: the area in place, so a first personal answer is pick an area, then tap a card (budget:
+          2 taps + 1 field, asserted in tests/e2e/ui_sweep.py). The same stored value as Settings'
+          select (AreaSelect.tsx); #351's area chip replaces this layout. */}
+      <AreaSelect
+        id="area-select"
+        className="mt-3 max-w-xs"
+        value={area}
+        onChange={onAreaChange}
+        hintId={EXAMPLE_NOTE_ID}
+        hint={area ? undefined : "Not set: the questions below use an example postcode."}
+      />
+
       {showExamples && (
         <>
-          <SuggestionChips label="Try:" ariaLabel="Try an example" onPick={submitPrompt} />
+          <SuggestionChips label="Try:" ariaLabel="Try an example" onPick={submitPrompt} area={area} />
           <SampleCard />
           {/* 021 P2: the honesty line stays visible — one compact sentence, below the value, with the
               full explanation one tap away in "?" (HelpPanel). It is repeated on every result card. */}
@@ -764,6 +821,14 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
   // update local state + persist together on every real selection (submitPrompt's usecaseId-defined
   // branch below).
   const [recentIds, setRecentIds] = useState<string[]>(() => readRecentUsecaseIds());
+
+  // #353: the saved area, read once at mount (Home remounts on every tab switch, so a change made in
+  // Settings is picked up) and written through the same prefs.ts store Settings uses.
+  const [area, setArea] = useState<string | null>(() => readBorough());
+  const pickArea = useCallback((v: string | null) => {
+    writeBorough(v);
+    setArea(v);
+  }, []);
 
   // The workflow actually driving the CURRENT/last run, looked up in the SAME catalog the cards render
   // from — so the "Showing …" announcement and the Scam Check sample-data note both key off one source
@@ -871,17 +936,19 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
           showExamples={suggestions === "hero"}
           coverage={coverage}
           onGoSettings={onGoSettings}
+          area={area}
+          onAreaChange={pickArea}
         />
 
         <TrustBar />
 
         {/* 026 P2: placed right above the category grid (the plan's own "above/below" wording — this
             is the reasonable default), only rendered once a real selection exists. */}
-        <RecentChips ids={recentIds} onPick={submitPrompt} disabled={isRunning} />
+        <RecentChips ids={recentIds} onPick={submitPrompt} disabled={isRunning} area={area} />
 
         {/* 024 P1: always visible, independent of search state — results now live in the ResultSheet
             overlay below, not inline, so there is no "hide after first search" reason to hide this too. */}
-        <CategoryCardList onPick={submitPrompt} disabled={isRunning} />
+        <CategoryCardList onPick={submitPrompt} disabled={isRunning} area={area} />
       </main>
 
       {/* 024 P2: results moved out of <main> into a bottom-sheet overlay, driven by the same
@@ -911,6 +978,7 @@ export function Home({ onGoSettings }: { onGoSettings: () => void }) {
           isRunning={isRunning}
           suggestions={suggestions}
           onPick={submitPrompt}
+          area={area}
           devMode={devMode}
           status={status}
           events={eventLog}

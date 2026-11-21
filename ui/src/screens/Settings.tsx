@@ -11,7 +11,7 @@ import {
   readBorough,
   writeBorough,
 } from "../prefs";
-import { boroughLabels } from "../boroughs";
+import { AreaSelect } from "../AreaSelect";
 import { FONT_SCALE_OPTIONS } from "../textSize";
 
 const APPEARANCE_OPTIONS: { id: Appearance; label: string }[] = [
@@ -19,8 +19,6 @@ const APPEARANCE_OPTIONS: { id: Appearance; label: string }[] = [
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
 ];
-
-const BOROUGHS = boroughLabels();
 
 // 024 P6b (design re-sync): the design groups Settings controls under small icon+label section
 // headers ("Display", "Location") — SortMyLondon.dc.html, re-pulled 2026-09-19. Icons ported verbatim
@@ -167,36 +165,6 @@ function HighContrastSwitch({ value, onToggle }: { value: boolean; onToggle: () 
   );
 }
 
-// The borough <select> — a default-location ANCHOR for Home's search (shared/places.ts's
-// resolvePlace), never a within-borough filter (prefs.ts's readBorough/writeBorough doc comment).
-function BoroughSelect({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
-  return (
-    <div className="mt-6">
-      <label htmlFor="borough-select" className="block text-sm font-semibold text-text mb-2">
-        Your area
-      </label>
-      <select
-        id="borough-select"
-        value={value ?? ""}
-        onChange={(e) => {
-          onChange(e.target.value === "" ? null : e.target.value);
-        }}
-        className={`min-h-[44px] w-full px-3 rounded border border-border-strong bg-bg text-text ${FOCUS_RING_CLASS}`}
-      >
-        <option value="">Not set</option>
-        {BOROUGHS.map((b) => (
-          <option key={b} value={b}>
-            {b}
-          </option>
-        ))}
-      </select>
-      <p className="mt-1 text-sm text-text-muted">
-        Used as a starting point for your searches when you don&apos;t type a postcode or place.
-      </p>
-    </div>
-  );
-}
-
 function AboutSection() {
   return (
     <div className="mt-8 pt-6 border-t border-border">
@@ -281,7 +249,14 @@ export function Settings() {
       <HighContrastSwitch value={highContrast} onToggle={toggleHighContrast} />
 
       <SectionHeading icon={<LocationIcon />}>Location</SectionHeading>
-      <BoroughSelect value={borough} onChange={pickBorough} />
+      <AreaSelect
+        id="borough-select"
+        className="mt-6"
+        value={borough}
+        onChange={pickBorough}
+        hintId="borough-hint"
+        hint="Used as a starting point for your searches when you don't type a postcode or place."
+      />
 
       <AboutSection />
     </div>
