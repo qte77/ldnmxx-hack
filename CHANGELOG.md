@@ -10,7 +10,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
   select (`ui/src/AreaSelect.tsx`, shared by both screens). With an area set, category cards, "Try:"
   chips and "Recently looked up" chips ask for that area (`ui/src/screens/areaAsk.ts`: "GP near E8 3GT"
   becomes "GP near Camden"). With no area set they keep the example postcode, and a note under the select
-  says so. #351's area chip replaces the select's layout later.
+  says so. #351's area chip replaces the select's layout later. `prefs.ts` `readBorough` now returns
+  only a borough the select offers; any other stored value reads as no area, so a tampered or stale
+  value never reaches the ask.
 - `tests/e2e/ui_sweep.py`: `first_personal_answer` checks the first personal answer on a fresh device.
   Every step goes through `FirstAnswerSteps`, which counts taps and fields as it acts, and the run fails
   past 2 taps + 1 field (`FIRST_ANSWER_MAX_TAPS`, `FIRST_ANSWER_MAX_FIELDS`). It asserts the Worker's

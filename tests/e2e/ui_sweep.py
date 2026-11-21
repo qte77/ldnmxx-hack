@@ -21,6 +21,7 @@ record_video_dir (polyfetch's render_session has a teardown bug that drops the f
 import contextlib
 import json
 import os
+import re
 import sys
 import time
 from datetime import UTC, datetime
@@ -155,8 +156,9 @@ FIRST_ANSWER_MAX_TAPS = 2
 FIRST_ANSWER_MAX_FIELDS = 1
 AREA, OTHER_AREA = "Camden", "Hackney"
 # Rendered only by the Worker's corpus answer (worker/src/corpus/render.ts: the care summary line and
-# the "<glyph> N services near <place>" title), so neither can come from the client-side chips or label.
-FIRST_ANSWER_MARKERS = ("Showing: Sort My Care", "Nearest public-service signposts", f"services near {AREA}")
+# the "<glyph> N service(s) near <place>" title), so neither can come from the client-side chips or label.
+FIRST_ANSWER_MARKERS = ("Showing: Sort My Care", "Nearest public-service signposts")
+FIRST_ANSWER_TITLE = re.compile(rf"\b\d+ services? near {AREA}\b")
 
 
 class FirstAnswerSteps:
@@ -212,11 +214,12 @@ def clear_area(page):
 
 def choosing_area_changed_nothing(page):
     """WCAG 3.2.2: choosing an area only stores it; it neither navigates nor submits."""
-    return (
-        select_value(page, "#civic-query", timeout=1000) == ""
-        and page.get_by_role("button", name="Close results").count() == 0
-        and "Showing:" not in body_text(page)
-    )
+    try:
+        sheet_open = page.get_by_role("button", name="Close results").count() > 0
+    except Exception:
+        sheet_open = True  # unknown counts as changed
+    query_empty = select_value(page, "#civic-query", timeout=1000) == ""
+    return query_empty and not sheet_open and "Showing:" not in body_text(page)
 
 
 def area_syncs(page, out, tag):
@@ -259,6 +262,8 @@ def first_answer_path(page, out, tag):
     screenshot(page, f"{out}/{tag}-03-first-answer.png")
     close_sheet(page)
     missing = [m for m in FIRST_ANSWER_MARKERS if m not in body]
+    if not FIRST_ANSWER_TITLE.search(body):
+        missing.append(FIRST_ANSWER_TITLE.pattern)
     if asked != f"GP near {AREA}" or missing:
         print(f"    !! first answer: asked {asked!r}, missing={missing} after {waited:.1f}s")
         return False

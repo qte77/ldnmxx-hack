@@ -8,6 +8,8 @@
 // absence of an override, which is already exactly what theme-init.js and tokens.css's
 // `@media (prefers-color-scheme: dark)` block do when no attribute is set.
 
+import { boroughLabels } from "./boroughs";
+
 interface AttrElement {
   getAttribute(name: string): string | null;
   setAttribute(name: string, value: string): void;
@@ -101,11 +103,17 @@ export function writeHighContrast(v: boolean, storage?: Storage): void {
   }
 }
 
+// #353: only a borough the area select offers is ever read back, because the value goes straight into
+// the ask (cards, chips, withLocationAnchor). A tampered, stale or foreign stored value reads as null.
+const BOROUGHS = new Set(boroughLabels());
+
 /** A default-location ANCHOR for the Home search (prepended to a postcode-less prompt via
- *  shared/places.ts's resolvePlace) — never a within-borough filter. Null = no anchor set. */
+ *  shared/places.ts's resolvePlace) — never a within-borough filter. Null = no anchor set, or a stored
+ *  value that is not one of the offered boroughs. */
 export function readBorough(storage?: Storage): string | null {
   try {
-    return store(storage)?.getItem(BOROUGH_KEY) ?? null;
+    const v = store(storage)?.getItem(BOROUGH_KEY) ?? null;
+    return v !== null && BOROUGHS.has(v) ? v : null;
   } catch {
     return null;
   }
