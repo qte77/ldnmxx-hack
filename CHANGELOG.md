@@ -45,6 +45,9 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Security
 
+- `ui/` and `worker/`: override the dev-only `minimatch` to 11.x (lock: 11.0.8) for GHSA-g3hv-75wg-m249
+  (Dependabot alerts #96, #97). `eslint-plugin-sonarjs` still asks for `^10.2.6`, so an override is the fix;
+  lint, typecheck and tests pass with it.
 - `worker/package.json` overrides: `vite` 8.3.0 -> 8.3.3 and `source-map-js` 1.2.1 -> 1.2.2
   (both transitive, pulled in via `vitest`/`postcss`/`@eslint/css-tree`; no direct dependency to
   bump). Closes GHSA-587h-7wmj-h5pm (high), GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw,
