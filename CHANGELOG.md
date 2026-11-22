@@ -4,6 +4,22 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ## [Unreleased]
 
+### Added
+
+- Home: a "Your area" select under the search box (#353). It is the same stored value as the Settings
+  select (`ui/src/AreaSelect.tsx`, shared by both screens). With an area set, category cards, "Try:"
+  chips and "Recently looked up" chips ask for that area (`ui/src/screens/areaAsk.ts`: "GP near E8 3GT"
+  becomes "GP near Camden"). With no area set they keep the example postcode, and a note under the select
+  says so. #351's area chip replaces the select's layout later. `prefs.ts` `readBorough` now returns
+  only a borough the select offers; any other stored value reads as no area, so a tampered or stale
+  value never reaches the ask.
+- `tests/e2e/ui_sweep.py`: `first_personal_answer` checks the first personal answer on a fresh device.
+  Every step goes through `FirstAnswerSteps`, which counts taps and fields as it acts, and the run fails
+  past 2 taps + 1 field (`FIRST_ANSWER_MAX_TAPS`, `FIRST_ANSWER_MAX_FIELDS`). It asserts the Worker's
+  own answer for the area (the care summary line and "services near Camden"), that choosing the area
+  neither navigates nor submits, that Home and Settings show the same area, and that the area is
+  cleared afterwards. The area is boroughs only; a postcode-level area waits for #351.
+
 ### Changed
 
 - `tests/e2e/ui_sweep.py`: a typed flow now waits for its markers (up to 30 s) instead of a fixed 8 s

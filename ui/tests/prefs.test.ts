@@ -13,6 +13,7 @@ import {
   readRecentUsecaseIds,
   writeRecentUsecaseIds,
 } from "../src/prefs";
+import { boroughLabels } from "../src/boroughs";
 
 // Map-backed Storage + element stand-ins (the ui test env is node — no real localStorage/DOM).
 function fakeStorage(init: Record<string, string> = {}): Storage {
@@ -133,5 +134,19 @@ describe("readBorough / writeBorough", () => {
     expect(readBorough(s)).toBe("Camden");
     writeBorough(null, s);
     expect(readBorough(s)).toBeNull();
+  });
+  // #353 / code-scanning thread on #390: the stored value goes into the ask, so only a borough the
+  // area select offers is read back; anything else (tampered, stale, another app's) reads as null.
+  it("reads a tampered or unknown stored value as null", () => {
+    for (const bad of ["Narnia", "camden", "Camden, London", "<script>", "GP near E8 3GT", " Camden", ""]) {
+      expect(readBorough(fakeStorage({ "qte77-borough": bad }))).toBeNull();
+    }
+  });
+  it("round-trips every borough the area select offers", () => {
+    for (const b of boroughLabels()) {
+      const s = fakeStorage();
+      writeBorough(b, s);
+      expect(readBorough(s)).toBe(b);
+    }
   });
 });
