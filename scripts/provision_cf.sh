@@ -21,14 +21,16 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 # Load the gitignored repo-root .env (CLOUDFLARE_API_TOKEN) unless already exported. Pre-exported wins,
 # so CI can pass the token via the environment without a .env file.
 [ -f "$REPO/.env" ] && [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && { set -a; . "$REPO/.env"; set +a; }
-WRANGLER="npx --yes wrangler"
+# The wrangler pinned in worker/package-lock.json (installed by step 0), never a registry-resolved npx copy.
+WRANGLER="$REPO/worker/node_modules/.bin/wrangler"
 PROJECT="${PROJECT:-sortmy-london}"
 
 export CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
 [ -n "${CLOUDFLARE_API_TOKEN:-}" ] || { echo "!! no CLOUDFLARE_API_TOKEN — add it to the repo-root .env (see .env.example)"; exit 1; }
 cd "$REPO"
 
-echo "== 0. whoami =="
+echo "== 0. install the locked wrangler (worker/) and whoami =="
+npm --prefix worker ci
 $WRANGLER whoami
 
 echo "== 1. build the SPA at base / (ui/dist) =="

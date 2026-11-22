@@ -66,6 +66,11 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Fixed
 
+- `scripts/provision_cf.sh`: every wrangler step now runs the version locked in
+  `worker/package-lock.json` (`npm --prefix worker ci`, then `worker/node_modules/.bin/wrangler`) instead of
+  `npx --yes wrangler`, so one deploy uses one reproducible wrangler (#392). Test:
+  `ingest/tests/test_provision_cf.py`.
+
 - `worker/src/agent/router.ts`, `worker/src/worker.ts`: **the model-router escalation is now bounded**
   by `ROUTE_BUDGET_MS` (new optional var, default 4000 ms). Before, an unsure ask waited on the whole
   free chain, retries and Retry-After included, before the response stream could start. Now it gets
