@@ -22,6 +22,10 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
 
 ### Changed
 
+- Node 24 only: `ui/.nvmrc` and `worker/.nvmrc` are 24, the CI, D1-verify and Deploy workflows
+  set up Node 24, and `engines.node` in `ui/` and `worker/` is `>=24.15` (with `engine-strict=true`,
+  `npm ci` now needs Node 24.15 or later). Under Node 22, a dev dependency
+  (jsdoc-type-pratt-parser 9.5.0, which requires `^22.22.2 || >=24.15.0`) broke a local deploy.
 - `tests/e2e/ui_sweep.py`: a typed flow now waits for its markers (up to 30 s) instead of a fixed 8 s
   sleep, and prints its time to render. The intermittent live-sweep failure (#337) was the no-match
   flow's result still running when the sleep ended; screenshots showed "Stop" still visible.
