@@ -96,6 +96,9 @@ A step-free London route — same engine, one `usecase` away.
 
 ## How
 
+Needs Node 24.15 or later (`ui/` and `worker/` set `engine-strict=true`; `.nvmrc` names only the
+major, 24).
+
 ```bash
 make help    # all targets
 make dev     # worker (:8787) + ui (:5173) locally, keyless
