@@ -75,7 +75,8 @@ All notable changes are documented here (keep-a-changelog; hand-curated).
   `worker/migrations/0001_corpus_store.sql`: follow-up to #396. The script holds the locked wrangler in an
   array, so a checkout path with a space works, and its test now asserts that every wrangler step
   uses the locked binary. The docs and comments run wrangler as `npm --prefix worker exec wrangler`
-  instead of `npx wrangler`.
+  instead of `npx wrangler`, from the repo root with `--config worker/wrangler.toml` (without it,
+  wrangler would read the root Pages config).
 
 - `worker/src/agent/router.ts`, `worker/src/worker.ts`: **the model-router escalation is now bounded**
   by `ROUTE_BUDGET_MS` (new optional var, default 4000 ms). Before, an unsure ask waited on the whole

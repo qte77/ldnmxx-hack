@@ -1,7 +1,7 @@
 -- W6 (#13, ADR 0002): the read-through corpus store. Raw ingested tables are SOURCE-shaped and may
 -- grow columns with the source; one VIEW per corpus projects onto the frozen CorpusRecord columns —
 -- the view is the corpus contract in SQL, so ingest-schema churn updates the view, not query code.
--- Apply (user-run, creds-gated): npm --prefix worker exec wrangler -- d1 migrations apply DB --remote --config worker/wrangler.toml
+-- Apply from the repo root (user-run, creds-gated): npm --prefix worker exec wrangler -- d1 migrations apply DB --remote --config worker/wrangler.toml
 
 -- Raw NHS-ODS-shaped table (W4/#161 fills it via the ingester; empty until then).
 CREATE TABLE IF NOT EXISTS nhs_services (
