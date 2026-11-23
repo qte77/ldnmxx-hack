@@ -5,6 +5,7 @@ The script is run from a throwaway copy of the repo layout with fake `npm` and `
 """
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -12,8 +13,8 @@ from pathlib import Path
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "provision_cf.sh"
 
 
-def _run_script(tmp_path: Path) -> list[str]:
-    repo = tmp_path / "repo"
+def _run_script(tmp_path: Path, repo_name: str = "repo") -> list[str]:
+    repo = tmp_path / repo_name
     (repo / "scripts").mkdir(parents=True)
     (repo / "worker").mkdir()
     shutil.copy(SCRIPT, repo / "scripts" / "provision_cf.sh")
@@ -44,10 +45,22 @@ def _run_script(tmp_path: Path) -> list[str]:
     return log.read_text().splitlines()
 
 
+def _wrangler_steps_in_script() -> int:
+    """Invocations of the WRANGLER variable in the script (the assignment line excluded)."""
+    return len(re.findall(r"^(?!WRANGLER=).*\$\{?WRANGLER", SCRIPT.read_text(), flags=re.M))
+
+
 def test_every_wrangler_step_uses_the_locked_binary(tmp_path: Path) -> None:
     calls = _run_script(tmp_path)
+    steps = _wrangler_steps_in_script()
+    assert steps == 4, "update this test if a wrangler step was added or removed"
     assert not [c for c in calls if c.startswith("npx")], "npx must never resolve wrangler"
-    assert [c for c in calls if c.startswith("wrangler ")], "the stub wrangler was never run"
+    assert len([c for c in calls if c.startswith("wrangler ")]) == steps, "a wrangler step bypassed the locked binary"
+
+
+def test_checkout_path_with_a_space_works(tmp_path: Path) -> None:
+    calls = _run_script(tmp_path, "my repo")
+    assert len([c for c in calls if c.startswith("wrangler ")]) == _wrangler_steps_in_script()
 
 
 def test_worker_deps_are_installed_before_the_first_wrangler_step(tmp_path: Path) -> None:

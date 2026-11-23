@@ -14,7 +14,7 @@ Groundwork runs fully on Cloudflare: the **SPA on Cloudflare Pages** at `sortmy.
    environment. The **account id** is not written into this public repo: set `CLOUDFLARE_ACCOUNT_ID` in `.env` too,
    unless the token sees only one account (wrangler then auto-detects it). *(Editing a token's permissions keeps its value; **rolling** it
    changes the secret — update `.env` if you roll.)*
-3. **Worker secrets** (unchanged): `cd worker && npx wrangler secret put OPENROUTER_KEY` (+ `ARIZE_*` if used).
+3. **Worker secrets** (unchanged): `npm --prefix worker exec wrangler -- secret put OPENROUTER_KEY --config worker/wrangler.toml`, run from the repo root (+ `ARIZE_*` if used).
 
 ## Deploy
 

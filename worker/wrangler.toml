@@ -47,7 +47,7 @@ simple = { limit = 20, period = 60 }
 binding = "AI"
 
 # CF D1 — the read-through corpus store (W6 #13, ADR 0002). PROVISIONED 2026-07-22; EMPTY until the
-# W4/#161 ingest lands. Schema: npx wrangler d1 migrations apply DB --remote --config wrangler.toml
+# W4/#161 ingest lands. Schema (from the repo root): npm --prefix worker exec wrangler -- d1 migrations apply DB --remote --config worker/wrangler.toml
 # (always pass --config — bare wrangler walks up to the root Pages config). The Worker degrades to
 # the bundled sample corpora whenever D1 is unbound, FAILING, or NOT YET SEEDED (empty gazetteer),
 # so an empty store never breaks Care.
